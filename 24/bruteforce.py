@@ -27,6 +27,6 @@ def permut(n,r):
 
     return res
 
-p = permut(3, ["0", "1", "2", "3"])
+p = permut(9, ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
 print(len(p))
 print(p)
