@@ -78,28 +78,60 @@
 \setlength{\columnsep}{2pt}
 
 \begin{center}
-     \Large{\underline{Python3}} \\
+     \Large{\underline{Python 3.x}} \\
 \end{center}
 
 \section{Structures}
 
-Classe
+Une classe
 
-Fonction
+\begin{lstlisting}
+class Dog(Animal):
+  def __init__(self):
+    # ...
 
-if
+  def hello(self):
+    # ...
+\end{lstlisting}
 
-switch
+Une fonction
 
-try
+\begin{lstlisting}
+def ma_fonction(arg1, arg2):
+  return 3
+\end{lstlisting}
 
-ternaire
+Les conditions
 
+\begin{lstlisting}
+if a == b:
+  # faire quelque chose
+elif b == c:
+  # autre chose
+else:
+  # encore autre chose
+\end{lstlisting}
 
+Les conditions ternaires
+
+\begin{lstlisting}
+a = 5 if c == b else 8
+# Si c == b, a = 5 sinon 8
+\end{lstlisting}
+
+Gestion des exceptions
+
+\begin{lstlisting}
+try:
+  # quelque chose
+except:
+  # autre chose
+\end{lstlisting}
 
 \section{Conversions}
 
 Conversion entiers / chaines de caractères
+
 \begin{lstlisting}
 int("1853") * 2 # 3706
 str(1853) * 2   # "18531853"
@@ -125,11 +157,13 @@ Générer une liste de carrés
 # Genere [1, 4, 9, 16, 25]
 \end{lstlisting}
 
-\section{Opérations sur chaines de caractères et listes}
+\section{Iterables}
+
+Tout les exemples sont présentés avec une chaine de caractère mais fonctionnent également avec une liste ou d'autres iterables.
 
 Itérer sur les charactères d'une liste
 \begin{lstlisting}
-for carac in "hello world:
+for carac in "hello world":
   print(carac, end="-")
 # h-e-l-l-o- -w-o-r-l-d-
 \end{lstlisting}
@@ -154,6 +188,28 @@ Inverse la chaîne de caractère
 chaine[::-1] # "dlrow olleh"
 \end{lstlisting}
 
+\section{Listes}
+
+Ajout et concaténation
+\begin{lstlisting}
+[1, 2, 3].append(4) # [1, 2, 3, 4]
+[1, 2] += [3, 4]    # [1, 2, 3, 4]
+\end{lstlisting}
+
+Associer plusieurs listes
+\begin{lstlisting}
+zip([1, 2, 3], [4, 5, 6])
+# [(1, 4), (2, 5), (3, 6)]
+\end{lstlisting}
+
+\section{Chaines de caractères}
+
+Conversion code ASCII / caractère
+\begin{lstlisting}
+chr(97)  # 'a'
+ord('a') # 97
+\end{lstlisting}
+
 \section{Dictionnaire}
 
 Vérifier l'existence d'une clé
@@ -172,6 +228,19 @@ for cle, valeur in dic:
 \end{lstlisting}
 
 \section{Tuple}
+
+Tuple packing et unpacking
+\begin{lstlisting}
+t = 12345, 54321, 'hello!'
+x, y, z = t
+\end{lstlisting}
+
+Cas particuliers (Tuple de 0 et 1 élément)
+\begin{lstlisting}
+empty = ()
+singleton = 'hello',
+# notez la derniere virgule
+\end{lstlisting}
 
 \section{Set}
 
@@ -198,7 +267,13 @@ print("fatal error", file=sys.stderr)
 \end{lstlisting}
 
 \section{Fonctionnel}
-Etc.
+
+Réduction (reduce)
+
+\begin{lstlisting}
+functools.reduce(lambda x, y: x*y, [2, 3, 4])
+# 2 * 3 * 4 = 24
+\end{lstlisting}
 
 \section{Mathématiques}
 
@@ -218,9 +293,59 @@ i ** n    # 9
 pow(i, n) # 9
 \end{lstlisting}
 
+Valeur absolue
+\begin{lstlisting}
+abs(-5) # 5
+\end{lstlisting}
+
 \section{Tri}
 
 \section{Solveurs}
+
+\section{Threads}
+
+\section{Réseau}
+
+\section{HTTP}
+
+\section{Tableaux ASCII}
+
+Lettres minuscules
+
+\begin{tabular}{c|c||c|c||c|c}
+\hline
+dec & char & dec & char & dec & char\\
+\hline
+97  & a & 106 & j & 115 & s \\
+98  & b & 107 & k & 116 & t \\
+99  & c & 108 & l & 117 & u \\
+100 & d & 109 & m & 118 & v \\
+101 & e & 110 & n & 119 & w \\
+102 & f & 111 & o & 120 & x \\
+103 & g & 112 & p & 121 & y \\
+104 & h & 113 & q & 122 & z \\
+105 & i & 114 & r &     &   \\
+\hline
+\end{tabular}
+
+Lettres majuscules
+
+\begin{tabular}{c|c||c|c||c|c}
+\hline
+dec & char & dec & char & dec & char\\
+\hline
+65 & A & 74 & J & 83 & S \\
+66 & B & 75 & K & 84 & T \\
+67 & C & 76 & L & 85 & U \\
+68 & D & 77 & M & 86 & V \\
+69 & E & 78 & N & 87 & W \\
+70 & F & 79 & O & 88 & X \\
+71 & G & 80 & P & 89 & Y \\
+72 & H & 81 & Q & 90 & Z \\
+73 & I & 82 & R &     &   \\
+
+\hline
+\end{tabular}
 
 % You can even have references
 \rule{0.3\linewidth}{0.25pt}
