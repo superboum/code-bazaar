@@ -1,0 +1,231 @@
+\documentclass[10pt,landscape]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{multicol}
+\usepackage{calc}
+\usepackage{ifthen}
+\usepackage[landscape]{geometry}
+\usepackage{amsmath,amsthm,amsfonts,amssymb}
+\usepackage{color,graphicx,overpic}
+\usepackage{hyperref}
+\usepackage{listings}
+
+\pdfinfo{
+  /Title (Python3 CheatSheet)
+  /Creator (TeX)
+  /Producer (pdfTeX 1.40.0)
+  /Author (Quentin Dufour)
+  /Subject (python)
+  /Keywords (python)}
+
+% This sets page margins to .5 inch if using letter paper, and to 1cm
+% if using A4 paper. (This probably isn't strictly necessary.)
+% If using another size paper, use default 1cm margins.
+\ifthenelse{\lengthtest { \paperwidth = 11in}}
+    { \geometry{top=.5in,left=.5in,right=.5in,bottom=.5in} }
+    {\ifthenelse{ \lengthtest{ \paperwidth = 297mm}}
+        {\geometry{top=1cm,left=1cm,right=1cm,bottom=1cm} }
+        {\geometry{top=1cm,left=1cm,right=1cm,bottom=1cm} }
+    }
+
+% Turn off header and footer
+\pagestyle{empty}
+
+% Redefine section commands to use less space
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%x
+                                {\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                {-1explus -.5ex minus -.2ex}%
+                                {0.5ex plus .2ex}%
+                                {\normalfont\normalsize\bfseries}}
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+                                {-1ex plus -.5ex minus -.2ex}%
+                                {1ex plus .2ex}%
+                                {\normalfont\small\bfseries}}
+\makeatother
+
+% Define BibTeX command
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+% Don't print section numbers
+\setcounter{secnumdepth}{0}
+
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt plus 0.5ex}
+
+%My Environments
+\newtheorem{example}[section]{Example}
+% -----------------------------------------------------------------------
+
+\begin{document}
+\raggedright
+\footnotesize
+\begin{multicols}{3}
+
+
+% multicol parameters
+% These lengths are set only within the two main columns
+%\setlength{\columnseprule}{0.25pt}
+\setlength{\premulticols}{1pt}
+\setlength{\postmulticols}{1pt}
+\setlength{\multicolsep}{1pt}
+\setlength{\columnsep}{2pt}
+
+\begin{center}
+     \Large{\underline{Python3}} \\
+\end{center}
+
+\section{Structures}
+
+Classe
+
+Fonction
+
+if
+
+switch
+
+try
+
+ternaire
+
+
+
+\section{Conversions}
+
+Conversion entiers / chaines de caractères
+\begin{lstlisting}
+int("1853") * 2 # 3706
+str(1853) * 2   # "18531853"
+\end{lstlisting}
+
+\section{Initialisations}
+
+Initialiser une liste 6 éléments à 3
+\begin{lstlisting}
+l = [3,]*6
+# [3, 3, 3, 3, 3, 3]
+\end{lstlisting}
+
+Initialiser 4 variables à None
+\begin{lstlisting}
+a,b,c,d = (None,)*4
+# a=None, b=None, c=None, d=None
+\end{lstlisting}
+
+Générer une liste de carrés
+\begin{lstlisting}
+[i**2 for i in range(1,6)]
+# Genere [1, 4, 9, 16, 25]
+\end{lstlisting}
+
+\section{Opérations sur chaines de caractères et listes}
+
+Itérer sur les charactères d'une liste
+\begin{lstlisting}
+for carac in "hello world:
+  print(carac, end="-")
+# h-e-l-l-o- -w-o-r-l-d-
+\end{lstlisting}
+
+Accéder à des caractères d'une liste
+\begin{lstlisting}
+"hello world"[2]  # 3eme element "l"
+"hello world"[-1] # dernier element "d"
+\end{lstlisting}
+
+Accéder à des sous chaines de caractère
+\begin{lstlisting}
+chaine = "hello world"
+chaine[1:5]   # "ello"
+chaine[-5:-1] # "worl"
+chaine[-5:]   # "world"
+chaine[4:]    # "o world"
+\end{lstlisting}
+
+Inverse la chaîne de caractère
+\begin{lstlisting}
+chaine[::-1] # "dlrow olleh"
+\end{lstlisting}
+
+\section{Dictionnaire}
+
+Vérifier l'existence d'une clé
+\begin{lstlisting}
+dic = {"a": 1}
+if "a" in dic:
+  # Verifie si la clef a existe
+  pass
+\end{lstlisting}
+
+Itérer sur un dictionnaire
+\begin{lstlisting}
+dic = {"a": 1, "b": 2}
+for cle, valeur in dic:
+  print(cle, valeur)
+\end{lstlisting}
+
+\section{Tuple}
+
+\section{Set}
+
+Un set ne contient qu'une seule fois chaque valeur et n'est pas ordonné.
+\begin{lstlisting}
+{8, 9, 9, 1}
+# {9, 8, 1}
+\end{lstlisting}
+
+\section{Entrées / Sorties}
+
+Pour lire sur l'entrée standard :
+
+\begin{lstlisting}
+input() # stdin
+\end{lstlisting}
+
+Pour écrire sur la sortie standard :
+
+\begin{lstlisting}
+print(x, y, z) # print sur stdout
+print("fatal error", file=sys.stderr)
+# print sur stderr
+\end{lstlisting}
+
+\section{Fonctionnel}
+Etc.
+
+\section{Mathématiques}
+
+Récupérer le minimum ou le maximum de plusieurs valeurs.
+\begin{lstlisting}
+min(3, 5)       # 3
+min(3, 2, 8, 7) # 2
+min([13, 5, 8]) # 5
+max(6, 3)       # 3
+...
+\end{lstlisting}
+
+A la puissance n
+\begin{lstlisting}
+i, n = (3, 2)
+i ** n    # 9
+pow(i, n) # 9
+\end{lstlisting}
+
+\section{Tri}
+
+\section{Solveurs}
+
+% You can even have references
+\rule{0.3\linewidth}{0.25pt}
+\scriptsize
+\bibliographystyle{abstract}
+\bibliography{refFile}
+\end{multicols}
+\end{document}
