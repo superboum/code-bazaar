@@ -223,7 +223,7 @@ if "a" in dic:
 Itérer sur un dictionnaire
 \begin{lstlisting}
 dic = {"a": 1, "b": 2}
-for cle, valeur in dic:
+for cle, valeur in dic.items():
   print(cle, valeur)
 \end{lstlisting}
 
@@ -271,8 +271,27 @@ print("fatal error", file=sys.stderr)
 Réduction (reduce)
 
 \begin{lstlisting}
-functools.reduce(lambda x, y: x*y, [2, 3, 4])
+from functools import reduce
+reduce(lambda x, y: x*y, [2, 3, 4])
 # 2 * 3 * 4 = 24
+\end{lstlisting}
+
+Filtre (filter)
+\begin{lstlisting}
+list(filter(lambda x: x > 2, [1,2,3,4]))
+# [3, 4]
+
+[n for n in [1, 2, 3, 4] if n > 2]
+# [3, 4]
+\end{lstlisting}
+
+Association (map)
+\begin{lstlisting}
+list(map(lambda x: x**2, [2, 3, 4]))
+# [4, 9, 16]
+
+[n**2 for n in [2, 3, 4]]
+# [4, 9, 16]
 \end{lstlisting}
 
 \section{Mathématiques}
@@ -300,13 +319,84 @@ abs(-5) # 5
 
 \section{Tri}
 
-\section{Solveurs}
+Retourner une nouvel iterable trié
+(Fonctionne avec tout iterable)
+\begin{lstlisting}
+sorted([9,12,2])
+# [2, 9, 12]
 
-\section{Threads}
+sorted({"F": 0, "D": 0, "A": 0, "B": 0})
+# ['A', 'B', 'D', 'F']
+
+sorted([9,12,2], reverse=True)
+# [12, 9, 2]
+\end{lstlisting}
+
+Trier une liste (seulement)
+\begin{lstlisting}
+a = [5, 2, 8]
+a.sort()
+# a = [2, 5, 8]
+\end{lstlisting}
+
+%\section{Solveurs}
+
+\section{Threads et Queue}
+
+\begin{lstlisting}
+from Queue import Queue
+from threading import Thread
+
+def listener(q):
+  while True:
+    print(q.get())
+
+q = Queue()
+t = Thread(target=listener, args=(q))
+
+t.start()
+q.put("hello")
+\end{lstlisting}
 
 \section{Réseau}
 
+\begin{lstlisting}
+import socket, select
+
+sock = socket.socket( \
+  socket.AF_INET, \
+  socket.SOCK_STREAM)
+rlist = []
+
+sock.bind(('0.0.0.0', 1025))
+sock.listen()
+
+while True:
+  rd, wr, err = select.select(rlist, [], [])
+  for s in rd:
+    if s is sock:
+      client_socket, address = sock.accept()
+      rlist.append(client_socket)
+    else:
+      data = s.recv(1024)
+      if data: print(data); sock.send("OK")
+      else: s.close(); rlist.remove(s)
+\end{lstlisting}
+
 \section{HTTP}
+
+\begin{lstlisting}
+from flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def hello():
+    return "Hello World!"
+
+app.run()
+\end{lstlisting}
+
+\section{Stocker données}
 
 \section{Tableaux ASCII}
 
