@@ -384,19 +384,50 @@ while True:
 \end{lstlisting}
 
 \section{HTTP}
+\url{http://flask.pocoo.org/docs/0.11/quickstart/}
+
+Créer un dossier /static pour servir des fichiers.
+
+Créer un dossier /templates pour mettre les templates au format JINJA2.
 
 \begin{lstlisting}
-from flask import Flask
+<h1>{{ name }} </h1>
+\end{lstlisting}
+
+Code d'exemple avec Flask
+
+\begin{lstlisting}
+from flask import Flask, request, \
+        render_template, url_for, session
 app = Flask(__name__)
 
-@app.route("/")
-def hello():
-    return "Hello World!"
+@app.route("/user")
+@app.route("/user/<username>", \
+        methods=['GET', 'POST'])
+def hello(username=None):
+    if request.method == 'POST':
+        # request.form['hello']
+        # session['username'] = xx
+        return render_template( \
+        'hello.html', name=username)
+    else:
+        return "Hello "+username+" !"
 
 app.run()
+
 \end{lstlisting}
 
 \section{Stocker données}
+
+TODO
+
+\section{Hash et encodage}
+
+base64
+
+md5
+
+hash
 
 \section{Tableaux ASCII}
 
@@ -436,6 +467,14 @@ dec & char & dec & char & dec & char\\
 
 \hline
 \end{tabular}
+
+\section{Algorithmes}
+
+ROT N
+
+Génération de nombres premiers
+
+??
 
 % You can even have references
 \rule{0.3\linewidth}{0.25pt}
