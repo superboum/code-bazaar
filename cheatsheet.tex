@@ -157,6 +157,15 @@ Générer une liste de carrés
 # Genere [1, 4, 9, 16, 25]
 \end{lstlisting}
 
+Générer un tableau 2D (une matrice) de 2 par 3 à -1
+
+\begin{lstlisting}
+[[-1 for x in range(2)] for y in range(3)]
+# [[-1, -1],
+#  [-1, -1],
+#  [-1, -1]]
+\end{lstlisting}
+
 \section{Iterables}
 
 Tout les exemples sont présentés avec une chaine de caractère mais fonctionnent également avec une liste ou d'autres iterables.
@@ -192,14 +201,27 @@ chaine[::-1] # "dlrow olleh"
 
 Ajout et concaténation
 \begin{lstlisting}
-[1, 2, 3].append(4) # [1, 2, 3, 4]
-[1, 2] += [3, 4]    # [1, 2, 3, 4]
+[1, 2, 3].append(4)   # [1, 2, 3, 4]
+[1, 2] + [3, 4]       # [1, 2, 3, 4]
+[1, 2].extend([3, 4]) # [1, 2, 3, 4]
+
+a = [1, 2]
+a += [3, 4]
+a.append(5)
+# a = [1, 2, 3, 4, 5]
 \end{lstlisting}
 
 Associer plusieurs listes
 \begin{lstlisting}
 zip([1, 2, 3], [4, 5, 6])
 # [(1, 4), (2, 5), (3, 6)]
+\end{lstlisting}
+
+Récupérer l'index d'un élément
+
+\begin{lstlisting}
+["foo", "bar", "baz"].index("bar")
+# 1
 \end{lstlisting}
 
 \section{Chaines de caractères}
@@ -252,11 +274,22 @@ Un set ne contient qu'une seule fois chaque valeur et n'est pas ordonné.
 
 \section{Entrées / Sorties}
 
-Pour lire sur l'entrée standard :
+Pour lire une ligne sur l'entrée standard :
 
 \begin{lstlisting}
 input() # stdin
 \end{lstlisting}
+
+Pour lire sur l'entrée standard jusqu'à un EOF (End Of File) :
+
+\begin{lstlisting}
+import sys
+
+for line in sys.stdin:
+  print(line)
+\end{lstlisting}
+
+\textit{Vous pourrez alors executer votre application avec "python3 monapp.py < fichier.txt" ou "python3 monapp.py" et écrire ce que vous voulez puis terminer par un CTRL + D}
 
 Pour écrire sur la sortie standard :
 
