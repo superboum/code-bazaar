@@ -203,12 +203,12 @@ Ajout et concaténation
 \begin{lstlisting}
 [1, 2, 3].append(4)   # [1, 2, 3, 4]
 [1, 2] + [3, 4]       # [1, 2, 3, 4]
-[1, 2].extend([3, 4]) # [1, 2, 3, 4]
 
 a = [1, 2]
 a += [3, 4]
-a.append(5)
-# a = [1, 2, 3, 4, 5]
+a.extend([5, 6])
+a.append(7)
+# a = [1, 2, 3, 4, 5, 6, 7]
 \end{lstlisting}
 
 Associer plusieurs listes
