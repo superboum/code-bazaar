@@ -462,6 +462,37 @@ md5
 
 hash
 
+\section{Programmation dynamique}
+
+Deux méthodes "systématiques":
+
+1. Librairie standard
+\begin{lstlisting}
+from functools import lru_cache
+...
+#max_size le nombre d'éléments max du cache ou None (cache "infini")
+@lru_cache(max_size=42)
+def anything(*args):
+    ....
+\end{lstlisting}
+
+2. homemade
+\begin{lstlisting}
+from collections import defaultdict
+def dynamic(f):
+    cache = defaultdict(lambda:-1)
+    def is_known(*args):
+        if cache[args] == -1:
+            cache[args] = f(*args)
+        return cache[args]
+    return is_known
+    
+@dynamic
+def anything(*args):
+    ....
+\end{lstlisting}
+
+
 \section{Tableaux ASCII}
 
 Lettres minuscules
