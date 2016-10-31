@@ -509,6 +509,26 @@ Génération de nombres premiers
 
 ??
 
+Dynamic erathostene: 
+
+\begin{lstlisting}
+
+primes = [2, 3]
+
+def bumblebee(n):
+    prime = True
+    i = primes[-1]
+    while primes[-1] < n:
+        prime = True
+        for p in primes:
+            if i % p == 0:
+                prime = False
+                break
+        if prime:
+            primes.append(i)
+        i += 2
+\end{lstlisting
+
 % You can even have references
 \rule{0.3\linewidth}{0.25pt}
 \scriptsize
