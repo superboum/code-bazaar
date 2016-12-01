@@ -10,6 +10,7 @@
 \usepackage{color,graphicx,overpic}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{minted}
 
 \pdfinfo{
   /Title (Python3 CheatSheet)
@@ -85,122 +86,122 @@
 
 Une classe
 
-\begin{lstlisting}
+\begin{minted}{python}
 class Dog(Animal):
   def __init__(self):
     # ...
 
   def hello(self):
     # ...
-\end{lstlisting}
+\end{minted}
 
 Une fonction
 
-\begin{lstlisting}
+\begin{minted}{python}
 def ma_fonction(arg1, arg2):
   return 3
-\end{lstlisting}
+\end{minted}
 
 Les conditions
 
-\begin{lstlisting}
+\begin{minted}{python}
 if a == b:
   # faire quelque chose
 elif b == c:
   # autre chose
 else:
   # encore autre chose
-\end{lstlisting}
+\end{minted}
 
 Les conditions ternaires
 
-\begin{lstlisting}
+\begin{minted}{python}
 a = 5 if c == b else 8
 # Si c == b, a = 5 sinon 8
-\end{lstlisting}
+\end{minted}
 
 Gestion des exceptions
 
-\begin{lstlisting}
+\begin{minted}{python}
 try:
   # quelque chose
 except:
   # autre chose
-\end{lstlisting}
+\end{minted}
 
 \section{Conversions}
 
 Conversion entiers / chaines de caractères
 
-\begin{lstlisting}
+\begin{minted}{python}
 int("1853") * 2 # 3706
 str(1853) * 2   # "18531853"
-\end{lstlisting}
+\end{minted}
 
 \section{Initialisations}
 
 Initialiser une liste 6 éléments à 3
-\begin{lstlisting}
+\begin{minted}{python}
 l = [3,]*6
 # [3, 3, 3, 3, 3, 3]
-\end{lstlisting}
+\end{minted}
 
 Initialiser 4 variables à None
-\begin{lstlisting}
+\begin{minted}{python}
 a,b,c,d = (None,)*4
 # a=None, b=None, c=None, d=None
-\end{lstlisting}
+\end{minted}
 
 Générer une liste de carrés
-\begin{lstlisting}
+\begin{minted}{python}
 [i**2 for i in range(1,6)]
 # Genere [1, 4, 9, 16, 25]
-\end{lstlisting}
+\end{minted}
 
 Générer un tableau 2D (une matrice) de 2 par 3 à -1
 
-\begin{lstlisting}
+\begin{minted}{python}
 [[-1 for x in range(2)] for y in range(3)]
 # [[-1, -1],
 #  [-1, -1],
 #  [-1, -1]]
-\end{lstlisting}
+\end{minted}
 
 \section{Iterables}
 
 Tout les exemples sont présentés avec une chaine de caractère mais fonctionnent également avec une liste ou d'autres iterables.
 
 Itérer sur les charactères d'une liste
-\begin{lstlisting}
+\begin{minted}{python}
 for carac in "hello world":
   print(carac, end="-")
 # h-e-l-l-o- -w-o-r-l-d-
-\end{lstlisting}
+\end{minted}
 
 Accéder à des caractères d'une liste
-\begin{lstlisting}
+\begin{minted}{python}
 "hello world"[2]  # 3eme element "l"
 "hello world"[-1] # dernier element "d"
-\end{lstlisting}
+\end{minted}
 
 Accéder à des sous chaines de caractère
-\begin{lstlisting}
+\begin{minted}{python}
 chaine = "hello world"
 chaine[1:5]   # "ello"
 chaine[-5:-1] # "worl"
 chaine[-5:]   # "world"
 chaine[4:]    # "o world"
-\end{lstlisting}
+\end{minted}
 
 Inverse la chaîne de caractère
-\begin{lstlisting}
+\begin{minted}{python}
 chaine[::-1] # "dlrow olleh"
-\end{lstlisting}
+\end{minted}
 
 \section{Listes}
 
 Ajout et concaténation
-\begin{lstlisting}
+\begin{minted}{python}
 [1, 2, 3].append(4)   # [1, 2, 3, 4]
 [1, 2] + [3, 4]       # [1, 2, 3, 4]
 
@@ -209,152 +210,152 @@ a += [3, 4]
 a.extend([5, 6])
 a.append(7)
 # a = [1, 2, 3, 4, 5, 6, 7]
-\end{lstlisting}
+\end{minted}
 
 Associer plusieurs listes
-\begin{lstlisting}
+\begin{minted}{python}
 zip([1, 2, 3], [4, 5, 6])
 # [(1, 4), (2, 5), (3, 6)]
-\end{lstlisting}
+\end{minted}
 
 Récupérer l'index d'un élément
 
-\begin{lstlisting}
+\begin{minted}{python}
 ["foo", "bar", "baz"].index("bar")
 # 1
-\end{lstlisting}
+\end{minted}
 
 \section{Chaines de caractères}
 
 Conversion code ASCII / caractère
-\begin{lstlisting}
+\begin{minted}{python}
 chr(97)  # 'a'
 ord('a') # 97
-\end{lstlisting}
+\end{minted}
 
 \section{Dictionnaire}
 
 Vérifier l'existence d'une clé
-\begin{lstlisting}
+\begin{minted}{python}
 dic = {"a": 1}
 if "a" in dic:
   # Verifie si la clef a existe
   pass
-\end{lstlisting}
+\end{minted}
 
 Itérer sur un dictionnaire
-\begin{lstlisting}
+\begin{minted}{python}
 dic = {"a": 1, "b": 2}
 for cle, valeur in dic.items():
   print(cle, valeur)
-\end{lstlisting}
+\end{minted}
 
 \section{Tuple}
 
 Tuple packing et unpacking
-\begin{lstlisting}
+\begin{minted}{python}
 t = 12345, 54321, 'hello!'
 x, y, z = t
-\end{lstlisting}
+\end{minted}
 
 Cas particuliers (Tuple de 0 et 1 élément)
-\begin{lstlisting}
+\begin{minted}{python}
 empty = ()
 singleton = 'hello',
 # notez la derniere virgule
-\end{lstlisting}
+\end{minted}
 
 \section{Set}
 
 Un set ne contient qu'une seule fois chaque valeur et n'est pas ordonné.
-\begin{lstlisting}
+\begin{minted}{python}
 {8, 9, 9, 1}
 # {9, 8, 1}
-\end{lstlisting}
+\end{minted}
 
 \section{Entrées / Sorties}
 
 Pour lire une ligne sur l'entrée standard :
 
-\begin{lstlisting}
+\begin{minted}{python}
 input() # stdin
-\end{lstlisting}
+\end{minted}
 
 Pour lire sur l'entrée standard jusqu'à un EOF (End Of File) :
 
-\begin{lstlisting}
+\begin{minted}{python}
 import sys
 
 for line in sys.stdin:
   print(line)
-\end{lstlisting}
+\end{minted}
 
 \textit{Vous pourrez alors executer votre application avec "python3 monapp.py < fichier.txt" ou "python3 monapp.py" et écrire ce que vous voulez puis terminer par un CTRL + D}
 
 Pour écrire sur la sortie standard :
 
-\begin{lstlisting}
+\begin{minted}{python}
 print(x, y, z) # print sur stdout
 print("fatal error", file=sys.stderr)
 # print sur stderr
-\end{lstlisting}
+\end{minted}
 
 \section{Fonctionnel}
 
 Réduction (reduce)
 
-\begin{lstlisting}
+\begin{minted}{python}
 from functools import reduce
 reduce(lambda x, y: x*y, [2, 3, 4])
 # 2 * 3 * 4 = 24
-\end{lstlisting}
+\end{minted}
 
 Filtre (filter)
-\begin{lstlisting}
+\begin{minted}{python}
 list(filter(lambda x: x > 2, [1,2,3,4]))
 # [3, 4]
 
 [n for n in [1, 2, 3, 4] if n > 2]
 # [3, 4]
-\end{lstlisting}
+\end{minted}
 
 Association (map)
-\begin{lstlisting}
+\begin{minted}{python}
 list(map(lambda x: x**2, [2, 3, 4]))
 # [4, 9, 16]
 
 [n**2 for n in [2, 3, 4]]
 # [4, 9, 16]
-\end{lstlisting}
+\end{minted}
 
 \section{Mathématiques}
 
 Récupérer le minimum ou le maximum de plusieurs valeurs.
-\begin{lstlisting}
+\begin{minted}{python}
 min(3, 5)       # 3
 min(3, 2, 8, 7) # 2
 min([13, 5, 8]) # 5
 max(6, 3)       # 3
 ...
-\end{lstlisting}
+\end{minted}
 
 A la puissance n
-\begin{lstlisting}
+\begin{minted}{python}
 i, n = (3, 2)
 i ** n    # 9
 pow(i, n) # 9
-\end{lstlisting}
+\end{minted}
 
 Valeur absolue
-\begin{lstlisting}
+\begin{minted}{python}
 abs(-5) # 5
-\end{lstlisting}
+\end{minted}
 
 \section{Tri}
 
 Retourner une nouvel iterable trié
 (Fonctionne avec tout iterable)
-\begin{lstlisting}
+\begin{minted}{python}
 sorted([9,12,2])
 # [2, 9, 12]
 
@@ -363,20 +364,20 @@ sorted({"F": 0, "D": 0, "A": 0, "B": 0})
 
 sorted([9,12,2], reverse=True)
 # [12, 9, 2]
-\end{lstlisting}
+\end{minted}
 
 Trier une liste (seulement)
-\begin{lstlisting}
+\begin{minted}{python}
 a = [5, 2, 8]
 a.sort()
 # a = [2, 5, 8]
-\end{lstlisting}
+\end{minted}
 
 %\section{Solveurs}
 
 \section{Threads et Queue}
 
-\begin{lstlisting}
+\begin{minted}{python}
 from Queue import Queue
 from threading import Thread
 
@@ -389,11 +390,11 @@ t = Thread(target=listener, args=(q))
 
 t.start()
 q.put("hello")
-\end{lstlisting}
+\end{minted}
 
 \section{Réseau}
 
-\begin{lstlisting}
+\begin{minted}{python}
 import socket, select
 
 sock = socket.socket( \
@@ -414,7 +415,7 @@ while True:
       data = s.recv(1024)
       if data: print(data); sock.send("OK")
       else: s.close(); rlist.remove(s)
-\end{lstlisting}
+\end{minted}
 
 \section{HTTP}
 \url{http://flask.pocoo.org/docs/0.11/quickstart/}
@@ -423,13 +424,13 @@ Créer un dossier /static pour servir des fichiers.
 
 Créer un dossier /templates pour mettre les templates au format JINJA2.
 
-\begin{lstlisting}
+\begin{minted}{python}
 <h1>{{ name }} </h1>
-\end{lstlisting}
+\end{minted}
 
 Code d'exemple avec Flask
 
-\begin{lstlisting}
+\begin{minted}{python}
 from flask import Flask, request, \
         render_template, url_for, session
 app = Flask(__name__)
@@ -448,7 +449,7 @@ def hello(username=None):
 
 app.run()
 
-\end{lstlisting}
+\end{minted}
 
 \section{Stocker données}
 
@@ -467,17 +468,18 @@ hash
 Deux méthodes "systématiques":
 
 1. Librairie standard
-\begin{lstlisting}
+\begin{minted}{python}
 from functools import lru_cache
 ...
-#max_size le nombre d'éléments max du cache ou None (cache "infini")
+# max_size le nombre d'elements max
+# du cache ou None (cache "infini")
 @lru_cache(max_size=42)
 def anything(*args):
-    ....
-\end{lstlisting}
+....
+\end{minted}
 
 2. homemade
-\begin{lstlisting}
+\begin{minted}{python}
 from collections import defaultdict
 def dynamic(f):
     cache = defaultdict(lambda:-1)
@@ -486,12 +488,186 @@ def dynamic(f):
             cache[args] = f(*args)
         return cache[args]
     return is_known
-    
+
 @dynamic
 def anything(*args):
     ....
-\end{lstlisting}
+\end{minted}
 
+\section{La bissection - dichotomie}
+
+% http://stackoverflow.com/questions/14392208/how-to-do-the-bisection-method-in-python
+\begin{minted}{python}
+def bisect(func, low, high, desired, iter):
+    for i in range(iter):
+        midpoint = (high - low) / 2.0 + low
+        if func(midpoint) > desired:
+            high = midpoint
+        else:
+            low = midpoint
+
+    return midpoint
+\end{minted}
+
+\section{Union Find}
+
+% http://code.activestate.com/recipes/577225-union-find/
+\begin{minted}{python}
+def MakeSet(x):
+     x.parent = x
+     x.rank   = 0
+
+def Union(x, y):
+     xRoot = Find(x)
+     yRoot = Find(y)
+     if xRoot.rank > yRoot.rank:
+         yRoot.parent = xRoot
+     elif xRoot.rank < yRoot.rank:
+         xRoot.parent = yRoot
+     elif xRoot != yRoot: 
+         yRoot.parent = xRoot
+         xRoot.rank = xRoot.rank + 1
+
+def Find(x):
+     if x.parent == x:
+        return x
+     else:
+        x.parent = Find(x.parent)
+        return x.parent
+
+
+class Node:
+    def __init__ (self, label):
+        self.label = label
+    def __str__(self):
+        return self.label
+
+l = [Node(ch) for ch in "abcdefg"]
+[MakeSet(node) for node in l]
+Union(l[0],l[2])
+sets = [str(Find(x)) for x in l]
+\end{minted}
+
+\section{Segment Tree}
+
+% http://www.learn4master.com/algorithms/range-minimum-query-segment-tree
+\begin{minted}{python}
+def buildTree(root, Tree, start, end, inp):
+    if start == end:
+        Tree[root] = input[start]
+        return Tree[root]
+
+    mid = start + (end - start) / 2
+    leftMin = buildTree(
+      root * 2 + 1, Tree, start, mid, inp)
+    rightMin = buildTree(
+      root * 2 + 2, Tree, mid + 1, end, inp)
+    Tree[root] = min(leftMin, rightMin)
+    return Tree[root]
+
+def rangeQUtil(root, Tree, start, end, qs, qe):
+    if qe < start or qs > end:
+        return float("inf")
+
+    if qs <= start and qe >= end:
+        return Tree[root]
+
+    int mid = start + (end - start) / 2
+    int leftMin = rangeQUtil(
+      root * 2 + 1, Tree, start, mid, qs, qe)
+    int rightMin = rangeQUtil(
+      root * 2 + 2, Tree, mid + 1, end, qs, qe)
+    return min(leftMin, rightMin)
+
+# Initialize
+inp = [0,1,2,3,4,5,6,7,8,9]
+tr = [-1 for x in range(len(input)*2+1)]
+tr = buildTree(0, tr, 0, len(input)-1, inp)
+
+# Query
+n = len(inp) - 1; qstart = 0; qend = 5
+rangeQUtil(0, tr, 0, n, qstart, qend)
+\end{minted}
+
+\section{Dijkstra}
+
+\begin{minted}{python}
+def dijkstra_search(graph, start, goal):
+  frontier = PriorityQueue()
+  frontier.put(start, 0)
+  came_from = {}
+  cost_so_far = {}
+  came_from[start] = None
+  cost_so_far[start] = 0
+
+  while not frontier.empty():
+    current = frontier.get()
+
+    if current == goal:
+      break
+
+    for next in graph.neighbors(current):
+      new_cost = cost_so_far[current] \
+        + graph.cost(current, next)
+
+      if next not in cost_so_far or \
+        new_cost < cost_so_far[next]:
+
+        cost_so_far[next] = new_cost
+        priority = new_cost
+        frontier.put(next, priority)
+        came_from[next] = current
+
+  return came_from, cost_so_far
+\end{minted}
+
+\section{Breath-First Search}
+
+% http://eddmann.com/posts/depth-first-search-and-breadth-first-search-in-python/
+
+Graphe de référence
+
+\begin{minted}{python}
+graph = {'A': set(['B', 'C']),
+         'B': set(['A', 'D', 'E']),
+         'C': set(['A', 'F']),
+         'D': set(['B']),
+         'E': set(['B', 'F']),
+         'F': set(['C', 'E'])}
+\end{minted}
+
+Composantes connexes (tous les points connectés à ce noeud)
+
+\begin{minted}{python}
+def bfs(graph, start):
+  visited, queue = set(), [start]
+  while queue:
+    vertex = queue.pop(0)
+    if vertex not in visited:
+      visited.add(vertex)
+      queue.extend(graph[vertex] - visited)
+  return visited
+
+bfs(graph, 'A')
+# {'B', 'C', 'A', 'F', 'D', 'E'}
+\end{minted}
+
+Recherche de chemins
+
+\begin{minted}{python}
+def bfs_paths(graph, start, goal):
+  queue = [(start, [start])]
+  while queue:
+    (vertex, path) = queue.pop(0)
+    for next in graph[vertex] - set(path):
+      if next == goal:
+        yield path + [next]
+      else:
+        queue.append((next, path + [next]))
+
+list(bfs_paths(graph, 'A', 'F')) 
+# [['A', 'C', 'F'], ['A', 'B', 'E', 'F']]
+\end{minted}
 
 \section{Tableaux ASCII}
 
@@ -536,13 +712,11 @@ dec & char & dec & char & dec & char\\
 
 ROT N
 
-Génération de nombres premiers
+\subsection{Génération de nombres premiers}
 
-??
+Dynamic erathostene
 
-Dynamic erathostene: 
-
-\begin{lstlisting}
+\begin{minted}{python}
 
 primes = [2, 3]
 
@@ -558,7 +732,7 @@ def bumblebee(n):
         if prime:
             primes.append(i)
         i += 2
-\end{lstlisting
+\end{minted}
 
 % You can even have references
 \rule{0.3\linewidth}{0.25pt}
