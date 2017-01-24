@@ -535,7 +535,6 @@ def Find(x):
         x.parent = Find(x.parent)
         return x.parent
 
-
 class Node:
     def __init__ (self, label):
         self.label = label
@@ -591,7 +590,30 @@ rangeQUtil(0, tr, 0, n, qstart, qend)
 
 \section{Dijkstra}
 
+% http://www.redblobgames.com/pathfinding/a-star/implementation.html
+
 \begin{minted}{python}
+import heapq
+
+class PriorityQueue:
+  def __init__(self):
+    self.elements = []
+  def empty(self):
+    return len(self.elements) == 0
+  def put(self, item, priority):
+    heapq.heappush(self.elements, (priority, item))
+  def get(self):
+    return heapq.heappop(self.elements)[1]
+
+class SimpleGraph:
+  def __init__(self):
+    self.edges = {}
+    self.weights = {}
+  def neighbors(self, id):
+    return self.edges[id]
+  def cost(self, from_node, to_node):
+    return self.weights[(from_node, to_node)]
+
 def dijkstra_search(graph, start, goal):
   frontier = PriorityQueue()
   frontier.put(start, 0)
@@ -619,6 +641,34 @@ def dijkstra_search(graph, start, goal):
         came_from[next] = current
 
   return came_from, cost_so_far
+
+def reconstruct_path(came_from, start, goal):
+  current = goal
+  path = [current]
+  while current != start:
+    current = came_from[current]
+    path.append(current)
+  path.append(start)
+  path.reverse()
+  return path
+
+example_graph = SimpleGraph()
+example_graph.edges = {
+    'A': ['B'],
+    'B': ['A', 'C', 'D'],
+    'C': ['A'],
+    'D': ['E', 'A'],
+    'E': ['B']
+}
+example_graph.weights = {
+    ('A', 'B'): 5,
+    ('B', 'A'): 4,
+    ('B', 'C'): 6,
+    # ...
+}
+
+from, cost = dijkstra_search(example_graph, 'A', 'E')
+reconstruct_path(from, 'A', 'E')
 \end{minted}
 
 \section{Breath-First Search}
