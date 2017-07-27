@@ -1,3 +1,5 @@
+#!/usr/bin/sbcl --script
+
 (defun can-be-divided (n l)
   (cond
     ((eq l nil) nil)
