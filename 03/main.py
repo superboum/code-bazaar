@@ -29,5 +29,5 @@ while functools.reduce(lambda x, y: x*y, factors) != target:
     primes = one_more_prime(primes)
     if target % primes[-1] == 0:
         factors.append(primes[-1])
-
+print("This solution does not work for every value (eg: 8)")
 print(factors)
