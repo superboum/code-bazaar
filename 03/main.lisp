@@ -19,5 +19,4 @@
     (can-be-divided n (compute-primes 3 (round (sqrt n)) '(2)))
 )
 
-(write (largest-prime-factor 600851475143))
-(write-line "")
+(print (largest-prime-factor 600851475143))
