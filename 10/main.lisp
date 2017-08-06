@@ -12,7 +12,7 @@
   (cond
     ((>= iterator limit) primes)
     ((can-be-divided iterator primes) (compute-primes (+ 2 iterator) limit primes))
-    (t (compute-primes (+ 2 iterator) limit (cons iterator primes)))
+    (t (compute-primes (+ 2 iterator) limit (append primes (list iterator))))
 ))
 
 (print (reduce #'+ (compute-primes 3 2000000 '(2))))
