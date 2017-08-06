@@ -6,9 +6,9 @@
     (t (find-divisor n (+ d 1)))
 ))
 
-(defun largest-prime-factor (n g)
+(defun largest-prime-factor (n last-div)
   (cond
-    ((< n g) g)
+    ((< n last-div) last-div)
     (t (let ((res (find-divisor n 2)))
          (largest-prime-factor (/ n res) res)
 ))))
