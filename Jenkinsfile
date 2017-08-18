@@ -1,4 +1,4 @@
-def test-simple(name, exec, expected) {
+def bashTest(name, exec, expected) {
   echo "Testing: ${name}"
   sh "bash -c 'diff <(time ${exec}|tee /dev/stderr) <(echo -n ${expected})'"
 }
@@ -17,7 +17,7 @@ node {
     docker.image('debian').inside {
       sh 'apt update && apt install --no-install-recommends -y git sbcl'
       checkout scm
-      test-simple "Problem 1 - Multiples of 3 and 5", "./euler/01/main.lisp", "233168"
+      bashTest "Problem 1 - Multiples of 3 and 5", "./euler/01/main.lisp", "233168"
     }
   }
 }
