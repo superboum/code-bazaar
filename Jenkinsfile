@@ -6,6 +6,7 @@ def bashTest(name, exec, expected) {
 node {
   stage('Cheatsheet') {
     docker.image('debian').inside("-u root") {
+      sh 'sleep 10'
       sh 'apt-get update'
       sh 'apt-get install --no-install-recommends -y git texlive-latex-base texlive-latex-extra lmodern texlive-lang-french python-pigments'
       checkout scm
