@@ -1,8 +1,8 @@
-_minted-cheatsheet/
-cheatsheet.aux
-cheatsheet.fdb_latexmk
-cheatsheet.fls
-cheatsheet.log
-cheatsheet.out
-cheatsheet.tex~
-
+_minted*
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.tex~
+*.pdf
