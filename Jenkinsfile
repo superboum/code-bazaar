@@ -6,9 +6,8 @@ def bashTest(name, exec, expected) {
 node {
   stage('Cheatsheet') {
     docker.image('ubuntu:xenial').inside("-u root") {
-      sh 'sleep 10'
       sh 'apt-get update'
-      sh 'apt-get install --no-install-recommends -y git texlive-latex-base texlive-latex-extra lmodern texlive-lang-french python-pigments'
+      sh 'apt-get install --no-install-recommends -y git texlive-latex-base texlive-latex-extra lmodern texlive-lang-french python-pygments'
       checkout scm
       sh 'pdflatex -shell-escape cheatsheet/python.tex'
       archiveArtifacts artifacts: './python.pdf'
