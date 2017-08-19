@@ -10,12 +10,12 @@ node {
       sh 'apt-get install --no-install-recommends -y git texlive-latex-base texlive-latex-extra lmodern texlive-lang-french python-pygments'
       checkout scm
       sh 'pdflatex -shell-escape cheatsheet/python.tex'
-      archiveArtifacts artifacts: './python.pdf'
+      archiveArtifacts artifacts: 'python.pdf'
     }
   }
 
   stage('Common Lisp') {
-    docker.image('ubuntu:xenial').inside("-u root") {
+    docker.image('ubuntu:xenial').inside("-u root --security-opt seccomp=unconfined") {
       sh 'apt-get update'
       sh 'apt-get install --no-install-recommends -y git sbcl'
       checkout scm
