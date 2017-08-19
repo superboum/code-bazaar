@@ -1,6 +1,5 @@
 def bashTest(name, exec, expected) {
-  echo "Testing: ${name}"
-  sh "bash -c 'diff <(time ${exec}|tee /dev/stderr) <(echo -n ${expected})'"
+  sh "echo Testing: ${name} && bash -c 'diff <(time ${exec}|tee /dev/stderr) <(echo -n ${expected})'"
 }
 
 node {
