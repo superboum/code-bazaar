@@ -15,5 +15,5 @@
 ))
 
 (let ((ab (find-vars 0 0)))
-  (print (* (first ab) (second ab) (- 1000 (first ab) (second ab))))
+  (write (* (first ab) (second ab) (- 1000 (first ab) (second ab))))
 )

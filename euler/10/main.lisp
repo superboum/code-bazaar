@@ -16,4 +16,4 @@
     (t (compute-primes (+ 2 iterator) limit (append primes (list iterator))))
 ))
 
-(print (reduce #'+ (compute-primes 3 2000000 '(2))))
+(write (reduce #'+ (compute-primes 3 2000000 '(2))))

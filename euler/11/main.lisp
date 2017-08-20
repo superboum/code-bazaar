@@ -79,6 +79,6 @@
   (reduce #'max (map 'list (lambda (x) (funcall x lines adjs)) (list #'max-prod-adj-line #'max-prod-adj-col #'max-prod-adj-diag)))
 )
 
-(print (max-prod-adj (parse) 4))
+(write (max-prod-adj (parse) 4))
 ;(print (max-prod-col '( (1 1 1 1) (1 2 3 4) (1 1 1 1))))
 ;(print (pad-left-to-right (list (list 1 2 3 4) (list 5 6 7 8) (list 9 10 11 12) (list 13 14 15 16)) 3 0))

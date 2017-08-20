@@ -26,5 +26,5 @@
     (t (solve (+ n 1) (+ s n 1) lim))
 ))
 
-(print (solve 1 1 500))
+(write (solve 1 1 500))
 ;(print (divisor-counter (prime-factors 28 2) 0 1))

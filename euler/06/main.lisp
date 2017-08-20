@@ -1,3 +1,5 @@
+#!/usr/bin/sbcl --script
+
 (defun square-sum (n)
   (cond
     ((<= n 0) 0)

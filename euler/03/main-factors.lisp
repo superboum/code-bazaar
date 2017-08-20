@@ -13,4 +13,4 @@
          (largest-prime-factor (/ n res) res)
 ))))
 
-(print (largest-prime-factor 600851475143 0))
+(write (largest-prime-factor 600851475143 0))

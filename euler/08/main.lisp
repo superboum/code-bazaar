@@ -22,4 +22,4 @@
       (t (append (map 'list #'digit-char-p (coerce line 'list)) (parse)))
 )))
 
-(print (compute 13 0 (parse)))
+(write (compute 13 0 (parse)))
