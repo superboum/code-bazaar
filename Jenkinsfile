@@ -25,9 +25,11 @@ node {
       bashTest "Problem 07 - 10001st prime", "./euler/07/main.lisp", "104743"
       bashTest "Problem 08 - Largest product in a series", "./euler/08/main.lisp < ./euler/08/in.txt", "23514624000"
       bashTest "Problem 09 - Special Pythagorean triplet", "./euler/09/main.lisp", "31875000"
-      bashTest "Problem 10 - Summation of primes", "./euler/10/main.lisp", "142913828922"
+      echo "Problem 10 - Summation of primes is too slow and too computing intensive for the CI"
+      // bashTest "Problem 10 - Summation of primes", "./euler/10/main.lisp", "142913828922"
       bashTest "Problem 11 - Largest product in a grid", "./euler/11/main.lisp < ./euler/11/in.txt", "70600674"
       bashTest "Problem 12 - Highly divisible triangular number", "./euler/12/main.lisp", "76576500"
+      bashTest "Problem 13 - Large sum", "./euler/13/main.lisp", "5537376230"
 
     }
   }
