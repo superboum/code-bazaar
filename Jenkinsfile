@@ -32,7 +32,7 @@ node {
       bashTest "Problem 12 - Highly divisible triangular number", "./euler/12/main.lisp", "8091de7d285989bbfa9a2f9f3bdcc7c0"
       bashTest "Problem 13 - Large sum", "./euler/13/main.lisp < ./euler/13/in.txt", "361113f19fd302adc31268f8283a4f2d"
       bashTest "Problem 14 - Longest Collatz sequence", "./euler/14/main.lisp", "5052c3765262bb2c6be537abd60b305e"
-
+      bashTest "Problem 14 - Longest Collatz sequence - with Memoization", "./euler/14/main-memo.lisp", "5052c3765262bb2c6be537abd60b305e"
     }
   }
 }
