@@ -20,4 +20,4 @@
       (t (cons factor (find-factors (/ n factor))))
 )))
 
-(print (reduce #'max (find-factors 600851475143)))
+(write (reduce #'max (find-factors 600851475143)))

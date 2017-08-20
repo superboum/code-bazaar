@@ -21,6 +21,7 @@ node {
       bashTest "Problem 01 - Multiples of 3 and 5", "./euler/01/main.lisp", "e1edf9d1967ca96767dcc2b2d6df69f4"
       bashTest "Problem 02 - Even Fibonacci numbers", "./euler/02/main.lisp", "4194eb91842c8e7e6df099ca73c38f28"
       bashTest "Problem 03 - Largest prime factor", "./euler/03/main-factors.lisp", "94c4dd41f9dddce696557d3717d98d82"
+      bashTest "Problem 03 - Largest prime factor - Implementation with Pollard algorithm", "./euler/03/main-pollard.lisp", "94c4dd41f9dddce696557d3717d98d82"
       bashTest "Problem 06 - Sum square difference", "./euler/06/main.lisp", "867380888952c39a131fe1d832246ecc"
       bashTest "Problem 07 - 10001st prime", "./euler/07/main.lisp", "8c32ab09ec0210af60d392e9b2009560"
       bashTest "Problem 08 - Largest product in a series", "./euler/08/main.lisp < ./euler/08/in.txt", "0f53ea7949d32ef24f9186207600403c"
