@@ -46,7 +46,10 @@
     (t (set-max a b maxprimes maxa maxb))
 ))
 
-(defun test () (check-limits -999 0 -1 0 0)) ; If b < 0, the formula doesn't produce any prime
+(defun test () 
+  (let ((res (check-limits -999 0 -1 0 0))) ; If b < 0, the formula doesn't produce any prime
+    (* (second res) (third res))
+))
 
 (write (test))
 ;(print (count-primes (suite -79 1601) 0)) ; should be equal to 80
