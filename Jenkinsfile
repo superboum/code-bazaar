@@ -1,5 +1,5 @@
 def bashTest(name, exec, expected) {
-  sh "bash -c 'echo Testing: ${name} && diff <(time ${exec}|md5sum|cut -c -32) <(echo ${expected})'"
+  sh "bash -c 'echo Testing: ${name} && diff -i <(time ${exec}|md5sum|cut -c -32) <(echo ${expected})'"
 }
 
 node {
