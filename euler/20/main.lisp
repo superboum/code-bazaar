@@ -1,3 +1,5 @@
+#!/usr/bin/sbcl --script
+
 (defun factorial (n)
   (cond
     ((eq n 0) 1)
@@ -10,4 +12,4 @@
     (t (+ (mod n 10) (add_digits (floor n 10))))
 ))
 
-(print (add_digits (factorial 100)))
+(write (add_digits (factorial 100)))

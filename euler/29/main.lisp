@@ -1,3 +1,5 @@
+#!/usr/bin/sbcl --script
+
 (defun gen-seq (current-a current-b max-a max-b)
   (cond
     ((> current-a max-a) '())
@@ -5,4 +7,4 @@
     (t (cons (expt current-a current-b) (gen-seq current-a (+ current-b 1) max-a max-b)))
 ))
 
-(print (length (remove-duplicates (gen-seq 2 2 100 100))))
+(write (length (remove-duplicates (gen-seq 2 2 100 100))))

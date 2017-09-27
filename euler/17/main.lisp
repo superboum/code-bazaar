@@ -1,3 +1,5 @@
+#!/usr/bin/sbcl --script
+
 (defconstant
   lunits
   (list
@@ -55,7 +57,7 @@
   )
 ))
 
-(print (-
+(write (-
   (reduce #'+ (map 'list #'length (append (to-thousand) (list "onethousand"))))
   (* (length "and") 9) ; as, for "100", we write "one hundred" and not "one hundred and". Idem for 200, 300, 400...
 ))

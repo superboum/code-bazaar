@@ -1,3 +1,5 @@
+#!/usr/bin/sbcl --script
+
 (defun decompose-number (x)
   (cond
     ((eq x 0) (list))
@@ -13,5 +15,5 @@
     (t (compute (+ 1 counter) limit pow))
 ))
 
-(print (reduce #'+ (compute 10 9999999 5))) ; 9999999 is arbitrary in our case.
+(write (reduce #'+ (compute 10 9999999 5))) ; 9999999 is arbitrary in our case.
 ; It would be a good idea to search a maximum value.

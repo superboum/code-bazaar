@@ -1,3 +1,5 @@
+#!/usr/bin/sbcl --script
+
 (defun can-be-divided (n l)
   (cond
     ((eq l nil) nil)
@@ -46,5 +48,5 @@
 
 (defun test () (check-limits -999 0 -1 0 0)) ; If b < 0, the formula doesn't produce any prime
 
-(print (test))
+(write (test))
 ;(print (count-primes (suite -79 1601) 0)) ; should be equal to 80

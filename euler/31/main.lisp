@@ -1,3 +1,5 @@
+#!/usr/bin/sbcl --script
+
 (defconstant coins (list 1 2 5 10 20 50 100 200 ))
 
 (defun gen-possibilities (current target avaible-coins)
@@ -18,4 +20,4 @@
       (gen-possibilities current target avaible-coins)
 )))))
 
-(print (how-many-ways 0 200 coins))
+(write (how-many-ways 0 200 coins))

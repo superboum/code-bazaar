@@ -1,3 +1,5 @@
+#!/usr/bin/sbcl --script
+
 (defun leap-year (x)
   (or
     (and (not (eq (mod x 100) 0)) (eq (mod x 4) 0)) ; not a century
@@ -28,4 +30,4 @@
     (t (compute (apply #'next-day current-date) stop-date (+ (mod current-week-day 7) 1)))
 ))
 
-(print (compute (list 1 1 1901) (list 31 12 2000) 2))
+(write (compute (list 1 1 1901) (list 31 12 2000) 2))
