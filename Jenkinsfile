@@ -35,6 +35,7 @@ node {
       bashTest "Problem 14 - Longest Collatz sequence - with Memoization", "./euler/14/main-memo.lisp", "5052c3765262bb2c6be537abd60b305e"
       bashTest "Problem 15 - Lattice paths", "./euler/15/main.lisp", "928f3957168ac592c4215dcd04e0b678"
       bashTest "Problem 16 - Power digit sum", "./euler/16/main.lisp", "6a5889bb0190d0211a991f47bb19a777"
+      bashTest "Problem 32 - Pandigital products", "./euler/32/main.lisp", "100F6E37D0B0564490A2EE27EFF0660D"
     }
   }
 }
