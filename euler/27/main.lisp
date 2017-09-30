@@ -1,21 +1,28 @@
 #!/usr/bin/sbcl --script
 
-(defun can-be-divided (n l)
-  (cond
-    ((eq l nil) nil)
-    ((eq (mod n (car l)) 0) t)
-    (t (can-be-divided n (cdr l)))
+(defun primes (limit)
+  (let (
+      (sievebound (floor (- limit 1) 2))
+      (crosslimit (floor (- (isqrt limit) 1) 2))
+      (sieve (make-array (floor (- limit 1) 2) :element-type 'bit :initial-element 0)))
+
+    ; Create sieve
+    (loop
+      for i from 1 to crosslimit
+      when (zerop (sbit sieve (- i 1)))
+        do (loop for j from (* 2 i (+ i 1)) to sievebound by (+ (* 2 i) 1)
+          do (setf (sbit sieve (- j 1)) 1)
+    ))
+
+    ; Compute sum from sieve
+    (loop
+      for i from 1 to sievebound
+      when (zerop (sbit sieve (- i 1) )) collect (+ (* 2 i) 1)
+    )
 ))
 
-(defun prime (selected_number primes_list limit)
-  (cond
-    ((>= (list-length primes_list) limit) primes_list)
-    ((can-be-divided selected_number primes_list) (prime (+ selected_number 1) primes_list limit))
-    (t (prime (+ 1 selected_number) (cons selected_number primes_list) limit))
-))
-
-(defconstant computed-primes 20000)
-(defconstant lprimes (prime 3 '(2) computed-primes))
+(defconstant max-prime 15000)
+(defconstant lprimes (primes max-prime))
 
 ; Curryfication
 (defun suite (a b)
@@ -25,7 +32,8 @@
 (defun count-primes (f n)
   (let ((res (funcall f n)))
     (cond
-      ((> res computed-primes) (error "~S is too big for our prime list." res))
+      ((> res max-prime) (error "~S is too big for our prime list." res))
+      ; @TODO define a find function that take in account the fact that the array is sorted.
       ((find res lprimes) (count-primes f (+ 1 n))) ; tant que c'est un premier
       (t n) ; condition d'arret
 )))
@@ -46,7 +54,8 @@
     (t (set-max a b maxprimes maxa maxb))
 ))
 
-(defun test () 
+(defun test ()
+  ; @TODO Better filtering could improve performance
   (let ((res (check-limits -999 0 -1 0 0))) ; If b < 0, the formula doesn't produce any prime
     (* (second res) (third res))
 ))
