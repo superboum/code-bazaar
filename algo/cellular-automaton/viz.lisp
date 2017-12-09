@@ -8,9 +8,19 @@
   ((title "Cellular Automaton")
    (width 1700)
    (height 900)
-   (cell-list '((0 1) (1 0) (1 2) (3 0) (3 3) (4 2) (4 3) (5 3)))
+   (cell-size 5)
+   (config "config/spacefiller1_106.lif")
+   (cell-list (with-open-file (stream config) (parse-life106 stream)))
   )
-  (map 'list (lambda (x) (rect (+ (/ width 2) (* (second x) 10)) (+ (* (first x) 10) (/ height 2)) 10 10)) cell-list)
+  (map
+    'list
+    (lambda (x) (rect
+                  (+ (/ width 2) (* (second x) cell-size))
+                  (+ (* (first x) cell-size) (/ height 2))
+                  cell-size
+                  cell-size
+    ))
+    cell-list)
   (setq cell-list (one-turn cell-list))
 )
 

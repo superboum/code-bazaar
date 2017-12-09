@@ -3,6 +3,7 @@
   (:export
     #:one-turn
     #:n-turn
+    #:parse-life106
 ))
 
 (in-package :life)
@@ -48,8 +49,28 @@
 ))
 
 (defun n-turn (cell-list counter)
-  (print cell-list)
   (cond
     ((<= counter 0) cell-list)
     (t (n-turn (one-turn cell-list) (- counter 1)))
 ))
+
+(defun parse-life106 (stream)
+  (labels (
+  (read-int (l) (multiple-value-bind
+    (n c)
+    (parse-integer l :junk-allowed t)
+    (cond
+      ((not n) nil)
+      (t (cons n (read-int (subseq l c))))
+  )))
+  (rec ()
+    (let ((line (read-line stream nil)))
+      (cond
+        ((not line) nil)
+        (t (cons (read-int line) (rec)))
+  ))))
+  (cond
+    ((search "Life 1.06" (read-line stream)) (rec))
+    (t nil)
+)))
+
