@@ -14,6 +14,8 @@
      "config/puffer.lif"
      "config/gosperglidergun_106.lif"
      "config/bigun_106.lif"
+     ;"config/3enginecordershiprake_106.lif" ;; too slow
+     "config/backrake1_106.lif"
    ))
    (config-pointer 0)
    (cell-list '())
