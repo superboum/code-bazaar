@@ -1,25 +1,29 @@
 (ql:quickload :sketch)
 (load "life.lisp")
+(load "elementary.lisp")
 
-(defpackage :cellular-automaton (:use :cl :sketch :life))
+(defpackage :cellular-automaton (:use :cl :sketch :life :elementary))
 (in-package :cellular-automaton)
 
 (defsketch cellular-automaton
+  ; Setup
   ((title "Cellular Automaton")
    (width 1700)
    (height 900)
    (cell-size 5)
-   (configs '(
-     "config/spacefiller1_106.lif"
-     "config/puffer.lif"
-     "config/gosperglidergun_106.lif"
-     "config/bigun_106.lif"
-     ;"config/3enginecordershiprake_106.lif" ;; too slow
-     "config/backrake1_106.lif"
-   ))
+   (configs
+     (append
+       (loop for x from 0 to 255 collect
+        (list
+          (create-elementary x (/ height -2 cell-size) 401 '(200))
+          #'next-elementary
+          #'cell-list-elementary
+   ))))
    (config-pointer 0)
-   (cell-list '())
+   (current (first configs))
   )
+
+  ; Draw
   (map
     'list
     (lambda (x) (rect
@@ -28,15 +32,17 @@
                   cell-size
                   cell-size
     ))
-    cell-list)
-  (setq cell-list (one-turn cell-list))
+    (funcall (third current) (first current)))
+
+  ; Update
+  (setq current (cons (funcall (second current) (first current)) (rest current)))
 )
 
 (defmethod kit.sdl2:mousebutton-event ((window cellular-automaton) state ts b x y)
   (cond
     ((eq state :mousebuttondown)
-      (with-slots (cell-list configs config-pointer) window
-        (setq cell-list (with-open-file (stream (nth config-pointer configs)) (parse-life106 stream)))
+      (with-slots (current configs config-pointer) window
+        (setq current (nth config-pointer configs))
         (setq config-pointer (mod (+ config-pointer 1) (length configs)))
 ))))
 
