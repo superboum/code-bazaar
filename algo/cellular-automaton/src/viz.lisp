@@ -1,8 +1,3 @@
-(ql:quickload :sketch)
-(load "life.lisp")
-(load "elementary.lisp")
-
-(defpackage :cellular-automaton (:use :cl :sketch :life :elementary))
 (in-package :cellular-automaton)
 
 (defsketch cellular-automaton
@@ -14,11 +9,8 @@
    (configs
      (append
        (loop for x from 0 to 255 collect
-        (list
-          (create-elementary x (/ height -2 cell-size) 401 '(200))
-          #'next-elementary
-          #'cell-list-elementary
-   ))))
+         (create-elementary x (/ height -2 cell-size) 401 '(200))
+   )))
    (config-pointer 0)
    (current (first configs))
   )
@@ -32,10 +24,10 @@
                   cell-size
                   cell-size
     ))
-    (funcall (third current) (first current)))
+    (funcall (automaton-cell-list current) current))
 
   ; Update
-  (setq current (cons (funcall (second current) (first current)) (rest current)))
+  (setq current (funcall (automaton-update current) current))
 )
 
 (defmethod kit.sdl2:mousebutton-event ((window cellular-automaton) state ts b x y)
@@ -45,5 +37,3 @@
         (setq current (nth config-pointer configs))
         (setq config-pointer (mod (+ config-pointer 1) (length configs)))
 ))))
-
-(make-instance 'cellular-automaton)

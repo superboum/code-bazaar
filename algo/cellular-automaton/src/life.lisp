@@ -1,12 +1,4 @@
-(defpackage :life
-  (:use :cl)
-  (:export
-    #:one-turn
-    #:n-turn
-    #:parse-life106
-))
-
-(in-package :life)
+(in-package :cellular-automaton)
 
 (defun comb (s1 s2 e1 e2)
   (labels ((rec (c1 c2)
@@ -18,10 +10,10 @@
   (rec s1 s2)
 ))
 
-(defconstant comb-around (comb -1 -1 2 2) "To compute neighbors of a cell")
+;(defconstant comb-around (comb -1 -1 2 2) "To compute neighbors of a cell")
 
 (defun get-pos-around (cell)
-  (map 'list (lambda (x) (mapcar #'+ cell x)) comb-around)
+  (map 'list (lambda (x) (mapcar #'+ cell x)) (comb -1 -1 2 2))
 )
 
 (defun count-neighbors (cell cell-list)
