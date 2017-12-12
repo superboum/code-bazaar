@@ -1,4 +1,4 @@
 (defpackage :cellular-automaton
-  (:use :cl :sketch)
-  (:export :cellular-automaton)
+  (:use :cl :sdl2)
+  (:export :main)
 )
