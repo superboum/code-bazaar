@@ -13,7 +13,19 @@ node {
     }
   }
 
-  stage('Common Lisp') {
+  stage('Algo - Cellular Automaton') {
+    docker.image('ubuntu:xenial').inside("-u root --security-opt seccomp=unconfined") {
+      sh 'apt-get update'
+      sh 'apt-get install --no-install-recommends -y sbcl'
+      checkout scm
+      dir('algo/cellular_automaton') {
+        sh 'sbcl --load ./compile.lisp'
+        archiveArtifacts artifacts: 'cellular_automaton'
+      }
+    }
+  }
+
+  stage('Euler - Common Lisp') {
     docker.image('ubuntu:xenial').inside("-u root --security-opt seccomp=unconfined") {
       sh 'apt-get update'
       sh 'apt-get install --no-install-recommends -y sbcl'
