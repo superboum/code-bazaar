@@ -24,7 +24,7 @@ node {
       timeout(2) {
         sh 'curl -O https://beta.quicklisp.org/quicklisp.lisp'
         sh 'sbcl --load quicklisp.lisp --eval "(quicklisp-quickstart:install)" --eval "(ql:quickload :sdl2)" --eval "(exit)"'
-        sbcl --load ~/quicklisp/setup.lisp --load ./algo/cellular-automaton/compile.lisp'
+        sh 'sbcl --load ~/quicklisp/setup.lisp --load ./algo/cellular-automaton/compile.lisp'
       }
       archiveArtifacts artifacts: 'algo/cellular-automaton/cellular_automaton'
     }
