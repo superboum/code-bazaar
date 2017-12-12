@@ -18,7 +18,7 @@ node {
       sh 'apt-get -qq update'
       sh 'apt-get -qq install --no-install-recommends -y sbcl curl libsdl2-2.0 ca-certificates'
       sh 'curl -O https://beta.quicklisp.org/quicklisp.lisp'
-      sh 'sbcl --load quicklisp.lisp --eval "(progn (quicklisp-quickstart:install) (ql:quickload :sdl2) (exit))"'
+      sh 'sbcl --load quicklisp.lisp --eval "(quicklisp-quickstart:install)" --eval "(ql:quickload :sdl2)" --eval "(exit)"'
       checkout scm
       dir('algo/cellular-automaton') {
         sh 'sbcl --load ./compile.lisp'
