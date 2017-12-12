@@ -8,6 +8,13 @@
    (cell-size 5)
    (configs
      (append
+       (list
+         (create-lif "config/puffer.lif")
+         (create-lif "config/gosperglidergun_106.lif")
+         (create-lif "config/bigun_106.lif")
+         (create-lif "config/backrake1_106.lif")
+         (create-lif "config/spacefiller1_106.lif")
+       )
        (loop for x from 0 to 255 collect
          (create-elementary x (/ height -2 cell-size) 401 '(200))
    )))
@@ -34,6 +41,6 @@
   (cond
     ((eq state :mousebuttondown)
       (with-slots (current configs config-pointer) window
-        (setq current (nth config-pointer configs))
         (setq config-pointer (mod (+ config-pointer 1) (length configs)))
+        (setq current (nth config-pointer configs))
 ))))

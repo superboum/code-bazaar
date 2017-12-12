@@ -7,5 +7,6 @@
                (:file "life")
                (:file "proxy")
                (:file "proxy-elementary")
+               (:file "proxy-life")
                (:file "viz")
 ))
