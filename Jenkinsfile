@@ -17,10 +17,14 @@ node {
     docker.image('ubuntu:xenial').inside("-u root --security-opt seccomp=unconfined") {
       sh 'apt-get -qq update'
       sh 'apt-get -qq install --no-install-recommends -y sbcl curl libsdl2-2.0 ca-certificates'
-      sh 'curl -O https://beta.quicklisp.org/quicklisp.lisp'
-      sh 'sbcl --load quicklisp.lisp --eval "(quicklisp-quickstart:install)" --eval "(ql:quickload :sdl2)" --eval "(exit)"'
       checkout scm
-      sh 'cd algo/cellular-automaton && sbcl --load ./compile.lisp'
+
+      timeout(2) {
+        sh 'curl -O https://beta.quicklisp.org/quicklisp.lisp'
+        sh 'sbcl --load quicklisp.lisp --eval "(quicklisp-quickstart:install)" --eval "(ql:quickload :sdl2)" --eval "(exit)"'
+        sh 'cd algo/cellular-automaton && sbcl --load ~/quicklisp/setup.lisp --load ./compile.lisp'
+      }
+
       dir('algo/cellular-automaton') {
         archiveArtifacts artifacts: 'cellular_automaton'
       }
