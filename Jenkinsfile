@@ -4,6 +4,7 @@ def bashTest(name, exec, expected) {
 
 node {
   stage('Cheatsheet') {
+    cleanWs()
     docker.image('ubuntu:xenial').inside("-u root") {
       sh 'apt-get -qq update'
       sh 'apt-get -qq install --no-install-recommends -y texlive-latex-base texlive-latex-extra lmodern texlive-lang-french python-pygments'
@@ -14,6 +15,7 @@ node {
   }
 
   stage('Algo - Cellular Automaton') {
+    cleanWs()
     docker.image('ubuntu:xenial').inside("-u root --security-opt seccomp=unconfined") {
       sh 'apt-get -qq update'
       sh 'apt-get -qq install --no-install-recommends -y sbcl curl libsdl2-2.0 ca-certificates'
@@ -22,16 +24,14 @@ node {
       timeout(2) {
         sh 'curl -O https://beta.quicklisp.org/quicklisp.lisp'
         sh 'sbcl --load quicklisp.lisp --eval "(quicklisp-quickstart:install)" --eval "(ql:quickload :sdl2)" --eval "(exit)"'
-        sh 'cd algo/cellular-automaton && sbcl --load ~/quicklisp/setup.lisp --load ./compile.lisp'
+        sbcl --load ~/quicklisp/setup.lisp --load ./algo/cellular-automaton/compile.lisp'
       }
-
-      dir('algo/cellular-automaton') {
-        archiveArtifacts artifacts: 'cellular_automaton'
-      }
+      archiveArtifacts artifacts: 'algo/cellular-automaton/cellular_automaton'
     }
   }
 
   stage('Euler - Common Lisp') {
+    cleanWs()
     docker.image('ubuntu:xenial').inside("-u root --security-opt seccomp=unconfined") {
       sh 'apt-get -qq update'
       sh 'apt-get -qq install --no-install-recommends -y sbcl'
