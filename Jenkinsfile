@@ -27,8 +27,10 @@ node {
         sh 'cd algo/cellular-automaton && sbcl --load ~/quicklisp/setup.lisp --load ./compile.lisp'
       }
 
+      sh 'cd algo/cellular-automaton && mkdir -p out && mv cellular_automaton config out'
+
       dir('algo/cellular-automaton') {
-        archiveArtifacts artifacts: 'cellular_automaton'
+        zip archive: true, dir: './out', glob: '', zipFile: 'cellular_automaton.zip'
       }
     }
   }
