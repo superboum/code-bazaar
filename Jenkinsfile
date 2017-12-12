@@ -20,8 +20,8 @@ node {
       sh 'curl -O https://beta.quicklisp.org/quicklisp.lisp'
       sh 'sbcl --load quicklisp.lisp --eval "(quicklisp-quickstart:install)" --eval "(ql:quickload :sdl2)" --eval "(exit)"'
       checkout scm
+      sh 'cd algo/cellular-automaton && sbcl --load ./compile.lisp'
       dir('algo/cellular-automaton') {
-        sh 'sbcl --load ./compile.lisp'
         archiveArtifacts artifacts: 'cellular_automaton'
       }
     }
