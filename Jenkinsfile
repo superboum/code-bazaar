@@ -16,9 +16,11 @@ node {
   stage('Algo - Cellular Automaton') {
     docker.image('ubuntu:xenial').inside("-u root --security-opt seccomp=unconfined") {
       sh 'apt-get update'
-      sh 'apt-get install --no-install-recommends -y sbcl'
+      sh 'apt-get install --no-install-recommends -y sbcl curl libsdl2-2.0'
+      sh 'curl -O https://beta.quicklisp.org/quicklisp.lisp'
+      sh 'sbcl --load quicklisp.lisp --eval "(progn (quicklisp-quickstart:install) (ql:quickload :sdl2) (exit))"'
       checkout scm
-      dir('algo/cellular_automaton') {
+      dir('algo/cellular-automaton') {
         sh 'sbcl --load ./compile.lisp'
         archiveArtifacts artifacts: 'cellular_automaton'
       }
