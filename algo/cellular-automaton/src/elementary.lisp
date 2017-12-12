@@ -1,7 +1,7 @@
 (in-package :cellular-automaton)
 
 ; Constant. reversed to fit rule fun
-(defconstant patterns '((nil nil nil) (nil nil t) (nil t nil) (nil t t) (t nil nil) (t nil t) (t t nil) (t t t)))
+(defvar patterns '((nil nil nil) (nil nil t) (nil t nil) (nil t t) (t nil nil) (t nil t) (t t nil) (t t t)))
 
 ; Reversed. Example 8d = 00010000 = '(nil nil nil t nil nil nil nil) = '(nil nil nil t)
 (defun rule (n)

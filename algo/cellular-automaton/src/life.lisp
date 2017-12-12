@@ -10,10 +10,10 @@
   (rec s1 s2)
 ))
 
-;(defconstant comb-around (comb -1 -1 2 2) "To compute neighbors of a cell")
+(defvar comb-around (comb -1 -1 2 2) "To compute neighbors of a cell")
 
 (defun get-pos-around (cell)
-  (map 'list (lambda (x) (mapcar #'+ cell x)) (comb -1 -1 2 2))
+  (map 'list (lambda (x) (mapcar #'+ cell x)) comb-around)
 )
 
 (defun count-neighbors (cell cell-list)
