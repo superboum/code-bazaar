@@ -5,8 +5,8 @@ def bashTest(name, exec, expected) {
 node {
   stage('Cheatsheet') {
     docker.image('ubuntu:xenial').inside("-u root") {
-      sh 'apt-get update'
-      sh 'apt-get install --no-install-recommends -y texlive-latex-base texlive-latex-extra lmodern texlive-lang-french python-pygments'
+      sh 'apt-get -qq update'
+      sh 'apt-get -qq install --no-install-recommends -y texlive-latex-base texlive-latex-extra lmodern texlive-lang-french python-pygments'
       checkout scm
       sh 'pdflatex -shell-escape cheatsheet/python.tex'
       archiveArtifacts artifacts: 'python.pdf'
@@ -15,8 +15,8 @@ node {
 
   stage('Algo - Cellular Automaton') {
     docker.image('ubuntu:xenial').inside("-u root --security-opt seccomp=unconfined") {
-      sh 'apt-get update'
-      sh 'apt-get install --no-install-recommends -y sbcl curl libsdl2-2.0'
+      sh 'apt-get -qq update'
+      sh 'apt-get -qq install --no-install-recommends -y sbcl curl libsdl2-2.0 ca-certificates'
       sh 'curl -O https://beta.quicklisp.org/quicklisp.lisp'
       sh 'sbcl --load quicklisp.lisp --eval "(progn (quicklisp-quickstart:install) (ql:quickload :sdl2) (exit))"'
       checkout scm
@@ -29,8 +29,8 @@ node {
 
   stage('Euler - Common Lisp') {
     docker.image('ubuntu:xenial').inside("-u root --security-opt seccomp=unconfined") {
-      sh 'apt-get update'
-      sh 'apt-get install --no-install-recommends -y sbcl'
+      sh 'apt-get -qq update'
+      sh 'apt-get -qq install --no-install-recommends -y sbcl'
       checkout scm
       bashTest "Problem 01 - Multiples of 3 and 5", "./euler/01/main.lisp", "e1edf9d1967ca96767dcc2b2d6df69f4"
       bashTest "Problem 02 - Even Fibonacci numbers", "./euler/02/main.lisp", "4194eb91842c8e7e6df099ca73c38f28"
