@@ -32,10 +32,25 @@
   (list 'string (coerce (read-string) 'string))
 ))
 
+(defun check-keyword (reference start)
+  (labels (
+    (rec-check (ref acc)
+      (let* ((s (read-char *standard-input* nil)))
+        (cond
+          ((null ref) (unread-char s) t)
+          ((eq (first ref) s) (rec-check (rest ref) (cons s acc)))
+          (t (reduce #'unread-char (cons s acc)) nil)
+    )))
+  )
+  (unread-char start)
+  (rec-check (coerce reference 'list) '())
+))
+
 (defun read-next ()
   (let* ((s (read-char *standard-input* nil)))
     (cond
       ((eq nil s) nil)
+      ((some (lambda (x) (eq x s)) (list #\space #\linefeed #\return #\tab)) (read-next))
       ((is-digit s) (cons (get-digit s) (read-next)))
       ((eq #\" s) (cons (get-string) (read-next)))
       ((eq #\{ s) (cons (list 'start_brace) (read-next)))
@@ -44,8 +59,9 @@
       ((eq #\] s) (cons (list 'end_brack) (read-next)))
       ((eq #\, s) (cons (list 'comma) (read-next)))
       ((eq #\: s) (cons (list 'colon) (read-next)))
-      ((some (lambda (x) (eq x s)) (list #\space #\linefeed #\return #\tab)) (read-next))
-      (t (list 'error))
+      ((check-keyword "true" s) (cons (list 'true) (read-next)))
+      ((check-keyword "false" s) (cons (list 'false) (read-next)))
+      (t (list 'error s))
 )))
 
 (print (read-next))
