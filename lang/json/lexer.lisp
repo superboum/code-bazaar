@@ -5,25 +5,28 @@
     (read in)
 ))
 
-(defun is-digit (s)
-  (or (digit-char-p s) (eq #\. s) (eq #\- s))
-)
+(defun is-digit (stream)
+  (let* ((s (peek-char nil stream nil)))
+    (cond
+      ((or (digit-char-p s) (eq #\. s) (eq #\- s)) t)
+      (t nil)
+)))
 
-(defun get-digit (start)
+(defun get-digit (stream)
   (labels (
-    (read-digit (s)
+    (read-digit ()
       (cond
-        ((is-digit s) (cons s (read-digit (read-char))))
-        (t (unread-char s) nil)
+        ((is-digit stream) (cons (read-char stream) (read-digit)))
+        (t nil)
     ))
   )
-  (list 'number (parse-float (coerce (read-digit start) 'string)))
+  (list 'number (parse-float (coerce (read-digit) 'string)))
 ))
 
-(defun get-string ()
+(defun get-string (stream)
   (labels (
     (read-string ()
-      (let* ((s (read-char)))
+      (let* ((s (read-char stream)))
         (cond
           ((eq #\" s) nil)
           (t (cons s (read-string)))
@@ -32,36 +35,53 @@
   (list 'string (coerce (read-string) 'string))
 ))
 
-(defun check-keyword (reference start)
+(defun check-char (stream c)
+  (let* ((s (peek-char nil stream nil)))
+    (cond
+      ((and (null c) (null s)) t)
+      ((eq c s) (read-char stream) t)
+      (t nil)
+)))
+
+(defun check-keyword (stream reference)
   (labels (
     (rec-check (ref acc)
-      (let* ((s (read-char *standard-input* nil)))
+      (let* ((s (read-char stream nil)))
         (cond
-          ((null ref) (unread-char s) t)
+          ((null ref) (unread-char s stream) t)
           ((eq (first ref) s) (rec-check (rest ref) (cons s acc)))
-          (t (reduce #'unread-char (cons s acc)) nil)
+          (t (notany (lambda (x) (unread-char x stream)) (cons s acc)) nil)
     )))
   )
-  (unread-char start)
   (rec-check (coerce reference 'list) '())
 ))
 
-(defun read-next ()
-  (let* ((s (read-char *standard-input* nil)))
-    (cond
-      ((eq nil s) nil)
-      ((some (lambda (x) (eq x s)) (list #\space #\linefeed #\return #\tab)) (read-next))
-      ((is-digit s) (cons (get-digit s) (read-next)))
-      ((eq #\" s) (cons (get-string) (read-next)))
-      ((eq #\{ s) (cons (list 'start_brace) (read-next)))
-      ((eq #\} s) (cons (list 'end_brace) (read-next)))
-      ((eq #\[ s) (cons (list 'start_brack) (read-next)))
-      ((eq #\] s) (cons (list 'end_brack) (read-next)))
-      ((eq #\, s) (cons (list 'comma) (read-next)))
-      ((eq #\: s) (cons (list 'colon) (read-next)))
-      ((check-keyword "true" s) (cons (list 'true) (read-next)))
-      ((check-keyword "false" s) (cons (list 'false) (read-next)))
-      (t (list 'error s))
+(defun read-next (stream)
+  (cond
+
+    ; Sanitize (EOF and spaces, tabs, etc.)
+    ((check-char stream nil) nil)
+    ((some
+       (lambda (x) (check-char stream x))
+       (list #\space #\linefeed #\return #\tab #\newline)
+     ) (read-next stream))
+
+    ; Structures
+    ((check-char stream #\{) (cons (list 'start_brace) (read-next stream)))
+    ((check-char stream #\}) (cons (list 'end_brace) (read-next stream)))
+    ((check-char stream #\[) (cons (list 'start_brack) (read-next stream)))
+    ((check-char stream #\]) (cons (list 'end_brack) (read-next stream)))
+    ((check-char stream #\,) (cons (list 'comma) (read-next stream)))
+    ((check-char stream #\:) (cons (list 'colon) (read-next stream)))
+
+    ; Values: string, numbers and bool
+    ((check-char stream #\") (cons (get-string stream) (read-next stream)))
+    ((is-digit stream) (cons (get-digit stream) (read-next stream)))
+    ((check-keyword stream "true") (cons (list 'true) (read-next stream)))
+    ((check-keyword stream "false") (cons (list 'false) (read-next stream)))
+
+    ; Errors
+    (t (list 'error (peek-char nil stream nil))
 )))
 
-(print (read-next))
+(print (read-next *standard-input*))
