@@ -25,14 +25,15 @@
 
 (defun get-string (stream)
   (labels (
-    (read-string ()
+    (read-string (escape)
       (let* ((s (read-char stream)))
         (cond
-          ((eq #\" s) nil)
-          (t (cons s (read-string)))
+          ((and (not escape) (eq #\" s)) nil)
+          ((and (not escape) (eq #\\ s)) (read-string t))
+          (t (cons s (read-string nil)))
     )))
   )
-  (list 'string (coerce (read-string) 'string))
+  (list 'string (coerce (read-string nil) 'string))
 ))
 
 (defun check-char (stream c)
