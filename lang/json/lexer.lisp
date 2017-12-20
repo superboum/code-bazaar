@@ -61,7 +61,7 @@
   (cond
 
     ; Sanitize (EOF and spaces, tabs, etc.)
-    ((check-char stream nil) (list 'the_end)) ; prevent an empty list while parsing
+    ((check-char stream nil) (list (list 'the_end))) ; prevent an empty list while parsing
     ((some
        (lambda (x) (check-char stream x))
        (list #\space #\linefeed #\return #\tab #\newline)
@@ -85,4 +85,4 @@
     (t (list 'error (peek-char nil stream nil))
 )))
 
-(print (read-next *standard-input*))
+;(print (read-next *standard-input*))

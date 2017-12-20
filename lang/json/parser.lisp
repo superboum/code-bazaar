@@ -136,5 +136,5 @@
 
 ;(print (kv '((string) (colon) (number) (the-end))))
 ;(print (json '((start_brack) (number) (comma) (number) (end_brack) (the-end))))
-(print (json '((start_brace) (string) (colon) (number) (comma) (string) (colon) (string) (end_brace) (the-end))))
+;(print (json '((start_brace) (string) (colon) (number) (comma) (string) (colon) (string) (end_brace) (the-end))))
 ;(print (accept 'string '((string) (colon) (number))))
