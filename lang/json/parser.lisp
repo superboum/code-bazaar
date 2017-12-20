@@ -103,9 +103,27 @@
     tokens
 ))
 
+(defun next-object (tokens)
+  (let* ((comma (accept 'comma tokens)))
+    (cond
+      (comma (next-object (kv comma)))
+      (t tokens)
+)))
+
+(defun inside-object (tokens)
+  (let* ((val (accept 'string tokens)))
+    (cond
+      (val (next-object (kv tokens)))
+      (t tokens)
+)))
+
 (defun object (tokens)
-  tokens
-)
+  (all
+    (list
+      #'inside-object
+      (curry #'expect 'end_brace))
+    tokens
+))
 
 (defun json (tokens)
   (choose
@@ -117,5 +135,6 @@
 ))
 
 ;(print (kv '((string) (colon) (number) (the-end))))
-(print (json '((start_brack) (number) (comma) (number) (end_brack) (the-end))))
+;(print (json '((start_brack) (number) (comma) (number) (end_brack) (the-end))))
+(print (json '((start_brace) (string) (colon) (number) (comma) (string) (colon) (string) (end_brace) (the-end))))
 ;(print (accept 'string '((string) (colon) (number))))
