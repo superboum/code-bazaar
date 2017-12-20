@@ -61,7 +61,7 @@
   (cond
 
     ; Sanitize (EOF and spaces, tabs, etc.)
-    ((check-char stream nil) nil)
+    ((check-char stream nil) (list 'the_end)) ; prevent an empty list while parsing
     ((some
        (lambda (x) (check-char stream x))
        (list #\space #\linefeed #\return #\tab #\newline)
@@ -78,8 +78,8 @@
     ; Values: string, numbers and bool
     ((check-char stream #\") (cons (get-string stream) (read-next stream)))
     ((is-digit stream) (cons (get-digit stream) (read-next stream)))
-    ((check-keyword stream "true") (cons (list 'true) (read-next stream)))
-    ((check-keyword stream "false") (cons (list 'false) (read-next stream)))
+    ((check-keyword stream "true") (cons (list 'bool t) (read-next stream)))
+    ((check-keyword stream "false") (cons (list 'bool nil) (read-next stream)))
 
     ; Errors
     (t (list 'error (peek-char nil stream nil))
