@@ -1,4 +1,6 @@
-#|
+#| Recursive_descent_parser
+ |
+ | BNF Grammar:
  | value ::= array | object | number | string | bool
  | kv ::= string ":" value
  |

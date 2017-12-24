@@ -1,4 +1,4 @@
 (load "./lexer.lisp")
-(load "./parser.lisp")
+(load "./parser2.lisp")
 
-(print (json (read-next *standard-input*)))
+(print (parse-json (read-next *standard-input*)))
