@@ -115,7 +115,7 @@
     'json
 ))
 
-(defun parse-json (tok)
+(defun build-ast (tok)
   (parser-ast (json (make-parser :tokens tok :ast nil)))
 )
 
