@@ -57,6 +57,14 @@
   (rec-check (coerce reference 'list) '())
 ))
 
+(defun lex (stream)
+  (let* ((tokens (read-next stream)) (last-token (first (last tokens))))
+    (cond
+      ((eq (first last-token) 'the_end) tokens)
+      ((eq (first last-token) 'error) (error "Lexer error: unexpected character ~a. Successfully parsed:~a" (second last-token) tokens))
+      (t (error "Lexer error: unknown. We parsed: ~a" tokens))
+)))
+
 (defun read-next (stream)
   (cond
 
@@ -80,9 +88,10 @@
     ((is-digit stream) (cons (get-digit stream) (read-next stream)))
     ((check-keyword stream "true") (cons (list 'bool t) (read-next stream)))
     ((check-keyword stream "false") (cons (list 'bool nil) (read-next stream)))
+    ((check-keyword stream "null") (cons (list 'bool nil) (read-next stream)))
 
     ; Errors
-    (t (list 'error (peek-char nil stream nil))
-)))
+    (t (list (list 'error (peek-char nil stream nil))))
+))
 
 ;(print (read-next *standard-input*))

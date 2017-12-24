@@ -1,5 +1,6 @@
 (load "./lexer.lisp")
 (load "./parser.lisp")
 (load "./to-s-expr.lisp")
+(load "./to-dot.lisp")
 
-(print (tos-json (build-ast (read-next *standard-input*))))
+(format t "~a" (tod-template (tod-json (build-ast (lex *standard-input*)) 0 0)))
