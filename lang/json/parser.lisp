@@ -71,7 +71,7 @@
 (defun kv (p)
   (tag-ast
     (let* ((np (eat-token (eat-token (tag-ast (set-ast p (get-token p)) 'key) 'string) 'colon)))
-      (cons-ast (value np) (to-list-ast np)))
+      (cons-ast (value (set-ast np nil)) (to-list-ast np)))
     'kv
 ))
 
@@ -116,10 +116,11 @@
 ))
 
 (defun parse-json (tok)
-  (json (make-parser :tokens tok :ast nil))
+  (parser-ast (json (make-parser :tokens tok :ast nil)))
 )
 
 ;(print (json (make-parser
                 ;:tokens '((start_brace) (string "key") (colon) (string "value") (comma) (string "n") (colon) (number 3) (end_brace) (the-end))
                 ;:ast nil
              ;)))
+;(print (parse-json '((start_brace) (string "symbols") (colon) (start_brack) (end_brack) (end_brace))))
