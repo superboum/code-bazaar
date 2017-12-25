@@ -1,5 +1,5 @@
 ; dot ./test.dot -Tpng -O
-; twurl "/1.1/statuses/show.json?id=938107501429559297" | sbcl --script ./main.lisp | dot -Tpng -o graph.png
+; twurl "/1.1/statuses/show.json?id=938107501429559297" | sbcl --script ./main.lisp | dot -Tsvg -o graph.svg
 
 (defun tod-is-sym (a s) (eq (first a) s))
 
