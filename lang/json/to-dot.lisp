@@ -102,7 +102,7 @@
 (defun tod-template (out)
   (format
     nil
-    "digraph json {~%rankdir=\"LR\";~%~a~%~a}~%"
+    "digraph json {~%rankdir=\"LR\";node[shape=plaintext];~%~a~%~a}~%"
     (tod-template-nodes out)
     (tod-template-links out)
 ))
