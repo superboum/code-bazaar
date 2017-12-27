@@ -1,11 +1,13 @@
+(defun sym-to-var (fn l s v)
+  (funcall fn (lambda (y) (if (eq y s) v y)) l))
+
 (defmacro pipeline ((as start) &body body)
-  `(reduce
-     (lambda (acc x)
-       (apply
-         (symbol-function (first x))
-         (mapcar (lambda (y) (if (eq y ',as) acc y)) (rest x) )))
-     '(,@body)
-     :initial-value ,start))
+  `(eval
+     (reduce
+       (lambda (acc x)
+         (sym-to-var #'mapcar x ',as acc))
+       ',body
+       :initial-value ',start)))
 
 (defmacro _curry (fn rev &rest start-args)
   (let ((fncall (symbol-function fn)))
