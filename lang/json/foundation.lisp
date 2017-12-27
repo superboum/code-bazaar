@@ -1,13 +1,17 @@
+(defmacro with-gensyms ((&rest names) &body body)
+  `(let ,(loop for n in names collect `(,n (gensym)))
+     ,@body))
+
+
 (defun sym-to-var (fn l s v)
   (funcall fn (lambda (y) (if (eq y s) v y)) l))
 
 (defmacro pipeline ((as start) &body body)
-  `(eval
-     (reduce
-       (lambda (acc x)
-         (sym-to-var #'mapcar x ',as acc))
-       ',body
-       :initial-value ',start)))
+  (reduce
+    (lambda (acc x)
+      (sym-to-var #'mapcar x as acc))
+    body
+    :initial-value start))
 
 (defmacro _curry (fn rev &rest start-args)
   (let ((fncall (symbol-function fn)))
