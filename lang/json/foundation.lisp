@@ -1,12 +1,4 @@
-(defun filter (start &rest body)
-  (reduce
-    (lambda (acc x) (funcall x acc))
-    body
-    :initial-value start))
-
-(defun mapcar2 (fn ll) (mapcar (lambda (l) (mapcar fn l)) ll))
-
-(defmacro filter2 ((as start) &body body)
+(defmacro pipeline ((as start) &body body)
   `(reduce
      (lambda (acc x)
        (apply
