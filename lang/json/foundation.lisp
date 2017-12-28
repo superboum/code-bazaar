@@ -2,7 +2,6 @@
   `(let ,(loop for n in names collect `(,n (gensym)))
      ,@body))
 
-
 (defun sym-to-var (fn l s v)
   (funcall fn (lambda (y) (if (eq y s) v y)) l))
 
