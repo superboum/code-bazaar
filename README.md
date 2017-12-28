@@ -6,7 +6,7 @@ Competitive programming
 ## Downloads
 
   * [Python 3.X cheatsheet](https://ci.deuxfleurs.fr/job/competitive-programming/job/master/lastSuccessfulBuild/artifact/python.pdf)
-  * [Cellular Automaton (Linux amd64)](https://ci.deuxfleurs.fr/job/competitive-programming/job/master/57/artifact/cellular_automaton.zip)
+  * [Cellular Automaton (Linux amd64)](https://ci.deuxfleurs.fr/job/competitive-programming/job/master/lastSuccessfulBuild/artifact/cellular_automaton.zip)
 
 ## Why
 
