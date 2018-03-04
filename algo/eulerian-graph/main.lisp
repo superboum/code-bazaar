@@ -137,7 +137,7 @@
         (sdl2:make-rect pixw pixh 2 2))))
 
   (defun draw (renderer)
-    (sdl2:set-render-draw-color renderer 100 100 100 255)
+    (sdl2:set-render-draw-color renderer 20 20 20 255)
     (sdl2:render-clear renderer)
 
     (maphash
