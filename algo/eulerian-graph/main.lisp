@@ -63,11 +63,12 @@
 (defun search-footway (sexpr)
   (remove-if-not
     (lambda (x)
-      (get-tag-value
-	"footway"
-        (find-tag-key
-          "highway"
-          (find-tags x))))
+      (some
+	(lambda (selected-highways)
+	  (equal
+	    selected-highways
+	    (second (get-tag-value nil (find-tag-key "highway" (find-tags x))))))
+	'("footway" "path")))
     (find-ways sexpr)))
 
 (defun extract-paths (sexpr)
