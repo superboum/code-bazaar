@@ -43,22 +43,14 @@
         (string= (first x) obj)
     ))
     sexpr))
-(defun find-ways (sexpr) (find-objs "way" sexpr))
-(defun find-bounds (sexpr) (find-objs "bounds" sexpr))
-(defun find-nodes (sexpr) (find-objs "node" sexpr))
-(defun find-tags (sexpr) (find-objs "tag" sexpr))
-(defun find-nds (sexpr) (find-objs "nd" sexpr))
 
 (defun get-property (prop content sexpr)
   (find-if
     (lambda (x) (and (string= (first x) prop) (or (null content) (string= (second x) content))))
     (second sexpr)))
-(defun get-tag-key (key sexpr) (get-property "k" key sexpr))
-(defun get-tag-value (value sexpr) (get-property "v" value sexpr))
-(defun get-nd-ref (sexpr) (get-property "ref" nil sexpr))
 
 (defun find-tag-key (key sexpr)
-  (find-if (lambda (x) (get-tag-key key x)) sexpr))
+  (find-if (lambda (x) (get-property "k" key x)) sexpr))
 
 (defun search-footway (sexpr)
   (remove-if-not
@@ -67,14 +59,14 @@
 	(lambda (selected-highways)
 	  (equal
 	    selected-highways
-	    (second (get-tag-value nil (find-tag-key "highway" (find-tags x))))))
+	    (second (get-property "v" nil (find-tag-key "highway" (find-objs "tag" x))))))
 	'("footway" "path")))
-    (find-ways sexpr)))
+    (find-objs "way" sexpr)))
 
 (defun extract-paths (sexpr)
   (mapcar
     (lambda (x)
-      (mapcar (lambda (y) (second (get-nd-ref y))) (find-nds x)))
+      (mapcar (lambda (y) (second (get-property "ref" nil y))) (find-objs "nd" x)))
    sexpr))
 
 (defun get-bounds (sexpr)
@@ -89,7 +81,7 @@
       (setf
 	(gethash (second (get-property "id" nil node)) ht)
 	(mapcar (lambda (x) (parse-number (second (get-property x nil node)))) '("lon" "lat"))))
-    (find-nodes sexpr))
+    (find-objs "node" sexpr))
   ht)
 
 ;;;;;;;;;;;;;;;;;;;
@@ -100,7 +92,7 @@
   ((width 1700)
    (height 1700)
    (sdata (cxml:parse-file "map.osm" (cxml-xmls:make-xmls-builder)))
-   (bounds (get-bounds (find-bounds sdata)))
+   (bounds (get-bounds (find-objs "bounds" sdata)))
    (nodes (extract-nodes (make-hash-table :test 'equal) sdata))
    (full-graph (add-paths (make-hash-table :test 'equal) (extract-paths (search-footway sdata)))))
 
