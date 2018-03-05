@@ -56,11 +56,15 @@
   (remove-if-not
     (lambda (x)
       (some
-	(lambda (selected-highways)
-	  (equal
-	    selected-highways
-	    (second (get-property "v" nil (find-tag-key "highway" (find-objs "tag" x))))))
+	(lambda (selected-highways) 
+	  (second (get-property "v" selected-highways (find-tag-key "highway" (find-objs "tag" x)))))
 	'("footway" "path")))
+    (find-objs "way" sexpr)))
+
+(defun search-way (name sexpr)
+  (find-if
+    (lambda (way)
+      (get-property "v" name (find-tag-key "name" (find-objs "tag" way))))
     (find-objs "way" sexpr)))
 
 (defun extract-paths (sexpr)
@@ -94,7 +98,10 @@
    (sdata (cxml:parse-file "map.osm" (cxml-xmls:make-xmls-builder)))
    (bounds (get-bounds (find-objs "bounds" sdata)))
    (nodes (extract-nodes (make-hash-table :test 'equal) sdata))
+   (region (search-way "Parc des Gayeulles" sdata)) 
    (full-graph (add-paths (make-hash-table :test 'equal) (extract-paths (search-footway sdata)))))
+
+  (print region)
 
   ;(maphash #'print-hash-entry nodes)
   (defun compute-position (id)
