@@ -67,11 +67,11 @@
       (get-property "v" name (find-tag-key "name" (find-objs "tag" way))))
     (find-objs "way" sexpr)))
 
+(defun extract-path (sexpr)
+  (mapcar (lambda (y) (second (get-property "ref" nil y))) (find-objs "nd" sexpr)))
+
 (defun extract-paths (sexpr)
-  (mapcar
-    (lambda (x)
-      (mapcar (lambda (y) (second (get-property "ref" nil y))) (find-objs "nd" x)))
-   sexpr))
+  (mapcar #'extract-path sexpr))
 
 (defun get-bounds (sexpr)
   (mapcar
@@ -88,6 +88,13 @@
     (find-objs "node" sexpr))
   ht)
 
+
+;;;;;;;;;;;;;;;;;;;
+; RAY CASTING
+;;;;;;;;;;;;;;;;;;;
+
+(defun ray-intersects-segment (p a b) )
+
 ;;;;;;;;;;;;;;;;;;;
 ; MAIN
 ;;;;;;;;;;;;;;;;;;;
@@ -99,9 +106,10 @@
    (bounds (get-bounds (find-objs "bounds" sdata)))
    (nodes (extract-nodes (make-hash-table :test 'equal) sdata))
    (region (search-way "Parc des Gayeulles" sdata)) 
+   (region-polygon (mapcar (lambda (x) (gethash x nodes)) (extract-path region)))
    (full-graph (add-paths (make-hash-table :test 'equal) (extract-paths (search-footway sdata)))))
 
-  (print region)
+  (print region-polygon)
 
   ;(maphash #'print-hash-entry nodes)
   (defun compute-position (id)
