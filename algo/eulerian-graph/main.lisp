@@ -91,9 +91,47 @@
 
 ;;;;;;;;;;;;;;;;;;;
 ; RAY CASTING
+; Source: https://rosettacode.org/wiki/Ray-casting_algorithm
 ;;;;;;;;;;;;;;;;;;;
 
-(defun ray-intersects-segment (p a b) )
+(defun point-vorder (&rest points)
+  (sort points (lambda (x y) (> (second x) (second y)))))
+
+(defun prepare-point (p ax ay bx by &optional (epsilon .001))
+  (destructuring-bind (px py) p
+    (cond
+      ((= py ay) (list px (- epsilon py)))
+      ((= py by) (list px (+ epsilon py)))
+      (t (list px py)))))
+
+(defun ray-intersects-segment (p a b)
+  (destructuring-bind ((ax ay) (bx by)) (point-vorder a b)
+    (destructuring-bind (px py) (prepare-point p ax ay  bx by)
+      (cond
+	;; Point is below the rectangle -> no intersection
+	((> py ay) nil)
+	;; Point is above the rectangle -> no intersection
+	((< py by) nil)
+	;; Point is to the right of the rectangle -> no intersection
+	((> px (max ax bx)) nil)
+	;; Point is to the left of the rectangle -> intersection
+	((< px (min ax bx)) t)
+	;; Point is within the rectangle -> more work :'(
+	(t
+	  (let
+	    ((angle-segment (if (= ax bx) nil (/ (- by ay) (- bx ax))))
+	     (angle-point (if (= ax px) nil (/ (- py ay) (- px ax)))))
+
+	    (cond
+	      ;; Rectangle width is 0, so this is a segment, so if here in the code, our point in on the segment -> intersection
+	      ((null angle-segment) t)
+              ;; ax is smaller than bx, so if our point create a vertical segment, it is on the left side of the rectangle -> intersection
+	      ((and (< ax bx) (null angle-point)) t)
+	      ;; otherwise our point create a vertical segment on the right side of the rectangle -> no intersection
+	      ((null angle-point) nil)
+	      ;; general case
+	      (t (>= angle-point angle-segment))
+)))))))
 
 ;;;;;;;;;;;;;;;;;;;
 ; MAIN
@@ -110,6 +148,8 @@
    (full-graph (add-paths (make-hash-table :test 'equal) (extract-paths (search-footway sdata)))))
 
   (print region-polygon)
+  (print (ray-intersects-segment '(2 5) '(3 3) '(3 10)))
+  (exit)
 
   ;(maphash #'print-hash-entry nodes)
   (defun compute-position (id)
