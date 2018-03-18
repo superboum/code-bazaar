@@ -27,6 +27,16 @@
   (reduce (lambda (y x) (add-path g x) y) path-lists)
   g)
 
+(defun remove-undirected-vertex (g vert)
+  (mapcar
+    (lambda (neighbour)
+      (setf
+	(gethash neighbour g)
+	(delete-if (lambda (vertn) (equal vertn vert)) (gethash neighbour g))))
+    (gethash vert g))
+
+  (remhash vert g))
+
 (defun print-hash-entry (key value)
   (format t "~S: ~S~%" key value))
 
@@ -155,7 +165,11 @@
     res))
 
 (defun restrict-to-polygon (g polygon nodes)
-  (maphash2 (lambda (key value) (inside-polygon (gethash key nodes) polygon)) g))
+  (maphash
+    (lambda (vertex value)
+      (let ((vertex-val (gethash vertex nodes)))
+        (when (evenp (inside-polygon vertex-val polygon)) (remove-undirected-vertex g vertex))))
+    g))
 
 ;;;;;;;;;;;;;;;;;;;
 ; MAIN
@@ -171,18 +185,22 @@
    (region-polygon (mapcar (lambda (x) (gethash x nodes)) (extract-path region)))
    (full-graph (add-paths (make-hash-table :test 'equal) (extract-paths (search-footway sdata)))))
 
-  (print (restrict-to-polygon full-graph region-polygon nodes))
-  (exit)
-  (print (sides region-polygon))
-  (print (ray-intersects-segment '(2 5) '(3 3) '(3 10)))
+  ;(restrict-to-polygon full-graph region-polygon nodes)
+  ;(exit)
+  ;(print (sides region-polygon))
+  ;(print (ray-intersects-segment '(2 5) '(3 3) '(3 10)))
 
   ;(maphash #'print-hash-entry nodes)
   (defun compute-position (id)
     (let*
       ((nodeinfo (gethash id nodes))
        (lon (first nodeinfo))
-       (lat (second nodeinfo))
-       (pixw (round (mapval lon (third bounds) (first bounds) 100 (- width 100))))
+       (lat (second nodeinfo)))
+      (compute-position-geo lon lat)))
+
+  (defun compute-position-geo (lon lat)
+    (let
+       ((pixw (round (mapval lon (third bounds) (first bounds) 100 (- width 100))))
        (pixh (round (mapval lat (second bounds) (fourth bounds) 100 (- height 100)))))
       (values pixw pixh)))
 
@@ -208,10 +226,23 @@
         renderer
         (sdl2:make-rect pixw pixh 2 2))))
 
+  (defun draw-polygon (renderer polygon)
+    (mapcar
+      (lambda (side)
+	(multiple-value-bind (pw1 ph1) (apply #'compute-position-geo (first side))
+	  (multiple-value-bind (pw2 ph2) (apply #'compute-position-geo (second side))
+            (sdl2:set-render-draw-color renderer 0 255 0 255)
+	    (sdl2:render-draw-line renderer pw1 ph1 pw2 ph2)
+            (sdl2:set-render-draw-color renderer 0 0 255 255)
+	    (sdl2:render-fill-rect renderer (sdl2:make-rect pw1 ph1 4 4)))))
+      (sides polygon)))
+
   (defun draw (renderer)
     (sdl2:set-render-draw-color renderer 20 20 20 255)
     (sdl2:render-clear renderer)
 
+    (draw-polygon renderer region-polygon)
+    
     (maphash
       (lambda (k v)
 	(draw-node renderer k)
@@ -229,7 +260,8 @@
           (:keyup
             (:keysym keysym)
             (cond
-              ((sdl2:scancode= (sdl2:scancode-value keysym) :scancode-escape)  (sdl2:push-event :quit))))
+              ((sdl2:scancode= (sdl2:scancode-value keysym) :scancode-escape)  (sdl2:push-event :quit))
+              ((sdl2:scancode= (sdl2:scancode-value keysym) :scancode-right)  (restrict-to-polygon full-graph region-polygon nodes))))
   ))))
 
   (exit)
