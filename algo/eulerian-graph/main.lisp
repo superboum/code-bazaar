@@ -133,16 +133,29 @@
 	      (t (>= angle-point angle-segment))
 )))))))
 
-(defun sides (polygon)
-  (sides-rec polygon (first (last polygon))))
 
 (defun sides-rec (polygon last-point) 
   (cond
     ((null polygon) nil)
     (t (cons (list last-point (first polygon)) (sides-rec (rest polygon) (first polygon))))))
 
+(defun sides (polygon)
+  (sides-rec polygon (first (last polygon))))
+
 (defun inside-polygon (p polygon)
-  (reduce (lambda (side acc) (+ acc (when (ray-intersects-segment p side) 1 0))) (sides polygon)))
+  (reduce
+    (lambda (acc side) (+ acc (if (ray-intersects-segment p (first side) (second side)) 1 0))) 
+    (sides polygon)
+    :initial-value 0))
+
+(defun maphash2 (fn ht)
+  (let 
+    ((res '()))
+    (maphash (lambda (key value) (push (funcall fn key value) res)) ht)
+    res))
+
+(defun restrict-to-polygon (g polygon nodes)
+  (maphash2 (lambda (key value) (inside-polygon (gethash key nodes) polygon)) g))
 
 ;;;;;;;;;;;;;;;;;;;
 ; MAIN
@@ -158,9 +171,10 @@
    (region-polygon (mapcar (lambda (x) (gethash x nodes)) (extract-path region)))
    (full-graph (add-paths (make-hash-table :test 'equal) (extract-paths (search-footway sdata)))))
 
+  (print (restrict-to-polygon full-graph region-polygon nodes))
+  (exit)
   (print (sides region-polygon))
   (print (ray-intersects-segment '(2 5) '(3 3) '(3 10)))
-  (exit)
 
   ;(maphash #'print-hash-entry nodes)
   (defun compute-position (id)
