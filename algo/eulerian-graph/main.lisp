@@ -133,6 +133,17 @@
 	      (t (>= angle-point angle-segment))
 )))))))
 
+(defun sides (polygon)
+  (sides-rec polygon (first (last polygon))))
+
+(defun sides-rec (polygon last-point) 
+  (cond
+    ((null polygon) nil)
+    (t (cons (list last-point (first polygon)) (sides-rec (rest polygon) (first polygon))))))
+
+(defun inside-polygon (p polygon)
+  (reduce (lambda (side acc) (+ acc (when (ray-intersects-segment p side) 1 0))) (sides polygon)))
+
 ;;;;;;;;;;;;;;;;;;;
 ; MAIN
 ;;;;;;;;;;;;;;;;;;;
@@ -147,7 +158,7 @@
    (region-polygon (mapcar (lambda (x) (gethash x nodes)) (extract-path region)))
    (full-graph (add-paths (make-hash-table :test 'equal) (extract-paths (search-footway sdata)))))
 
-  (print region-polygon)
+  (print (sides region-polygon))
   (print (ray-intersects-segment '(2 5) '(3 3) '(3 10)))
   (exit)
 
