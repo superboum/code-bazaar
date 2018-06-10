@@ -11,4 +11,4 @@ while stack:
   new_stack.append(v2)
   new_stack.append(v1)
 
-print(new_stack)
+print(new_stack[1:])
