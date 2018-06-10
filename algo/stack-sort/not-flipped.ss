@@ -19,4 +19,7 @@
     (cond
       (done stack)
       (#t (stack-sort (restack stack-orig stack-temp pivot))))))
-  
+
+(write (stack-sort (read)))
+(newline)
+(exit)

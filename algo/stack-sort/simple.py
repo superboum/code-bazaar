@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 stack = [int(x) for x in input().split()]
-new_stack = [ -1 ]
 
 while stack:
   v1 = stack.pop()
