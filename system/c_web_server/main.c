@@ -72,35 +72,6 @@ int main(int argc, char* argv[]) {
       continue;
     } else if (pid == 0) {
       // child here
-      char buf[5];
-      bzero(buf, 5);
-      size_t nrecv;
-
-      for (;;) {
-        nrecv = recv(connfd, buf, 4, MSG_PEEK|MSG_WAITALL);
-        if (nrecv == -1 || nrecv != 4) {
-          perror("failed to read http req.");
-          close(connfd);
-          exit(EXIT_FAILURE);
-        } else if (strncmp(buf, "\r\n\r\n", 4) != 0) {
-          nrecv = recv(connfd, buf, 1, 0);
-          if (nrecv == -1) {
-            perror("failed to read http req.");
-            close(connfd);
-            exit(EXIT_FAILURE);
-          }
-          printf("%c", buf[0]);
-        } else {
-          nrecv = recv(connfd, buf, 4, 0);
-          if (nrecv == -1) {
-            perror("failed to read http req.");
-            close(connfd);
-            exit(EXIT_FAILURE);
-          }
-          printf("%s", buf);
-          break;
-        }
-      }
       send(connfd, http_headers, http_headers_len, 0);
       send(connfd, http_content, http_content_len, 0);
 
