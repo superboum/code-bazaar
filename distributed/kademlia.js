@@ -23,15 +23,17 @@ const rank = (b, c) => {
   return rank(b, c+1)
 }
 
-const kbuckets_push = emitter_id => {
+const kbuckets_push = (emitter_id, ip, port) => {
   const xored = xorbuf(emitter_id, nodeid)
   const ranked = rank(xored)
   const items = kbuckets[ranked].length
-  if (items < bucket_size) {
-    kbuckets[ranked].push(emitter_id)
-    console.log(`node ${emitter_id.toString('hex')} ---> bucket ${ranked} (${items+1}/${bucket_size})`)
+  if (kbuckets[ranked].some(([id, ..._]) => 0 == id.compare(emitter_id))) {
+    console.log(`[known] node ${emitter_id.toString('hex')}, bucket ${ranked} (${items}/${bucket_size})`)
+  } else if (items < bucket_size) {
+    kbuckets[ranked].push([emitter_id, ip, port])
+    console.log(`[store] node ${emitter_id.toString('hex')}, bucket ${ranked} (${items+1}/${bucket_size})`)
   } else {
-    console.log(`node ${emitter_id.toString('hex')} -/-> bucket ${ranked} full (${items}/${bucket_size})`)
+    console.log(`[full] node ${emitter_id.toString('hex')}, bucket ${ranked} full (${items}/${bucket_size})`)
   }
 }
 
@@ -54,7 +56,13 @@ const handle_rpc = {
     })
     fd.send(res, meta.port, meta.ip, err => err ? console.error(err) : null)
   },
-  find_node: (fd, msg, meta) => null,
+  find_node: (fd, msg, meta) => {
+    try { msg.target_node = Buffer.from(msg.target_node, 'hex')} 
+    catch (e) { console.error('Unable to parse target node', e, msg); return }
+    
+    const r = rank(msg.target_node)
+    kbuckets[r].map(b => b.toString('hex'))
+  },
   find_value: (fd, msg, meta) => null,
   store: (fd, msg, meta) => null
 }
@@ -113,6 +121,7 @@ const start_network = port => new Promise((resolve, reject) => {
     try {
       const rpc_msg = JSON.parse(msg)
       if (!check_rpc_msg_format(rpc_msg)) return
+      kbuckets_push(rpc_msg.emitter_id, meta.address, meta.port)
       handle_rpc[rpc_msg.action](udpfd, rpc_msg, meta)
     } catch (e) {
       console.error('Unable to parse message', e)
@@ -126,7 +135,6 @@ const start_network = port => new Promise((resolve, reject) => {
 get_id()
   .then(buf => {
     nodeid = buf
-    kbuckets_push(nodeid)
     console.log(`node id is ${buf.toString('hex')}`)
     return start_network(process.env['KAD_PORT'])
   })
@@ -139,9 +147,5 @@ get_id()
   })
   .then(([fd, msg, meta]) => {
     console.log('Ping success',msg)
-    get_id().then(id => {
-      kbuckets_push(id)
-      console.log(kbuckets)
-    })
   })
   .catch(e => console.error('A critical error occured in the promise chain', e))
