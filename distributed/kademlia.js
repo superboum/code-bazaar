@@ -2,6 +2,7 @@ const dgram = require('dgram')
 const crypto = require('crypto')
 
 const id_size = 4
+const bucket_size = 20
 const timeout = 2000
 
 let nodeid = null
@@ -25,10 +26,14 @@ const rank = (b, c) => {
 const kbuckets_push = emitter_id => {
   const xored = xorbuf(emitter_id, nodeid)
   const ranked = rank(xored)
-  console.log(emitter_id, xored, ranked)
-  kbuckets[ranked].push(emitter_id)
+  const items = kbuckets[ranked].length
+  if (items < bucket_size) {
+    kbuckets[ranked].push(emitter_id)
+    console.log(`node ${emitter_id.toString('hex')} ---> bucket ${ranked} (${items+1}/${bucket_size})`)
+  } else {
+    console.log(`node ${emitter_id.toString('hex')} -/-> bucket ${ranked} full (${items}/${bucket_size})`)
+  }
 }
-
 
 const pending_requests = {}
 const handle_rpc = {
@@ -44,7 +49,7 @@ const handle_rpc = {
   ping: (fd, msg, meta) => {
     const res = JSON.stringify({
       msg_id: msg.msg_id, 
-      emitter_id: nodeid,
+      emitter_id: nodeid.toString('hex'),
       action: 'res'
     })
     fd.send(res, meta.port, meta.ip, err => err ? console.error(err) : null)
@@ -111,10 +116,14 @@ get_id()
   .then(udpfd => {
     addr = udpfd.address()
     console.log(`node listening on ${addr.address}:${addr.port}`)
-    return rpc(udpfd, '127.0.0.1', addr.port, {msg_id: 'a', emitter_id: nodeid, action: 'ping'})
+    return rpc(udpfd, '127.0.0.1', addr.port, {
+      msg_id: 'a', 
+      emitter_id: nodeid.toString('hex'), 
+      action: 'ping'
+    })
   })
   .then(([fd, msg, meta]) => {
-    console.log('Ping success')
+    console.log('Ping success',msg)
     get_id().then(id => {
       kbuckets_push(id)
       console.log(kbuckets)
