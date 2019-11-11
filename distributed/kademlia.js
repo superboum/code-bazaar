@@ -65,8 +65,22 @@ const check_rpc_msg_format = msg => {
     return false
   }
 
+  try {
+    msg.msg_id = Buffer.from(msg.msg_id, 'hex')
+  } catch(e) {
+    console.error("Message UUID is not valid hexadecimal", e, msg)
+    return false
+  }
+
   if (!msg.emitter_id) {
     console.error("Message has no emitter UUID", msg)
+    return false
+  }
+
+  try {
+    msg.emitter_id = Buffer.from(msg.emitter_id, 'hex')
+  } catch (e) {
+    console.error("Message emitter ID is not valid hexadecimal", e, msg)
     return false
   }
 
@@ -78,11 +92,14 @@ const check_rpc_msg_format = msg => {
   return true
 }
 
-const rpc = (fd, ip, port, msg) => new Promise((resolve, reject) => {
-  const timer = setTimeout(() => delete pending_requests[msg.msg_id], 2000)
-  pending_requests[msg.msg_id] = { timeout: timer, resolve: resolve }
-  fd.send(JSON.stringify(msg), port, ip, err => err ? reject(err) : null)
-})
+const rpc = (fd, ip, port, msg) => 
+  get_id().then(new_id => 
+    new Promise((resolve, reject) => {
+      Object.assign(msg, { msg_id: new_id.toString('hex'), emitter_id: nodeid.toString('hex')}) 
+      const timer = setTimeout(() => delete pending_requests[new_id], 2000)
+      pending_requests[new_id] = { timeout: timer, resolve: resolve }
+      fd.send(JSON.stringify(msg), port, ip, err => err ? reject(err) : null)
+    }))
 
 const start_network = port => new Promise((resolve, reject) => {
   const udpfd = dgram.createSocket('udp4')
@@ -117,8 +134,6 @@ get_id()
     addr = udpfd.address()
     console.log(`node listening on ${addr.address}:${addr.port}`)
     return rpc(udpfd, '127.0.0.1', addr.port, {
-      msg_id: 'a', 
-      emitter_id: nodeid.toString('hex'), 
       action: 'ping'
     })
   })
