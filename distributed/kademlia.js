@@ -141,7 +141,7 @@ get_id()
   .then(udpfd => {
     addr = udpfd.address()
     console.log(`node listening on ${addr.address}:${addr.port}`)
-    return rpc(udpfd, '127.0.0.1', addr.port, {
+    return rpc(udpfd, '127.0.0.1', '8888', {
       action: 'ping'
     })
   })
