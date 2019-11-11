@@ -1,24 +1,34 @@
 const dgram = require('dgram')
 const crypto = require('crypto')
 
-const id_size = 32
+const id_size = 4
 const timeout = 2000
 
-const kbuckets = Array.from({length: id_size}, () => [])
+let nodeid = null
+const kbuckets = Array.from({length: id_size*8+1}, () => [])
+
+const get_id = () => new Promise((resolve, reject) => 
+  crypto.randomBytes(id_size, (err, buf) => err ? reject(err) : resolve(buf)))
+
 const zipwith = (x, y, cb) => x.map((cur, idx) => cb(cur, y[idx]))
 const xorbuf = (b1, b2) => zipwith(b1, b2, (v1, v2) => v1 ^ v2) 
 const rank = (b, c) => {
-  if (b.length == 0) return c
+  if (c == null) c = 0
   const array_shift = parseInt(c / 8)
   const byte_shift = 7 - (c % 8)
+  if (b.length <= array_shift) return c
   const m = b[array_shift] & (1 << byte_shift)
-  if (!m) return c
+  if (m) return c
   return rank(b, c+1)
 }
 
-const kbuckets_push = (nodeid) => {
-
+const kbuckets_push = emitter_id => {
+  const xored = xorbuf(emitter_id, nodeid)
+  const ranked = rank(xored)
+  console.log(emitter_id, xored, ranked)
+  kbuckets[ranked].push(emitter_id)
 }
+
 
 const pending_requests = {}
 const handle_rpc = {
@@ -32,18 +42,17 @@ const handle_rpc = {
     delete pending_requests[msg.msg_id]
   },
   ping: (fd, msg, meta) => {
-    const res = JSON.stringify({msg_id: msg.msg_id, action: 'res'})
+    const res = JSON.stringify({
+      msg_id: msg.msg_id, 
+      emitter_id: nodeid,
+      action: 'res'
+    })
     fd.send(res, meta.port, meta.ip, err => err ? console.error(err) : null)
   },
   find_node: (fd, msg, meta) => null,
   find_value: (fd, msg, meta) => null,
   store: (fd, msg, meta) => null
 }
-
-let nodeid = null
-
-const get_id = () => new Promise((resolve, reject) => 
-  crypto.randomBytes(id_size, (err, buf) => err ? reject(err) : resolve(buf)))
 
 const check_rpc_msg_format = msg => {
   if (!msg.msg_id) {
@@ -95,16 +104,20 @@ const start_network = port => new Promise((resolve, reject) => {
 get_id()
   .then(buf => {
     nodeid = buf
-    console.log(xorbuf(buf, buf))
+    kbuckets_push(nodeid)
     console.log(`node id is ${buf.toString('hex')}`)
     return start_network(process.env['KAD_PORT'])
   })
   .then(udpfd => {
     addr = udpfd.address()
     console.log(`node listening on ${addr.address}:${addr.port}`)
-    return rpc(udpfd, '127.0.0.1', addr.port, {msg_id: 'a', action: 'ping'})
+    return rpc(udpfd, '127.0.0.1', addr.port, {msg_id: 'a', emitter_id: nodeid, action: 'ping'})
   })
   .then(([fd, msg, meta]) => {
     console.log('Ping success')
+    get_id().then(id => {
+      kbuckets_push(id)
+      console.log(kbuckets)
+    })
   })
   .catch(e => console.error('A critical error occured in the promise chain', e))
