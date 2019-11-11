@@ -27,10 +27,10 @@ const kbuckets_push = (emitter_id, ip, port) => {
   const xored = xorbuf(emitter_id, nodeid)
   const ranked = rank(xored)
   const items = kbuckets[ranked].length
-  if (kbuckets[ranked].some(([id, ..._]) => 0 == id.compare(emitter_id))) {
+  if (kbuckets[ranked].some(e => 0 == e.node_id.compare(emitter_id))) {
     console.log(`[known] node ${emitter_id.toString('hex')}, bucket ${ranked} (${items}/${bucket_size})`)
   } else if (items < bucket_size) {
-    kbuckets[ranked].push([emitter_id, ip, port])
+    kbuckets[ranked].push({node_id: emitter_id, ip: ip, port: port})
     console.log(`[store] node ${emitter_id.toString('hex')}, bucket ${ranked} (${items+1}/${bucket_size})`)
   } else {
     console.log(`[full] node ${emitter_id.toString('hex')}, bucket ${ranked} full (${items}/${bucket_size})`)
@@ -61,7 +61,7 @@ const handle_rpc = {
     catch (e) { console.error('Unable to parse target node', e, msg); return }
     
     const r = rank(msg.target_node)
-    kbuckets[r].map(b => b.toString('hex'))
+    kbuckets[r].map(b => new Object({node_id: b.node_id.toString('hex'), ip: b.ip, port: b.port}))
   },
   find_value: (fd, msg, meta) => null,
   store: (fd, msg, meta) => null
