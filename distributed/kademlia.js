@@ -61,7 +61,8 @@ const handle_rpc = {
     catch (e) { console.error('Unable to parse target node', e, msg); return }
     
     const r = rank(msg.target_node)
-    kbuckets[r].map(b => new Object({node_id: b.node_id.toString('hex'), ip: b.ip, port: b.port}))
+    kbuckets[r].map(b => 
+      new Object({node_id: b.node_id.toString('hex'), ip: b.ip, port: b.port}))
   },
   find_value: (fd, msg, meta) => null,
   store: (fd, msg, meta) => null
@@ -141,11 +142,9 @@ get_id()
   .then(udpfd => {
     addr = udpfd.address()
     console.log(`node listening on ${addr.address}:${addr.port}`)
-    return rpc(udpfd, '127.0.0.1', '8888', {
-      action: 'ping'
-    })
+    return rpc(udpfd, '127.0.0.1', '8888', { action: 'find_node' })
   })
   .then(([fd, msg, meta]) => {
-    console.log('Ping success',msg)
+    console.log('Ping success', msg)
   })
   .catch(e => console.error('A critical error occured in the promise chain', e))
