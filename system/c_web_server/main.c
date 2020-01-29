@@ -12,10 +12,22 @@ int main(int argc, char* argv[]) {
   int sockfd, connfd, pid, err, enable; 
   socklen_t len;
   struct sockaddr_in servaddr, client; 
-
   char *name = "inconnu";
-  if (argc >= 2) name = argv[1];
-  
+  int opt, port = 8080;
+
+  while ((opt = getopt(argc, argv, "p:n:")) != -1) {
+    switch(opt) {
+    case 'p':
+      port = atoi(optarg);
+      break;
+    case 'n':
+      name = optarg;
+      break;
+    default:
+      break;
+    }
+  }
+
   char http_content[256];
   sprintf(http_content, "<h1>salut %s</h1>\r\n", name);
   size_t http_content_len = strlen(http_content);
@@ -42,7 +54,7 @@ int main(int argc, char* argv[]) {
   
   servaddr.sin_family = AF_INET; 
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-  servaddr.sin_port = htons(8080); 
+  servaddr.sin_port = htons(port); 
   
   if ((bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr))) != 0) { 
     perror("socket bind failed..."); 
