@@ -65,7 +65,9 @@ int main(int argc, char* argv[]) {
     perror("Listen failed..."); 
     exit(EXIT_FAILURE); 
   } 
-  
+ 
+  printf("Listening on 0.0.0.0:%d\n", port);
+ 
   len = sizeof(client); 
   
   for (;;) {
