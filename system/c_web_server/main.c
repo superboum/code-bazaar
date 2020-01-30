@@ -84,8 +84,20 @@ int main(int argc, char* argv[]) {
       continue;
     } else if (pid == 0) {
       // child here
-      send(connfd, http_headers, http_headers_len, 0);
-      send(connfd, http_content, http_content_len, 0);
+      char buf = 0, newlinecnt = 0, ok = 1;
+      while (newlinecnt < 2 && (ok = recv(connfd, &buf, sizeof(buf), 0)) == 1) {
+        if (buf == '\r') continue;
+        if (buf == '\n') {
+          newlinecnt++;
+          continue;
+        }
+        newlinecnt = 0;
+      }
+
+      if (ok == 1) {
+        send(connfd, http_headers, http_headers_len, 0);
+        send(connfd, http_content, http_content_len, 0);
+      }
 
       close(connfd);
       exit(EXIT_SUCCESS);
