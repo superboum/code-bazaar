@@ -12,10 +12,22 @@ int main(int argc, char* argv[]) {
   int sockfd, connfd, pid, err, enable; 
   socklen_t len;
   struct sockaddr_in servaddr, client; 
-
   char *name = "inconnu";
-  if (argc >= 2) name = argv[1];
-  
+  int opt, port = 8080;
+
+  while ((opt = getopt(argc, argv, "p:n:")) != -1) {
+    switch(opt) {
+    case 'p':
+      port = atoi(optarg);
+      break;
+    case 'n':
+      name = optarg;
+      break;
+    default:
+      break;
+    }
+  }
+
   char http_content[256];
   sprintf(http_content, "<h1>salut %s</h1>\r\n", name);
   size_t http_content_len = strlen(http_content);
@@ -42,7 +54,7 @@ int main(int argc, char* argv[]) {
   
   servaddr.sin_family = AF_INET; 
   servaddr.sin_addr.s_addr = htonl(INADDR_ANY); 
-  servaddr.sin_port = htons(8080); 
+  servaddr.sin_port = htons(port); 
   
   if ((bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr))) != 0) { 
     perror("socket bind failed..."); 
@@ -53,7 +65,9 @@ int main(int argc, char* argv[]) {
     perror("Listen failed..."); 
     exit(EXIT_FAILURE); 
   } 
-  
+ 
+  printf("Listening on 0.0.0.0:%d\n", port);
+ 
   len = sizeof(client); 
   
   for (;;) {
@@ -72,8 +86,20 @@ int main(int argc, char* argv[]) {
       continue;
     } else if (pid == 0) {
       // child here
-      send(connfd, http_headers, http_headers_len, 0);
-      send(connfd, http_content, http_content_len, 0);
+      char buf = 0, newlinecnt = 0, ok = 1;
+      while (newlinecnt < 2 && (ok = recv(connfd, &buf, sizeof(buf), 0)) == 1) {
+        if (buf == '\r') continue;
+        if (buf == '\n') {
+          newlinecnt++;
+          continue;
+        }
+        newlinecnt = 0;
+      }
+
+      if (ok == 1) {
+        send(connfd, http_headers, http_headers_len, 0);
+        send(connfd, http_content, http_content_len, 0);
+      }
 
       close(connfd);
       exit(EXIT_SUCCESS);
