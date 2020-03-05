@@ -9,9 +9,15 @@ const pr = cmd =>
     .catch(console.error)
 
 const state = {
-  github_login: null,
-  github_password: null,
-  github_ok: false
+  github: {
+    login: null,
+     password: null,
+     ok: false
+  },
+  orgs: {
+    scan: [],
+    filtered: [],
+  }
 }
 
 const gh = req => new Object({
@@ -21,8 +27,8 @@ const gh = req => new Object({
     'User-Agent': 'superboum/code-bazaar'
   },
   auth: {
-    user: state.github_login,
-    pass: state.github_password
+    user: state.github.login,
+    pass: state.github.password
   },
   json: true
 })
@@ -33,32 +39,64 @@ const subcommands = [
     questions: [{
       'type': 'input',
       'name': 'login',
-      'message': 'Github Login:',
+      'message': 'login.username>',
     }, {
       'type': 'password',
       'name': 'pass',
-      'message': 'Github Password:'
+      'message': 'login.password>'
     }],
     answer: res => { 
-      state.github_login = res.login
-      state.github_password = res.pass
+      state.github.login = res.login
+      state.github.password = res.pass
 
       return rp(gh('/'))
         .then(r => {
-          state.github_ok = true
-          console.log(r)
+          state.github.ok = true
           console.log('success')
         })
         .catch(r => console.log(r.error.message))
     }
   },
   {
-    name: 'orgs.index',
+    name: 'orgs.scan',
     exec: () => {
+      return rp(gh('/user/orgs'))
+        .then(orgs => {
+          state.orgs.scan = orgs.map(o => o.login)
+          state.orgs.filtered = orgs.map(o => o.login)
+          console.log('success')
+        })
+        .catch(r => console.log(r.error.message))
     }
   },
   {
-    name: 'repo.index'
+    name: 'orgs.filter',
+    questions: [{
+      type: 'autocomplete',
+      name: 'filter',
+      message: 'orgs.filter>',
+      suggestOnly: true,
+      source: (answers, input) => Promise.resolve(state.orgs.scan.filter(o => o.match(input)))
+    }],
+    answer: res => {
+      state.orgs.filter = res.filter
+      state.orgs.filtered = state.orgs.scan.filter(o => o.match(state.orgs.filter))
+      console.log(state.orgs.filtered)
+      return Promise.resolve()
+    }
+  },
+  {
+    name: 'orgs.selected',
+    questions: [{
+      type: 'list',
+      name: 'list',
+      message: 'orgs.selected>',
+      choices: () => state.orgs.filtered.length > 0 ? state.orgs.filtered : ['none']
+    }],
+    answer: res => Promise.resolve()
+  },
+  {
+    name: 'repo.scan'
   }, 
   {
     name: 'repo.filter'
@@ -67,13 +105,13 @@ const subcommands = [
     name: 'repo.download'
   }, 
   {
-    name: 'files.index'
+    name: 'files.scan'
   },
   {
     name: 'files.filter'
   },
   {
-    name: 'analyze'
+    name: 'files.ngram'
   },
   {
     name: 'exit',
@@ -85,7 +123,7 @@ const rootcommand = {
   questions: [{
     type: 'autocomplete',
     name: 'cmd',
-    message: '>',
+    message: 'cmd>',
     source: (answers, input) => Promise.resolve(subcommands.filter(x => x.name.indexOf(input||'') != -1))
   }],
   answer: res => {
