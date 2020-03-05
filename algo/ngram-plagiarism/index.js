@@ -97,6 +97,9 @@ const subcommands = [
   },
   {
     name: 'repo.scan'
+    exec: () => {
+      return Promise.resolve()
+    }
   }, 
   {
     name: 'repo.filter'
