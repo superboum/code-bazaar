@@ -1,5 +1,6 @@
 const inquirer = require('inquirer')
 const rp = require('request-promise-native')
+const fs = require('fs').promises
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'))
 const pr = cmd => 
@@ -19,6 +20,14 @@ const state = {
     filtered: [],
   }
 }
+
+const save = () => fs.writeFile(process.env.HOME + '/.ghtool.json', JSON.stringify(state), {encoding: 'utf-8', flag: 'w+'})
+const load = () => 
+  fs
+    .readFile(process.env.HOME + '/.ghtool.json', 'utf-8')
+    .then(f => JSON.parse(f))
+    .then(j => Object.assign(state, j))
+    .catch(e => console.error('unable to load save',e ))
 
 const gh = req => new Object({
   method: 'GET',
@@ -96,7 +105,7 @@ const subcommands = [
     answer: res => Promise.resolve()
   },
   {
-    name: 'repo.scan'
+    name: 'repo.scan',
     exec: () => {
       return Promise.resolve()
     }
@@ -134,9 +143,10 @@ const rootcommand = {
     const p = 'exec' in cmd ? cmd.exec() : Promise.resolve()
     p
       .then(() => 'questions' in cmd && 'answer' in cmd ? pr(cmd) : Promise.resolve())
+      .then(() => save())
       .then(() => pr(rootcommand))
       .catch(console.error)
   }
 }
 
-pr(rootcommand)
+load().then(() => pr(rootcommand))
