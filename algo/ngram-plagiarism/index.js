@@ -1,6 +1,10 @@
 const inquirer = require('inquirer')
 const rp = require('request-promise-native')
 const fs = require('fs').promises
+const plimit = require('p-limit')
+
+const ghq = plimit(5)
+const fsq = plimit(50)
 
 inquirer.registerPrompt('autocomplete', require('inquirer-autocomplete-prompt'))
 const pr = cmd => 
@@ -17,6 +21,12 @@ const state = {
   },
   orgs: {
     scan: [],
+    filter: '',
+    filtered: [],
+  },
+  repo: {
+    scan: [],
+    filter: '',
     filtered: [],
   }
 }
@@ -41,6 +51,14 @@ const gh = req => new Object({
   },
   json: true
 })
+
+const filt = (substate, input) => {
+  substate.filter = input
+  try {
+    substate.filtered = substate.scan.filter(o => o.match(substate.filter))
+  } catch(e) {}
+  return Promise.resolve(substate.filtered)
+}
 
 const subcommands = [
   {
@@ -83,22 +101,19 @@ const subcommands = [
     questions: [{
       type: 'autocomplete',
       name: 'filter',
+      pageSize: 30,
       message: 'orgs.filter>',
       suggestOnly: true,
-      source: (answers, input) => Promise.resolve(state.orgs.scan.filter(o => o.match(input)))
+      source: (answers, input) => filt(state.orgs, input)
     }],
-    answer: res => {
-      state.orgs.filter = res.filter
-      state.orgs.filtered = state.orgs.scan.filter(o => o.match(state.orgs.filter))
-      console.log(state.orgs.filtered)
-      return Promise.resolve()
-    }
+    answer: res => filt(state.orgs, res.filter)
   },
   {
     name: 'orgs.selected',
     questions: [{
       type: 'list',
       name: 'list',
+      pageSize: 30,
       message: 'orgs.selected>',
       choices: () => state.orgs.filtered.length > 0 ? state.orgs.filtered : ['none']
     }],
@@ -106,13 +121,39 @@ const subcommands = [
   },
   {
     name: 'repo.scan',
-    exec: () => {
-      return Promise.resolve()
-    }
+    exec: () => 
+      Promise.all(
+        state.orgs.filtered.map(o => 
+          ghq(() => rp(gh(`/orgs/${o}/repos`)))))
+        .then(res => res.length > 0 && Array.isArray(res[0]) ? res[0] : res) 
+        .then(res => res.map(r => r.full_name))
+        .then(res => { state.repo.scan = res })
+        .catch(console.error)
   }, 
   {
-    name: 'repo.filter'
+    name: 'repo.filter',
+    questions: [{
+      type: 'autocomplete',
+      name: 'filter',
+      pageSize: 30,
+      message: 'repo.filter>',
+      suggestOnly: true,
+      source: (answers, input) => filt(state.repo, input)
+    }],
+    answer: res => filt(state.repo, res.filter)
+
   }, 
+  {
+    name: 'repo.selected',
+    questions: [{
+      type: 'list',
+      name: 'list',
+      message: 'repo.selected>',
+      pageSize: 30,
+      choices: () => state.repo.filtered.length > 0 ? state.repo.filtered : ['none']
+    }],
+    answer: res => Promise.resolve()
+  },
   {
     name: 'repo.download'
   }, 

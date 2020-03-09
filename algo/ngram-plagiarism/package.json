@@ -11,6 +11,7 @@
   "dependencies": {
     "inquirer": "^7.0.6",
     "inquirer-autocomplete-prompt": "^1.0.2",
+    "p-limit": "^2.2.2",
     "request": "^2.88.2",
     "request-promise-native": "^1.0.8"
   }
