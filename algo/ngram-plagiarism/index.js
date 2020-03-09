@@ -40,7 +40,7 @@ const load = () =>
     .catch(e => console.error('unable to load save',e ))
 
 const gh_host = 'https://api.github.com'
-const gh = req => 
+const gh = req, opts => 
   req === null ? 
     [] :
     ghq(() => rp({
@@ -53,7 +53,7 @@ const gh = req =>
         user: state.github.login,
         pass: state.github.password
       },
-      json: true,
+      json: opts && opts.is_raw ? opts.is_raw : true,
       transform: (body, response, resolveFull) => {
         console.log(`done ${response.request.uri.href}`)
         body['__next'] = null
@@ -175,6 +175,13 @@ const subcommands = [
   },
   {
     name: 'repo.download'
+    exec: () => 
+      state.repo.filtered.map(r => 
+        fs.mkdir(`${process.env.HOME}/ghtool/${r}`, {recursive: true})
+          .then(() => gh(`/repos/${r}/tarball/master`, { is_raw: true})))
+          .then(c => fsq(() => fs.writeFile(`${process.env.HOME}/ghtool/${r}.tar.gz`, c)))
+          .then()
+
   }, 
   {
     name: 'files.scan'
