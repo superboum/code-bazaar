@@ -39,18 +39,40 @@ const load = () =>
     .then(j => Object.assign(state, j))
     .catch(e => console.error('unable to load save',e ))
 
-const gh = req => new Object({
-  method: 'GET',
-  uri: 'https://api.github.com' + req,
-  headers: {
-    'User-Agent': 'superboum/code-bazaar'
-  },
-  auth: {
-    user: state.github.login,
-    pass: state.github.password
-  },
-  json: true
-})
+const gh_host = 'https://api.github.com'
+const gh = req => 
+  req === null ? 
+    [] :
+    ghq(() => rp({
+      method: 'GET',
+      uri: req.match('https?:\/\/') ? req : gh_host + req,
+      headers: {
+        'User-Agent': 'superboum/code-bazaar'
+      },
+      auth: {
+        user: state.github.login,
+        pass: state.github.password
+      },
+      json: true,
+      transform: (body, response, resolveFull) => {
+        console.log(`done ${response.request.uri.href}`)
+        body['__next'] = null
+        if (response && response.headers && response.headers.link) {
+          const next_match = response.headers.link.match('<([^<>]+)>; rel="next"')
+          const next = next_match.length == 2 ? next_match[1] : null
+          const last_match = response.headers.link.match('<([^<>]+)>; rel="last"')
+          const last = last_match.length == 2 ? last_match[1] : null
+          if (next && last && next != last) body['__next'] = next
+        }
+        return body
+      }
+    }))
+    .then(b => Promise.all([b, gh(b['__next'])]))
+    .then(([e1, e2]) => {
+      if (Array.isArray(e1) && Array.isArray(e2)) return [...e1, ...e2]
+      else if (e2.length === 0) return e1
+      else return [e1, e2]
+    })
 
 const filt = (substate, input) => {
   substate.filter = input
@@ -76,7 +98,7 @@ const subcommands = [
       state.github.login = res.login
       state.github.password = res.pass
 
-      return rp(gh('/'))
+      return gh('/')
         .then(r => {
           state.github.ok = true
           console.log('success')
@@ -86,15 +108,14 @@ const subcommands = [
   },
   {
     name: 'orgs.scan',
-    exec: () => {
-      return rp(gh('/user/orgs'))
+    exec: () => 
+      gh('/user/orgs')
         .then(orgs => {
           state.orgs.scan = orgs.map(o => o.login)
           state.orgs.filtered = orgs.map(o => o.login)
           console.log('success')
         })
         .catch(r => console.log(r.error.message))
-    }
   },
   {
     name: 'orgs.filter',
@@ -122,11 +143,9 @@ const subcommands = [
   {
     name: 'repo.scan',
     exec: () => 
-      Promise.all(
-        state.orgs.filtered.map(o => 
-          ghq(() => rp(gh(`/orgs/${o}/repos`)))))
-        .then(res => res.length > 0 && Array.isArray(res[0]) ? res[0] : res) 
-        .then(res => res.map(r => r.full_name))
+      Promise.all(state.orgs.filtered.map(o => gh(`/orgs/${o}/repos`)))
+        //.then(r => {console.log(r) ; return r})
+        .then(orgs => orgs.map(repos => repos.map(repo => repo.full_name)).flat())
         .then(res => { state.repo.scan = res })
         .catch(console.error)
   }, 
