@@ -185,11 +185,11 @@ const subcommands = [
 
         return fs.stat(arch_path)
           .then(_ => console.log(`${r}: nothing to do`))
-          .catch(_ => fs.mkdir(repo_path, {recursive: true}))
-          .then(_ => gh(repo_url, { json: false, encoding: null }))
-          .then(c => fsq(_ => fs.writeFile(arch_path, c, {encoding: 'binary'})))
-          .then(_ => fsq(_ => tar.extract({ file: arch_path, strip: 1, cwd: repo_path })))
-          .then(_ => console.log(`${r}: done`))
+          .catch(_ => fs.mkdir(repo_path, {recursive: true})
+            .then(_ => gh(repo_url, { json: false, encoding: null }))
+            .then(c => fsq(_ => fs.writeFile(arch_path, c, {encoding: 'binary'})))
+            .then(_ => fsq(_ => tar.extract({ file: arch_path, strip: 1, cwd: repo_path })))
+            .then(_ => console.log(`${r}: done`)))
           .catch(e => console.error(`Failed to download ${r}: ${e}`))
       }))
   }, 
