@@ -1,5 +1,6 @@
 const inquirer = require('inquirer')
 const rp = require('request-promise-native')
+const tar = require('tar')
 const fs = require('fs').promises
 const plimit = require('p-limit')
 
@@ -37,11 +38,11 @@ const load = () =>
     .readFile(process.env.HOME + '/.ghtool.json', 'utf-8')
     .then(f => JSON.parse(f))
     .then(j => Object.assign(state, j))
-    .catch(e => console.error('unable to load save',e ))
+    .catch(e => console.error('unable to load save'))
 
 const gh_host = 'https://api.github.com'
-const gh = req, opts => 
-  req === null ? 
+const gh = (req, opts) => 
+  req == null ? 
     [] :
     ghq(() => rp({
       method: 'GET',
@@ -53,21 +54,22 @@ const gh = req, opts =>
         user: state.github.login,
         pass: state.github.password
       },
-      json: opts && opts.is_raw ? opts.is_raw : true,
+      json: true,
       transform: (body, response, resolveFull) => {
         console.log(`done ${response.request.uri.href}`)
-        body['__next'] = null
+        req['__next'] = null
         if (response && response.headers && response.headers.link) {
           const next_match = response.headers.link.match('<([^<>]+)>; rel="next"')
           const next = next_match.length == 2 ? next_match[1] : null
           const last_match = response.headers.link.match('<([^<>]+)>; rel="last"')
           const last = last_match.length == 2 ? last_match[1] : null
-          if (next && last && next != last) body['__next'] = next
+          if (next && last && next != last) req['__next'] = next
         }
         return body
-      }
+      },
+      ...opts
     }))
-    .then(b => Promise.all([b, gh(b['__next'])]))
+    .then(b => Promise.all([b, gh(req['__next'])]))
     .then(([e1, e2]) => {
       if (Array.isArray(e1) && Array.isArray(e2)) return [...e1, ...e2]
       else if (e2.length === 0) return e1
@@ -174,14 +176,22 @@ const subcommands = [
     answer: res => Promise.resolve()
   },
   {
-    name: 'repo.download'
-    exec: () => 
-      state.repo.filtered.map(r => 
-        fs.mkdir(`${process.env.HOME}/ghtool/${r}`, {recursive: true})
-          .then(() => gh(`/repos/${r}/tarball/master`, { is_raw: true})))
-          .then(c => fsq(() => fs.writeFile(`${process.env.HOME}/ghtool/${r}.tar.gz`, c)))
-          .then()
+    name: 'repo.download',
+    exec: _ => 
+      Promise.all(state.repo.filtered.map(r => {
+        const repo_url = `/repos/${r}/tarball/master`
+        const repo_path = `${process.env.HOME}/.ghtool/${r}`
+        const arch_path = `/${repo_path}/.archive.tar.gz`
 
+        return fs.stat(arch_path)
+          .then(_ => console.log(`${r}: nothing to do`))
+          .catch(_ => fs.mkdir(repo_path, {recursive: true}))
+          .then(_ => gh(repo_url, { json: false, encoding: null }))
+          .then(c => fsq(_ => fs.writeFile(arch_path, c, {encoding: 'binary'})))
+          .then(_ => fsq(_ => tar.extract({ file: arch_path, strip: 1, cwd: repo_path })))
+          .then(_ => console.log(`${r}: done`))
+          .catch(e => console.error(`Failed to download ${r}: ${e}`))
+      }))
   }, 
   {
     name: 'files.scan'
