@@ -41,7 +41,7 @@ const load = () =>
     .catch(e => console.error('unable to load save'))
 
 const gh_host = 'https://api.github.com'
-const gh = (req, opts) => 
+const gh = (req, opts) =>
   req == null ? 
     [] :
     ghq(() => rp({
@@ -57,19 +57,19 @@ const gh = (req, opts) =>
       json: true,
       transform: (body, response, resolveFull) => {
         console.log(`done ${response.request.uri.href}`)
-        req['__next'] = null
+        req = null
         if (response && response.headers && response.headers.link) {
           const next_match = response.headers.link.match('<([^<>]+)>; rel="next"')
-          const next = next_match.length == 2 ? next_match[1] : null
+          const next = next_match && next_match.length == 2 ? next_match[1] : null
           const last_match = response.headers.link.match('<([^<>]+)>; rel="last"')
-          const last = last_match.length == 2 ? last_match[1] : null
-          if (next && last && next != last) req['__next'] = next
+          const last = last_match && last_match.length == 2 ? last_match[1] : null
+          if (next) req = next
         }
         return body
       },
       ...opts
     }))
-    .then(b => Promise.all([b, gh(req['__next'])]))
+    .then(b => Promise.all([b, gh(req, opts)]))
     .then(([e1, e2]) => {
       if (Array.isArray(e1) && Array.isArray(e2)) return [...e1, ...e2]
       else if (e2.length === 0) return e1
