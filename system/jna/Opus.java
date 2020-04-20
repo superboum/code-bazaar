@@ -4,6 +4,7 @@ import com.sun.jna.Pointer;
 import com.sun.jna.Memory;
 
 /* Some help :
+ *  - https://en.wikipedia.org/wiki/Java_Native_Access
  *  - https://github.com/xiph/opus/blob/master/include/opus.h
  *  - https://github.com/xiph/opus/blob/master/include/opus_defines.h
  *  - https://opus-codec.org/docs/opus_api-1.2/index.html
