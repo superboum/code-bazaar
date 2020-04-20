@@ -84,6 +84,10 @@ const filt = (substate, input) => {
   return Promise.resolve(substate.filtered)
 }
 
+const walk = path_list => 
+  Promise.all(path_list.map(path =>
+    
+
 const subcommands = [
   {
     name: 'login',
@@ -195,6 +199,7 @@ const subcommands = [
   }, 
   {
     name: 'files.scan'
+    exec: _ =>  
   },
   {
     name: 'files.filter'
