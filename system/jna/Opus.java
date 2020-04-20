@@ -22,10 +22,10 @@ public class Opus {
     // "opus" = "libopus.so" on linux
     NativeOpus no = (NativeOpus) Native.load("opus", NativeOpus.class);
 
-    Pointer oe =  new Memory(32/4); // an int 32
+    Pointer oe =  new Memory(32/8); // an int 32
     Pointer opus_enc = no.opus_encoder_create(48000, 2, NativeOpus.OPUS_APPLICATION_VOIP, oe);
 
-    Pointer answer = new Memory(32/4); // an int 32
+    Pointer answer = new Memory(32/8); // an int 32
     no.opus_encoder_ctl(opus_enc, NativeOpus.OPUS_GET_APPLICATION, answer);
 
     System.out.println("encoder application is set to "+answer.getInt(0)+" (expecting: " + NativeOpus.OPUS_APPLICATION_VOIP + ")");
