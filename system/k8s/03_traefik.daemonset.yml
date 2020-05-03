@@ -19,7 +19,6 @@ spec:
      containers:
      - image: traefik:v2.1.1
        name: traefik-ingress-lb
-       imagePullPolicy: Always
        ports:
        - containerPort: 8080
        - containerPort: 80
