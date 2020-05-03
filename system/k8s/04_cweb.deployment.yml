@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cweb-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cweb
+  template:
+    metadata:
+      labels: 
+        app: cweb
+    spec:
+      containers:
+      - name: cweb-instance
+        image: superboum/amd64_cweb:latest
+        ports:
+        - containerPort: 8080

@@ -1,0 +1,15 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: cweb-web-tls
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - kind: Rule
+    match: Host(`leweb.k8s.dufour.io`) && PathPrefix(`/`)
+    services:
+    - name: cweb-service
+      port: 8080
+  tls:
+    certResolver: le

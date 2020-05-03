@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+ name: traefik-ingress-controller 
+ labels:
+   k8s-app: traefik-ingress-lb
+   kubernetes.io/cluster-service: "true"
+spec:
+ selector:
+   matchLabels:
+      k8s-app: traefik-ingress-lb
+ template:
+   metadata:
+     labels:
+       k8s-app: traefik-ingress-lb
+       name: traefik-ingress-lb
+   spec:
+     serviceAccountName: traefik-ingress-controller
+     containers:
+     - image: traefik:v2.1.1
+       name: traefik-ingress-lb
+       imagePullPolicy: Always
+       ports:
+       - containerPort: 8080
+       - containerPort: 80
+       - containerPort: 443
+
+       resources:
+         requests:
+           cpu: 100m
+           memory: 20Mi
+       args:
+       - --providers.kubernetescrd
+       - --entrypoints.web.address=:80
+       - --entrypoints.websecure.address=:443
+       - --api.insecure
+       - --certificatesresolvers.le.acme.email=example@example.com
+       - --certificatesresolvers.le.acme.storage=/acme.json
+       - --certificatesResolvers.le.acme.httpChallenge.entryPoint=web
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+ name: traefik-web-ui
+spec:
+ type: LoadBalancer
+ selector:
+  k8s-app: traefik-ingress-lb
+ ports:
+ - port: 8080
+   targetPort: 8080
+   name: api
+ - port: 443
+   targetPort: 443
+   name: websecure
+ - port: 80
+   targetPort: 80
+   name: web
