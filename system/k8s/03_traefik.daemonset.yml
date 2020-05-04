@@ -21,8 +21,14 @@ spec:
        name: traefik-ingress-lb
        ports:
        - containerPort: 8080
+         hostPort: 8080
+         protocol: TCP
        - containerPort: 80
+         hostPort: 80
+         protocol: TCP
        - containerPort: 443
+         hostPort: 443
+         protocol: TCP
 
        resources:
          requests:
@@ -36,23 +42,3 @@ spec:
        - --certificatesresolvers.le.acme.email=example@example.com
        - --certificatesresolvers.le.acme.storage=/acme.json
        - --certificatesResolvers.le.acme.httpChallenge.entryPoint=web
----
-
-apiVersion: v1
-kind: Service
-metadata:
- name: traefik-web-ui
-spec:
- type: LoadBalancer
- selector:
-  k8s-app: traefik-ingress-lb
- ports:
- - port: 8080
-   targetPort: 8080
-   name: api
- - port: 443
-   targetPort: 443
-   name: websecure
- - port: 80
-   targetPort: 80
-   name: web
