@@ -38,6 +38,8 @@ spec:
        - --providers.kubernetescrd
        - --entrypoints.web.address=:80
        - --entrypoints.websecure.address=:443
+       - --entrypoints.web.http.redirections.entryPoint.to=websecure
+       - --entrypoints.web.http.redirections.entryPoint.scheme=https
        - --api.insecure
        - --certificatesresolvers.le.acme.email=example@example.com
        - --certificatesresolvers.le.acme.storage=/acme.json
