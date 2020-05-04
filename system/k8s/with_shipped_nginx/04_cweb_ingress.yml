@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/issuer: letsencrypt-prod
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  creationTimestamp: null
+  generation: 1
+  name: cweb
+  selfLink: /apis/extensions/v1beta1/namespaces/default/ingresses/cweb
+spec:
+  rules:
+  - host: clever-wright.shirokumo.net
+    http:
+      paths:
+      - backend:
+          serviceName: cweb-service
+          servicePort: 8081
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - clever-wright.shirokumo.net
+    secretName: clever-wright-shirokumo-net-tls
+status:
+  loadBalancer: {}
+
