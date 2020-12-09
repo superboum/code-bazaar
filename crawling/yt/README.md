@@ -44,6 +44,8 @@ The following video were missing from my feed :
   - [Integrating DEI into the game development process](https://www.youtube.com/watch?v=jx7JjU98NzQ)
   - [How To Choose The Right Insurance Plan — Animated Explainer Video | Epipheo](https://www.youtube.com/watch?v=o661QHdCNF4)
 
+To put this result in perspective, **27 videos over 1574 were not listed in my feed last month**.
+
 It seems that if a channel posts a video that is unavailable, you will not see it in your feed. Additionally, it seems that if you post multiple video in a row, they will not be listed. However, it is not enough to explain the set of non-listed video I aggregated.
 
-**Still, to the question "does Youtube display all video of channels you follow, the answer is definitely a NO**
+**Still, to the question "does Youtube display all videos of channels you follow ? The answer is definitely a NO**
