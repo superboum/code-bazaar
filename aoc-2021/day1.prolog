@@ -24,6 +24,6 @@ iter([_|T], S) :- iter(T, S).
 aggr(F, S, R) :- phrase_from_stream(parse(L), F), aggregate_all(count, iter(L, S), R).
 
 % open the file and display the result
-disp(S) :- open('input.txt', read, F), aggr(F, S, R), format('win: ~w, result: ~w~n', [S, R]).
+disp(S) :- open('day1.txt', read, F), aggr(F, S, R), format('win: ~w, result: ~w~n', [S, R]).
 
 :- disp(1), disp(3).
