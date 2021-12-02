@@ -4,7 +4,7 @@
 
 % parser
 parse([V | L]) --> integer(V), "\n", parse(L).
-parse([]) --> [], "\n".
+parse([]) --> "\n".
 
 % get a sliding window of size S
 sliding(_, 0, []).
