@@ -42,7 +42,7 @@ const xml = (cnt) => new Promise((resolve, reject) => parseString(cnt, (err, res
     .sort()
     .map(([date, id, c]) => [date, id, idToName[c], video_set.includes(id)])
 
-  answer.forEach(([date, id, c, r]) => console.log(`${date} | ${c} | ${id} | ${r ? '✅' : '❌'}`))
+  answer.forEach(([date, id, c, r]) => console.log(`${date} | ${r ? '✅' : '❌'} | ${id} | ${c} | `))
   
 })()
 
