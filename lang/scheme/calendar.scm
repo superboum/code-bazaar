@@ -1,3 +1,4 @@
+; -- utils
 (define (last l) (car (reverse l)))
 
 (define (flip-first in pro rest)
@@ -16,7 +17,24 @@
         ((pair? x) (append (flatten (car x)) (flatten (cdr x))))
         (else (list x))))
 
+(define (flatten-light x)
+  (cond
+    ((null? x) '())
+    ((list? (car x)) (append (car x) (flatten-light (cdr x))))
+    (#t (cons x (flatten-light (cdr x))))))
 
+(define (list-repeat s n)
+  (map (lambda (_) s) (iota n)))
+(define (string-repeat s n)
+  (apply string-append (list-repeat s n)))
+
+(define (nth l n)
+  (cond
+    ((null? l) '())
+    ((= n 0) (car l))
+    (#t (nth (cdr l) (- n 1)))))
+
+; -- dates
 (define (make-date-only day month year)
   (make-date 0 0 0 1 day month year))
 
@@ -60,6 +78,22 @@
       ((= (last-day-month date) (date-day lday)) (list week))
       (#t (cons week (gen-month-per-week (date-add-days lday 1)))))))
 
+; -- header
+(define header-top ".——————————————————————————————————————.\n")
+(define header-bottom "|——————————————————————————————————————|")
+(define (header-txt txt)
+  (let* ([txt-len (- (string-length header-top) (string-length txt) 3)]
+        [pad-left (flonum->fixnum (floor (exact->inexact (/ txt-len 2))))]
+        [pad-right (flonum->fixnum (ceiling (exact->inexact (/ txt-len 2))))])
+    (apply string-append (append 
+      (list "|")
+      (list-repeat " " pad-left)
+      (list txt)
+      (list-repeat " " pad-right)
+      (list "|\n")))))
+(define (header txt)
+  (string-append header-top (header-txt txt) header-bottom))
+
 ; -- base calendar
 (define (cal-day-cell-base date)
   (list
@@ -78,7 +112,7 @@
   (let* ([rcal (reverse cal)]
          [prev-week-fill (- 7 (length (car rcal)))])
     (reverse
-      (cons (append (map close-box-pad (iota prev-week-fill)) (car rcal)) (cdr rcal)))))
+      (cons (append (car rcal) (map close-box-pad (iota prev-week-fill))) (cdr rcal)))))
 
 ; -- closing boxes on the right part
 (define (fill-right week)
@@ -87,8 +121,8 @@
       (reverse
         (cons
           (list
-            (format "~a ~%" top)
-            (format "~a|~%" mid))
+            (format "~a " top)
+            (format "~a|" mid))
           (cdr rweek))))))
 (define (cal-right-part cal) (map fill-right cal))
 
@@ -104,7 +138,7 @@
   (let* ([rcal (reverse cal)]
          [pad (+ (weekday-fr (last-day-month-date fdm)) 1)])
     (reverse (cons
-      (map (lambda (_) (list " ————")) (iota pad))
+      (list-repeat (list " ————") pad)
       rcal))))
 
 (define (cal-decorated date)
@@ -113,13 +147,50 @@
   (cal-right-part
   (cal-last-full-week
   (cal-base date))))))
+        
+(define bottom "|______________________________________|")
 
-;  (format ".——————————————————————————————————————.
-;|          CALENDRIER ~a          |
-;|——————————————————————————————————————|
-;"
-          
+(define (cal->lines cal)
+  (map 
+    (lambda (x) (apply string-append x)) 
+    (flatten-light 
+      (map flip cal))))
 
-(define (cal-display cal) (printf (apply string-append (flatten (map flip cal)))))
+(define (cal-build lines) 
+  (apply 
+    string-append 
+    (map 
+      (lambda (s) (string-append s "\n")) 
+      lines)))
 
-(define (cal-quick month year) (cal-display (cal-decorated (first-day-month month year))))
+(define (borders lines)
+  (cond
+    ((null? lines) '())
+    (#t 
+      (let* ([line (car lines)]
+             [pad-count (- 36 (string-length line))]
+             [pad (string-repeat " " pad-count)])
+        (cons (string-append "| " (car lines) pad " |") (borders (cdr lines)))))))
+
+(define mois '("JANVIER" "FÉVRIER" "MARS" "AVRIL" "MAI" "JUIN" "JUILLET"
+               "AOÛT" "SEPTEMBRE" "OCTOBRE" "NOVEMBRE" "DÉCEMBRE"))
+(define (cal-box date cal)
+  (append
+    (list (header (format "CALENDRIER ~a ~a" (nth mois (- (date-month date) 1)) (date-year date))))
+    (borders (cal->lines cal))
+    (list bottom)))
+
+(define (cal-quick month year) 
+  (let ([fdm (first-day-month month year)])
+    (printf 
+    (cal-build
+    (cal-box fdm
+    (cal-decorated fdm))))))
+
+(define plan-year '(2022 2023 2024))
+(define plan-month (map (lambda (m) (+ 1 m)) (iota 12)))
+(define (cal-plan month year)
+  (cond
+    ((null? year) '())
+    ((null? month) (cal-plan plan-month (cdr year)))
+    (#t (cal-quick (car month) (car year)) (cal-plan (cdr month) year))))
