@@ -44,6 +44,8 @@
     ((= (date-month date) 2) (days-feb (date-year date)))
     ((member (date-month date) long-months) 31)
     (#t 30)))
+(define (last-day-month-date date)
+  (make-date-only (last-day-month date) (date-month date) (date-year date)))
 
 (define (gen-week date)
   (cond
@@ -58,13 +60,27 @@
       ((= (last-day-month date) (date-day lday)) (list week))
       (#t (cons week (gen-month-per-week (date-add-days lday 1)))))))
 
-(define cal-pad '("     " "     "))
+; -- base calendar
 (define (cal-day-cell-base date)
   (list
-    (format " ————")
+    " ————"
     (format "| ~2,'0d " (date-day date))))
-    ;(format " ————")))
 
+(define (cal-base fdm)
+  (map 
+    (lambda (w)(map (lambda (d) (cal-day-cell-base d)) w))
+    (gen-month-per-week fdm)))
+
+
+; -- closing boxes on the second to last
+(define (close-box-pad x) (list " ————" ""))
+(define (cal-last-full-week cal)
+  (let* ([rcal (reverse cal)]
+         [prev-week-fill (- 7 (length (car rcal)))])
+    (reverse
+      (cons (append (map close-box-pad (iota prev-week-fill)) (car rcal)) (cdr rcal)))))
+
+; -- closing boxes on the right part
 (define (fill-right week)
   (let ([rweek (reverse week)])
     (let-values ([(top mid) (apply values (car rweek))])
@@ -73,24 +89,37 @@
           (list
             (format "~a ~%" top)
             (format "~a|~%" mid))
-            ;(format "~a ~%" bot))
           (cdr rweek))))))
+(define (cal-right-part cal) (map fill-right cal))
 
-(define (fill-bottom month)
-  (let ([rmonth (reverse month)])
-    (reverse (cons (map (lambda (_) (list " ————")) (car rmonth)) rmonth))))
+; -- handle shifting first week to the right col
+(define cal-pad '("     " "     "))
+(define (cal-shift-top cal)
+  (let* ([shift (- 7 (length (car cal)))]
+         [padding (map (lambda (cnt) cal-pad) (iota shift))])
+    (cons (append padding (car cal)) (cdr cal))))
 
-(define (build-cells fdm)
-  (fill-bottom
-    (map 
-      (lambda (w) (fill-right (map (lambda (d) (cal-day-cell-base d)) w))) 
-      (gen-month-per-week fdm))))
+; -- handle closing bottom of the calendar
+(define (cal-bottom fdm cal)
+  (let* ([rcal (reverse cal)]
+         [pad (+ (weekday-fr (last-day-month-date fdm)) 1)])
+    (reverse (cons
+      (map (lambda (_) (list " ————")) (iota pad))
+      rcal))))
 
-(define (build-cells-with-pads fdm)
-  (let ([days (build-cells fdm)]
-        [pad-first (map (lambda (cnt) cal-pad) (iota (weekday-fr fdm)))])
-    (cons (append pad-first (car days)) (cdr days))))
+(define (cal-decorated date)
+  (cal-bottom date
+  (cal-shift-top
+  (cal-right-part
+  (cal-last-full-week
+  (cal-base date))))))
 
-;(define (build-cal-inner fdm)
-;  (build-cell-with-pads fdm)
-    
+;  (format ".——————————————————————————————————————.
+;|          CALENDRIER ~a          |
+;|——————————————————————————————————————|
+;"
+          
+
+(define (cal-display cal) (printf (apply string-append (flatten (map flip cal)))))
+
+(define (cal-quick month year) (cal-display (cal-decorated (first-day-month month year))))
