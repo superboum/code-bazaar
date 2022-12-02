@@ -1,9 +1,3 @@
-(define (collect)
-  (let ([line (get-line (current-input-port))])
-    (cond
-      ((eof-object? line) '())
-      (#t (cons line (collect))))))
-
 (define (aggregate cal-max cal-cur)
   (let ([food (get-line (current-input-port))])
     (cond
