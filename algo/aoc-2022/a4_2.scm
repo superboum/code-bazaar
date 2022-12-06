@@ -13,8 +13,8 @@
 
 (define (parse-interval port)
   (let* ([start (lex-int port) ]
-        [_ (lex-token port #\-)]
-        [end (lex-int port) ])
+         [_ (lex-token port #\-)]
+         [end (lex-int port) ])
     `(,start . ,end)
 ))
 
