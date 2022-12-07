@@ -16,6 +16,10 @@
       (#t #f)
 )))
 
+(define (lex-word port w)
+  (let ([r (get-string-n port (string-length w))])
+    (assert (string=? r w))))
+
 ; input : headers, moves
 ; moves : moveLine, moves | empty
 ; headers : crates, numLine
@@ -32,7 +36,9 @@
   (list
     'input
     (parse-headers port)
-    ;(parse-moves port)
+    (cond
+      ((lex-token port #\newline) (parse-moves port))
+      (#t 'error))
 ))
 
 (define (parse-headers port)
@@ -101,6 +107,25 @@
   (let ([v (lex-int port)])
     (lex-token port #\space)
     v))
+
+(define (parse-moves port)
+  (let ([c (lookahead-char port)])
+    (cond
+      ((eof-object? c) '())
+      ((eq? c #\m) (cons (parse-move-line port) (parse-moves port)))
+      (#t 'error))))
+
+(define (parse-move-line port)
+  (let* ([_1 (lex-word port "move ")]
+         [count (lex-int port)]
+         [_2 (lex-word port " from ")]
+         [from (lex-int port)]
+         [_3 (lex-word port " to ")]
+         [to (lex-int port)])
+  (lex-token port #\newline)
+  `((count . ,count) (from . ,from) (to . ,to))
+))
+  
 
 ;-- utils
 (define (zip a b)
