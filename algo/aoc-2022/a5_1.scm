@@ -38,15 +38,24 @@
 (define (parse-headers port)
   (list 
     'headers
-    (cons 'crates (parse-crates port '()))
-    ;(cons 'idx (parse-num-lines port)
+    (cons 'crates (parse-crates-top port '()))
+    (cons 'idx (parse-num-lines port))
 ))
 
-(define (parse-crates port acc)
-  (let ([line (parse-crate-line port)])
+(define (parse-crates-top port acc)
+  (let ([c (lookahead-char port)])
     (cond 
-      ((null? line) acc)
-      (#t (parse-crates port (zip line acc)))
+      ((eq? c #\space) (parse-crates-top port (zip (parse-crate-line port) acc)))
+      ((eq? c #\[) (parse-crates-bottom port acc))
+      (#t (cons 'error acc))
+)))
+
+(define (parse-crates-bottom port acc)
+  (let ([c (lookahead-char port)])
+    (cond 
+      ((eq? c #\[) (parse-crates-bottom port (zip (parse-crate-line port) acc)))
+      ((eq? c #\space) acc)
+      (#t (cons 'error acc))
 )))
 
 (define (parse-crate-line port)
@@ -54,7 +63,7 @@
     (cond
       ((lex-token port #\newline) (list maybeCrate))
       ((lex-token port #\space) (cons maybeCrate (parse-crate-line port)))
-      (#t '())
+      (#t '(error))
 )))
 
 (define (parse-maybe-crate port)
@@ -78,6 +87,20 @@
   (lex-token port #\space)
   'empty
 )
+
+(define (parse-num-lines port)
+  (let ([num-block (parse-num-block port)])
+    (cond
+      ((lex-token port #\newline) (list num-block))
+      ((lex-token port #\space) (cons num-block (parse-num-lines port)))
+      (#t '(error))
+)))
+
+(define (parse-num-block port)
+  (lex-token port #\space)
+  (let ([v (lex-int port)])
+    (lex-token port #\space)
+    v))
 
 ;-- utils
 (define (zip a b)
