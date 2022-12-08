@@ -33,19 +33,16 @@
 ; numBlock : '<space>' int '<space>'
 
 (define (parse-input port)
-  (list
-    'input
-    (parse-headers port)
+  (let ([initial-state (parse-headers port)])
     (cond
-      ((lex-token port #\newline) (parse-moves port))
+      ((lex-token port #\newline) (extract-result (parse-moves port initial-state)))
       (#t 'error))
 ))
 
 (define (parse-headers port)
-  (list 
-    'headers
-    (cons 'crates (parse-crates-top port '()))
-    (cons 'idx (parse-num-lines port))
+  (let ([initial-state (parse-crates-top port '())])
+    (parse-num-lines port)
+    (prepare initial-state)
 ))
 
 (define (parse-crates-top port acc)
@@ -67,7 +64,7 @@
 (define (parse-crate-line port)
   (let ([maybeCrate (parse-maybe-crate port)])
     (cond
-      ((lex-token port #\newline) (list maybeCrate))
+      ((lex-token port #\newline) (cons maybeCrate '()))
       ((lex-token port #\space) (cons maybeCrate (parse-crate-line port)))
       (#t '(error))
 )))
@@ -84,7 +81,7 @@
   (lex-token port #\[)
   (let ([letter (get-char port)])
     (lex-token port #\])
-    `(crate . ,letter)
+    letter
 ))
 
 (define (parse-empty-space port)
@@ -108,14 +105,14 @@
     (lex-token port #\space)
     v))
 
-(define (parse-moves port)
+(define (parse-moves port state)
   (let ([c (lookahead-char port)])
     (cond
-      ((eof-object? c) '())
-      ((eq? c #\m) (cons (parse-move-line port) (parse-moves port)))
+      ((eof-object? c) state)
+      ((eq? c #\m) (parse-moves port (parse-move-line port state)))
       (#t 'error))))
 
-(define (parse-move-line port)
+(define (parse-move-line port state)
   (let* ([_1 (lex-word port "move ")]
          [count (lex-int port)]
          [_2 (lex-word port " from ")]
@@ -123,7 +120,7 @@
          [_3 (lex-word port " to ")]
          [to (lex-int port)])
   (lex-token port #\newline)
-  `((count . ,count) (from . ,from) (to . ,to))
+  (next-step state count from to)
 ))
   
 
@@ -133,5 +130,32 @@
     ((null? a) '())
     ((null? b) (cons (cons (car a) '()) (zip (cdr a) b)))
     (#t (cons (cons (car a) (car b)) (zip (cdr a) (cdr b))))))
+
+(define (split src n sel)
+  (cond
+    ((null? src) (values sel src))
+    ((<= n 0) (values sel src))
+    (#t (split (cdr src) (- n 1) (cons (car src) sel)))
+))
+
+;-- logic
+(define (prepare ll) (list->vector (map clear-empty (map reverse ll))))
+(define (clear-empty l)
+  (cond
+    ((null? l) '())
+    ((eq? 'empty (car l)) (clear-empty (cdr l)))
+    (#t l)))
+
+(define (next-step state count from-idx to-idx)
+  (let ([from (vector-ref state (- from-idx 1))]
+        [to (vector-ref state (- to-idx 1))])
+    (let-values ([(sel rest) (split from count '())])
+      (vector-set! state (- from-idx 1) rest)
+      (vector-set! state (- to-idx 1) (append sel to))
+      state
+)))
+
+(define (extract-result state)
+  (list->string (map (lambda (l) (car l)) (vector->list state))))
 
 (format #t "~a~%" (parse-input (current-input-port)))
