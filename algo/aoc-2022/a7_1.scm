@@ -37,36 +37,44 @@
 ))))
 
 ; --- parser
-; input: terminalLine, input | <eof>
-; terminalLine: cmdLine | infoLine
-; cmdLine: <$>, (<cd>, path | <ls>)
+; input: cmdBlock, input | <eof>
+; cmdBlock: <$>, <cd>, path | <$>, <ls>, infoLine
 ; path: <word>
-; infoLine: dirLine | fileLine
-; dirLine: <dir> <word>
-; fileLine: <int> <word>
+; infoLine: (dirLine | fileLine), infoLine | <none>
+; dirLine: <dir>, <word>
+; fileLine: <int>, <word>
 
 (define (parser tokens)
+  (parse-lines tokens))
+
+(define (parse-lines tokens)
   (let ([t (tokens 'peek)])
     (cond
       ((eq? 'eof t) '())
-      (#t (cons (parse-term tokens) (parser tokens)))
+      (#t (cons (parse-term tokens) (parse-lines tokens))) 
 )))
 
 (define (parse-term tokens)
   (let ([t (tokens 'peek)])
     (cond
-      ((eq? 'prompt t) (parse-cmd tokens))
-      ((or (eq? 'dir t) (eq? 'int (car t))) (parse-info tokens))
+      ((eq? 'prompt t) (parse-block tokens))
       (#t (raise "invalide token for parse-term"))
 )))
 
-(define (parse-cmd tokens)
+(define (parse-block tokens)
   (assert (eq? (tokens 'read) 'prompt))
   (let ([t (tokens 'read)])
     (cond
-      ((eq? t 'cd) `(cd ,(cdr (tokens 'read)))) ; we should type-check the path...
-      ((eq? t 'ls) `(ls))
+      ((eq? t 'cd) `(cd . ,(cdr (tokens 'read)))) ; we should type-check the path...
+      ((eq? t 'ls) `(ls . ,(parse-ls-res tokens)))
       (#t (raise "invalid token for parse-cmd"))
+)))
+
+(define (parse-ls-res tokens)
+  (let ([t (tokens 'peek)])
+    (cond
+      ((or (eq? t 'prompt) (eq? t 'eof)) '())
+      (#t (cons (parse-info tokens) (parse-ls-res tokens)))
 )))
 
 (define (parse-info tokens)
