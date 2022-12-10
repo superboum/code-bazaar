@@ -84,7 +84,6 @@
 
 ; --- build filesystem tree
 (define (obs-gen fstree workdir)
-  ;(format #t "obs-gen ~a ~a~%" fstree workdir)
   (lambda (v)
     (cond
       ((eq? (car v) 'cd) (obs-gen fstree (cwd workdir (cdr v))))
@@ -99,7 +98,6 @@
     (#t (cons rel path))))
 
 (define (updtree fstree path files)
-  ;(format #t "updtree ~a ~a ~a~%" fstree path files)
   (cond
     ((null? path) (append fstree (fstreefmt files)))
     (#t 
@@ -113,7 +111,6 @@
   (map (lambda (f) (if (eq? (car f) 'dir) `(,(cadr f) -1) (reverse (cdr f)))) files))
 
 (define (leaf-extract leaves target)
-  ;(format #t "leaf-extract ~a ~a~%" leaves target)
   (letrec ([inner (lambda (leaves target acc)
     (cond
       ((null? leaves) (raise "not found"))
@@ -121,7 +118,28 @@
       (#t (inner (cdr leaves) target (cons (car leaves) acc)))))])
     (inner leaves target '())))
 
+; -- compute size
+(define (fs-folder-size fstree)
+  (cond
+    ((> (cadr fstree) 0) fstree)
+    (#t 
+     (let* ([new-leaves (map fs-folder-size  (cddr fstree))]
+            [size (apply + (map (lambda (f) (cadr f)) new-leaves))])
+        (cons (car fstree) (cons size new-leaves))
+))))
+
+; -- list folders with size smaller than x
+(define (folder-smaller-than fstree x)
+  (cond
+    ((null? (cddr fstree)) '()) ; this is a file
+    ((> (cadr fstree) x) (apply append (map (lambda (f) (folder-smaller-than f x)) (cddr fstree))))
+    (#t (cons (cadr fstree) (apply append (map (lambda (f) (folder-smaller-than f x)) (cddr fstree)))))
+))
 
 ; --- glue
 (define lex-stdin (lexer-peekable (current-input-port)))
-(format #t "~a~%" ((parser lex-stdin (obs-gen '("/" -1) '())) '(dump)))
+(let* ([visitor (parser lex-stdin (obs-gen '("/" 0) '()))]
+       [fstree (visitor '(dump))]
+       [stats (fs-folder-size fstree)]
+       [small-folder (folder-smaller-than stats 100000)])
+  (format #t "~a~%" (apply + small-folder)))
