@@ -8,6 +8,10 @@
   display: flex;
   flex-direction: row;
 }
+.block {
+  max-width: 350px;
+  margin: 1rem;
+}
 </style>
     </head>
     <body>
@@ -16,9 +20,9 @@
     <h2>dents plateau</h2>
     <form>
     <input type="number" id="plateau" min="4" max="64" value="42"/>
-    <div>
+    <!--<div>
     <input type="checkbox" id="plateau-cont"><label for="plateau-cont">calculé</label>
-    </div>
+    </div>-->
     </form>
   </div>
 
@@ -37,9 +41,17 @@
 
   <div class="block">
     <h2>braquet</h2>
-    <input type="number" id="braquet"/>
+    <div><input type="number" id="braquet"/></div>
+    <p><em>La démultiplication de votre pédalage.</em></p>
+    <div>
+        Met à jour : <select name="braquet-impact" id="braquet-impact">
+            <option value="plateau">Plateau</option>
+            <option value="pignon" selected>Pignon</option>
+        </select>
+    </div>
    </div>
 </section>
+<hr/>
 
 <section class="calcul" id="braquetDev">
   <div class="block">
@@ -54,6 +66,7 @@
   <div class="block">
     <h2>⌀ roue (mm)</h2>
     <input type="number" id="bd_diam" value="700"/>
+    <p><em>Le diamètre extérieur de votre roue.</em></p>
   </div>
 
   <div class="block">
@@ -62,18 +75,60 @@
 
   <div class="block">
     <h2>développement (m/tour)</h2>
-    <input type="number" id="bd_dev"/>
+    <div><input type="number" id="bd_dev"/></div>
+    <p><em>Le nombre de mètres parcourus à chaque tour de roue.</em></p>
+    <div>
+        Met à jour : <select name="braquet-impact" id="braquet-impact">
+            <option value="braquet" selected>Braquet</option>
+            <option value="diam">Diamètre</option>
+        </select>
+    </div>
    </div>
 </section>
-<!--
-braquet
-taille de la roue
-développement
+<hr/>
 
-développement
-cadence
-vitesse
--->
+<section class="calcul" id="devVit">
+  <div class="block">
+    <h2>développement (m/tour)</h2>
+    <input type="number" id="dv_dev" value="2.72"/>
+   </div> 
+
+  <div class="block">
+    <h2>×</h2>
+  </div>
+
+  <div class="block">
+    <h2>cadence (tour/min)</h2>
+    <div><input type="number" id="dv_cad" value="60" min="1" max="200"/></div>
+    <p><em>Une cadence idéale se situe entre 60 et 90 tr/min</em></p>
+   </div> 
+
+  <div class="block">
+    <h2>=</h2>
+  </div>
+
+  <div class="block">
+    <h2>vitesse (km/h)</h2>
+    <input type="number" id="dv_vit"/>
+    <p><em>Votre vitesse de déplacement simplement.</em></p>
+    <div>
+        Met à jour : <select name="braquet-impact" id="braquet-impact">
+            <option value="dev" selected>Développement</option>
+            <option value="cad">Cadence</option>
+        </select>
+    </div>
+  </div> 
+
+</section>
+<hr/>
+
+<h2>Répondre à des questions</h2>
+
+<p><strong>Est-ce que la démultiplication de ma transmission est suffisante pour gravir des côtes ?</strong>Mettez le nombre de dents de votre plus petit plateau et de votre plus grand pignon, indiquez la taille de votre roue, définissez la cadence minimale recommandée et notez la vitesse. Si cette dernière est au dessus de 4.5km/h, alors vous pouvez envisager d'avantage de démultiplication.</p>
+
+<p><strong>Combien de dents j'ai besoin sur ma roue libre pour une démultiplication maximale ?</strong> Définissez la vitesse à 4.5km/h, la cadence à 60, la taille de votre roue, et mettez le nombre de dents sur votre plateau.</p>.
+
+<hr/>
 
 <p>
 <em>En apprendre plus sur les braquets, le développement ou la cadence sur le site <a href="http://www.lesvelosdepatrick.com/transmission-velo-braquets.htm">les vélos de Patrick</a></em>.
@@ -84,26 +139,66 @@ vitesse
         if (evt.target.id == 'braquet' ) {
             el['pignon'].value = el['plateau'].value / el['braquet'].value
         } else {
+            const prev = el['braquet'].value
             el['braquet'].value = el['plateau'].value / el['pignon'].value
+            if (prev != el['braquet'].value) {
+                el['bd_braquet'].value = el['braquet'].value
+                braqdev(el)({target: {id: 'bd_braquet' }})
+            }
         }
     }
 
     const braqdev = el => evt => {
         if (evt.target.id == 'bd_dev') {
+            const prev = el['bd_braquet'].value
+            el['bd_braquet'].value = el['bd_dev'].value * 1000 / (3.14159 * el['bd_diam'].value)
+            if (prev != el['bd_braquet'].value) {
+                el['braquet'].value = el['bd_braquet'].value 
+                dbbraq(el)({target: {id: 'braquet' }})
+            }
         } else {
-            console.log('hello')
             el['bd_dev'].value = el['bd_braquet'].value * 3.14159 * el['bd_diam'].value / 1000
         }
     }
 
-    const dbelems = ['braquet', 'pignon', 'plateau'].reduce((acc, v) => ({ ...acc, [v]: document.querySelector(`#${v}`) }), {})
-    Object.entries(dbelems).forEach(([k, v]) => v.addEventListener('change', dbbraq(dbelems)))
-    dbbraq(dbelems)({target: { id: 'plateau' }})
+    const devvit = el => evt => {
+        if (evt.target.id == 'dv_vit') {
+            el['dv_dev'].value = (el['dv_vit'].value*1000/60) / el['dv_cad'].value
+        } else {
+            el['dv_vit'].value = (el['dv_cad'].value * 60) * (el['dv_dev'].value / 1000)
+        }
+    }
 
-    const bd_elems = ['bd_braquet', 'bd_diam', 'bd_dev'].reduce((acc, v) => ({ ...acc, [v]: document.querySelector(`#${v}`) }), {})
-    Object.entries(bd_elems).forEach(([k, v]) => v.addEventListener('change', braqdev(bd_elems)))
-    console.log(bd_elems)
-    braqdev(bd_elems)({target: {id: 'bd_braquet' }})
+    const entities = {
+        'dentsToBraquet': ['braquet', 'pignon', 'plateau'],
+        'braquetToDeveloppement': ['bd_braquet', 'bd_diam', 'bd_dev'],
+        'developpementToVitesse': ['dv_dev', 'dv_cad', 'dv_vit'],
+    }
+
+    const fxs = {
+        'dentsToBraquet': dbbraq,
+        'braquetToDeveloppement': braqdev,
+        'developpementToVitesse': devvit,
+    }
+
+    const idx = Object.entries(entities).reduce((acc, [k, v]) => ({
+        ...acc,
+        ...(v.reduce((acc, v) => ({
+            ...acc,
+            [v]: document.querySelector(`#${v}`)
+        }), {})),
+    }), {})
+
+    Object.entries(entities).map(([k,v]) => 
+        v.forEach(id => 
+            idx[id].addEventListener('change', fxs[k](idx))
+    ))
+
+
+    dbbraq(idx)({target: { id: 'plateau' }})
+    braqdev(idx)({target: {id: 'bd_braquet' }})
+    devvit(idx)({target: {id: 'dv_cad'}})
+    
 </script>
     </body>
 </html>
