@@ -14,7 +14,12 @@
 <section class="calcul" id="dentsBraquet">
   <div class="block">
     <h2>dents plateau</h2>
+    <form>
     <input type="number" id="plateau" min="4" max="64" value="42"/>
+    <div>
+    <input type="checkbox" id="plateau-cont"><label for="plateau-cont">calculé</label>
+    </div>
+    </form>
   </div>
 
   <div class="block">
@@ -23,7 +28,7 @@
 
   <div class="block">
     <h2>dents pignon</h2>
-    <input type="number" id="pignon" min="4" max="64" value="36"/>
+    <input type="number" id="pignon" min="4" max="64" value="34"/>
   </div>
 
   <div class="block">
@@ -36,6 +41,30 @@
    </div>
 </section>
 
+<section class="calcul" id="braquetDev">
+  <div class="block">
+    <h2>braquet</h2>
+    <input type="number" id="bd_braquet" value="1.235"/>
+  </div>
+
+  <div class="block">
+    <h2>× π × </h2>
+  </div>
+
+  <div class="block">
+    <h2>⌀ roue (mm)</h2>
+    <input type="number" id="bd_diam" value="700"/>
+  </div>
+
+  <div class="block">
+    <h2>=</h2>
+  </div>
+
+  <div class="block">
+    <h2>développement (m/tour)</h2>
+    <input type="number" id="bd_dev"/>
+   </div>
+</section>
 <!--
 braquet
 taille de la roue
@@ -59,9 +88,22 @@ vitesse
         }
     }
 
+    const braqdev = el => evt => {
+        if (evt.target.id == 'bd_dev') {
+        } else {
+            console.log('hello')
+            el['bd_dev'].value = el['bd_braquet'].value * 3.14159 * el['bd_diam'].value / 1000
+        }
+    }
+
     const dbelems = ['braquet', 'pignon', 'plateau'].reduce((acc, v) => ({ ...acc, [v]: document.querySelector(`#${v}`) }), {})
     Object.entries(dbelems).forEach(([k, v]) => v.addEventListener('change', dbbraq(dbelems)))
     dbbraq(dbelems)({target: { id: 'plateau' }})
+
+    const bd_elems = ['bd_braquet', 'bd_diam', 'bd_dev'].reduce((acc, v) => ({ ...acc, [v]: document.querySelector(`#${v}`) }), {})
+    Object.entries(bd_elems).forEach(([k, v]) => v.addEventListener('change', braqdev(bd_elems)))
+    console.log(bd_elems)
+    braqdev(bd_elems)({target: {id: 'bd_braquet' }})
 </script>
     </body>
 </html>
