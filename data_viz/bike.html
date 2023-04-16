@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>bike</title>
+<style>
+.calcul {
+  display: flex;
+  flex-direction: row;
+}
+</style>
+    </head>
+    <body>
+<section class="calcul" id="dentsBraquet">
+  <div class="block">
+    <h2>dents plateau</h2>
+    <input type="number" id="plateau" min="4" max="64" value="42"/>
+  </div>
+
+  <div class="block">
+    <h2>÷</h2>
+  </div>
+
+  <div class="block">
+    <h2>dents pignon</h2>
+    <input type="number" id="pignon" min="4" max="64" value="36"/>
+  </div>
+
+  <div class="block">
+    <h2>=</h2>
+  </div>
+
+  <div class="block">
+    <h2>braquet</h2>
+    <input type="number" id="braquet"/>
+   </div>
+</section>
+
+<!--
+braquet
+taille de la roue
+développement
+
+développement
+cadence
+vitesse
+-->
+
+<p>
+<em>En apprendre plus sur les braquets, le développement ou la cadence sur le site <a href="http://www.lesvelosdepatrick.com/transmission-velo-braquets.htm">les vélos de Patrick</a></em>.
+</p>
+
+<script>
+    const dbbraq = el => evt => {
+        if (evt.target.id == 'braquet' ) {
+            el['pignon'].value = el['plateau'].value / el['braquet'].value
+        } else {
+            el['braquet'].value = el['plateau'].value / el['pignon'].value
+        }
+    }
+
+    const dbelems = ['braquet', 'pignon', 'plateau'].reduce((acc, v) => ({ ...acc, [v]: document.querySelector(`#${v}`) }), {})
+    Object.entries(dbelems).forEach(([k, v]) => v.addEventListener('change', dbbraq(dbelems)))
+    dbbraq(dbelems)({target: { id: 'plateau' }})
+</script>
+    </body>
+</html>
