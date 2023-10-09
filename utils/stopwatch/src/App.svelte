@@ -1,8 +1,9 @@
 <script>
     import { onDestroy } from 'svelte';
-	import Stopwatch from './Stopwatch.svelte';
-	import Laps from './Laps.svelte';
-	import Controls from './Controls.svelte';
+    import Stopwatch from './Stopwatch.svelte';
+    import Laps from './Laps.svelte';
+    import Controls from './Controls.svelte';
+    import Selector from './Selector.svelte';
 
 	// import the number of milliseconds from the readable stores
 	import { time } from './stores.js';
@@ -10,8 +11,10 @@
     // lapse is set to consider the time since the start button is first pressed
     let lapse = 0;
 
-    // previous is set to record the time accumulated before the pause button is pressed
     let previous = 0;
+
+    // paused is set to record the time accumulated before the pause button is pressed
+    let paused = 0;
 
     // unsubscribe is set to refer to the function used to unsubscribe from the store
     let unsubscribe;
@@ -22,7 +25,7 @@
         unsubscribe = time.subscribe(value => {
             // add the previous value to the current number of milliseconds
             //lapse = value + previous;
-            lapse = value;
+            lapse = value + paused;
         });
     }
 
@@ -37,17 +40,50 @@
 
     // through the stop function unsubscribe from the readable store and reset the values
     function stop() {
-        lapse = 0;
-        previous = 0;
-
-        laps = [];
+        if (!confirm(`Voulez-vous vraiment supprimer ${selected.name} ?`)) {
+          return
+        }
+        stopwatches = stopwatches.filter(elem => elem.name != selected.name);
+        if (stopwatches.length > 0) {
+        	selected = stopwatches[0];
+	} else {
+		selected = null;
+	}
         terminate();
     }
 
     // through the pause function unsubscribe from the store and set previous to match the value held by lapse
     function pause() {
-        previous += lapse;
+        paused = lapse;
         terminate();
+    }
+
+    let stopwatches = [];
+    let selected = null;
+    function add() {
+       let name = prompt("Votre chronomètre", "Sans nom");
+       let sw = { name: name, laps: [], lapse: 0, previous: 0, paused: 0 };
+       stopwatches = [ sw, ...stopwatches ];
+       switch_stopwatch(sw);
+    }
+
+    function sel(event) {
+     	switch_stopwatch(event.detail);
+    }
+
+    function switch_stopwatch(sw) {
+        if (selected) {
+          let old = stopwatches.find(elem => elem.name === selected.name);
+          old.lapse = lapse;
+          old.previous = previous;
+          old.laps = laps;
+          old.paused = paused;
+        }
+        selected = stopwatches.find(elem => elem.name === sw.name);
+        lapse = selected.lapse;
+        previous = selected.previous;
+        laps = selected.laps;
+        paused = selected.paused;
     }
 
     // describe the booleans to determine the button(s) included in the controls component
@@ -64,6 +100,7 @@
     function lap() {
         const { length } = laps;
         previous += lapse;
+        lapse = 0;
         const total = previous;
         // partial referring to the number of milliseconds between the previous (if existing) and current lap
         const partial = length > 0 ? total - laps[0].total : total;
@@ -72,6 +109,7 @@
             total,
             partial,
         }, ...laps];
+        paused = 0;
 	terminate();
     }
 
@@ -84,18 +122,21 @@
 <style>
 	/* global styles which would otherwise be placed in the global stylesheet */
 
-	@import url("https://fonts.googleapis.com/css?family=Roboto+Mono:300|Open+Sans:400&display=swap");
-
 	:global(*) {
 			box-sizing: border-box;
 			padding: 0;
 			margin: 0;
+        		font-family: monospace;
+	}
+	:global(h1) {
+        	font-family: monospace;
+		font-weight: normal;
 	}
 
 	:global(body) {
 			background: hsl(0, 0%, 95%);
 			color: hsl(0, 0%, 20%);
-			font-family: "Open Sans", sans-serif;
+        		font-family: monospace;
 			/* center the .stopwatch container in the viewport */
 			display: flex;
 			flex-direction: column;
@@ -149,6 +190,8 @@
 
 </style>
 
+{#if selected}
+<h1>{selected.name}</h1>
 <div class="stopwatch">
     <!-- pass the number of milliseconds to the stopwatch component -->
     <Stopwatch {lapse} />
@@ -159,11 +202,6 @@
     -->
 	<Controls on:start={start} on:stop={stop} on:pause={pause} on:lap={lap} {subscription} {lapsed} />
 </div>
+{/if}
 
-<div class="selector">
-    <!-- list of all the timers -->
-    <div>list</div> 
-    <!-- new timer -->
-    <div>input</div>
-</div>
-
+<Selector on:add={add} on:sel={sel} {stopwatches} {selected}/>

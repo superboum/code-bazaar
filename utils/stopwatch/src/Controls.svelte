@@ -66,9 +66,10 @@ subscription -> Lap & pause
     <button on:click="{pause}">Pause</button>
     <button on:click="{lap}">Fin parole</button>
     {:else if lapsed}
-    <button on:click="{stop}">Supprimer</button>
-    <button on:click="{start}">Début parole</button>
+    <button on:click="{start}">Reprendre</button>
+    <button on:click="{lap}">Fin parole</button>
     {:else}
+    <button on:click="{stop}">Supprimer</button>
     <button on:click="{start}">Début parole</button>
     {/if}
 </div>
