@@ -204,4 +204,4 @@
 </div>
 {/if}
 
-<Selector on:add={add} on:sel={sel} {stopwatches} {selected}/>
+<Selector on:add={add} on:sel={sel} {stopwatches} {selected} {subscription} />

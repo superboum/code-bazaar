@@ -13,6 +13,7 @@
 
     export let stopwatches = [ ];
     export let selected = null;
+    export let subscription;
 </script>
 
 <style>
@@ -61,7 +62,7 @@
     }
 </style>
 
-<div class="swcont">
+<div class="swcont" style={ subscription ? 'visibility: hidden' : 'visibility: visible' }>
 <div class="swlist">
     <button style="min-width: 3rem; width: 3rem" on:click="{add}">+</button>
     {#each stopwatches as sw}
