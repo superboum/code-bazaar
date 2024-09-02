@@ -36,6 +36,7 @@
    (! ou (@ a (@ b (((si a) vrai) b)))
   
    ; peano ops
+   (! zero? (@ n ((n (@ x faux)) vrai))
    (! suiv (@ n (@ f (@ x (f ((n f) x)) )))
    (! plus (@ m (@ n (@ f (@ x ((m f) ((n f) x)) ))))
    (! mult (@ m (@ n (@ f (@ x ((m (n f)) x)))))
@@ -53,11 +54,17 @@
    (! n2 (@ f (@ x (((suiv n1) f) x)))
    (! n3 (@ f (@ x (((suiv n2) f) x)))
 
-   ; y combinator OR fixed-point combinator
+   ; y combinator / fixed-point combinator
    (! y (@ f ((@ x ((f x) x)) (@ x ((f x) x))))
 
    ; math
-   ;(! fact (@ n (@ f (@ x 
+   (! pfact (@ r (@ n (@ f (@ x 
+     (((si (zero? n)) ; if n == 0
+       ((n1 f) x)) ; then 1
+       ((((mult n) (r (((pred n) f) x))) f) x)) ; else n * r (n - 1)
+   ))))
+   ;(! fact (@ n (@ f (@ x
+   ;  ((((y pfact) n) f) x))))
 
    ,body
-))))))))))))))))
+))))))))))))))))))
