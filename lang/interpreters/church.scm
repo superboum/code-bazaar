@@ -25,9 +25,9 @@
   (((eval-expr expr empty-env) (lambda (v) (+ v 1))) 0))
 
 ; -- logic
-(define stdenv 
+(define (with-stdenv body)
    ; bool
-  '(! faux (@ x (@ y y)) 
+  `(! faux (@ x (@ y y)) 
    (! vrai (@ x (@ y x))
    (! si (@ b (@ x (@ y ((b x) y) )))
    (! non (@ a (((si a) faux) vrai))
@@ -39,5 +39,9 @@
    (! un (@ f (@ x (f x)))
    (! deux (@ f (@ x (f (f x))))
 
-   deux
-))))))))))
+   (! suiv (@ n (@ f (@ x (f ((n f) x)) )))
+   (! plus (@ m (@ n (@ f (@ x ((m f) ((n f) x)) ))))
+   (! mult (@ m (@ n (@ f (@ x ((m (n f)) x)))))
+
+   ,body
+)))))))))))))
