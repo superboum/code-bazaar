@@ -30,8 +30,10 @@
    (! vrai (@ x (@ y x))
    (! si (@ b (@ x (@ y ((b x) y) )))
    (! non (@ a (((si a) faux) vrai))
-   (non vrai)
-)))))
+   (! et (@ a (@ b (((si a) b) faux)))
+   (! ou (@ a (@ b (((si a) vrai) b)))
+   ((et ((ou vrai) faux)) ((ou faux) vrai))
+)))))))
 ;
 ; (! and (@ a (@ b (if a b false)))
 ; (! or (@ a (@ b (if a true b)))
