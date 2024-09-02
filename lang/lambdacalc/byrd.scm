@@ -21,21 +21,23 @@
 (define (lcalc-bool expr)
   (((eval-expr expr empty-env) #t) #f))
 
-(define (lcacl-num expr)
-  ((eval-expr expr empty-env) (lambda (v) (+ v 1)) 0))
+(define (lcalc-num expr)
+  (((eval-expr expr empty-env) (lambda (v) (+ v 1))) 0))
 
 ; -- logic
-(define code1 
+(define stdenv 
+   ; bool
   '(! faux (@ x (@ y y)) 
    (! vrai (@ x (@ y x))
    (! si (@ b (@ x (@ y ((b x) y) )))
    (! non (@ a (((si a) faux) vrai))
    (! et (@ a (@ b (((si a) b) faux)))
    (! ou (@ a (@ b (((si a) vrai) b)))
-   ((et ((ou vrai) faux)) ((ou faux) vrai))
-)))))))
-;
-; (! and (@ a (@ b (if a b false)))
-; (! or (@ a (@ b (if a true b)))
-; (and (or false true) true)
-;))))))
+  
+   ; int peano
+   (! zero (@ f (@ x x))
+   (! un (@ f (@ x (f x)))
+   (! deux (@ f (@ x (f (f x))))
+
+   deux
+))))))))))
