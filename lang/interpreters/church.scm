@@ -3,6 +3,7 @@
   ;(display (format "~a~n~n" expr))
   (cond
     ((symbol? expr) (env expr))
+    ((not (list? expr)) (raise (format "`~a` is not a valid syntax" expr)))
     ((eq? (car expr) '!)
       (let ([k (cadr expr)] [v (eval-expr (caddr expr) env)] [rest (cadddr expr)])
 	(eval-expr rest (lambda (r) (if (eq? r k) v (env r))))))
@@ -10,14 +11,14 @@
       (let ([arg (cadr expr)] [body (caddr expr)])
       (lambda (y) (eval-expr body 
         (lambda (r) (if (eq? r arg) y (env r)))))))
-    (#t
+    (#t 
       ((eval-expr (car expr) env) ; operator
        (eval-expr (cadr expr) env) ; operand
     ))
 ))
 
 ;-- wrappers
-(define (empty-env x) (raise 'variable-unbound))
+(define (empty-env x) (raise (format "`~a` is not bound" x)))
 (define (lcalc-bool expr)
   (((eval-expr expr empty-env) #t) #f))
 
@@ -34,14 +35,29 @@
    (! et (@ a (@ b (((si a) b) faux)))
    (! ou (@ a (@ b (((si a) vrai) b)))
   
-   ; int peano
-   (! zero (@ f (@ x x))
-   (! un (@ f (@ x (f x)))
-   (! deux (@ f (@ x (f (f x))))
-
+   ; peano ops
    (! suiv (@ n (@ f (@ x (f ((n f) x)) )))
    (! plus (@ m (@ n (@ f (@ x ((m f) ((n f) x)) ))))
    (! mult (@ m (@ n (@ f (@ x ((m (n f)) x)))))
 
+   (! pred (@ n (@ f (@ x 
+     (((n 
+	 (@ g (@ h (h (g f))))) ; inc
+         (@ u x)) ; const
+         (@ u u)) ; extract *k*
+   )))
+ 
+   ; peano shortcut
+   (! n0 (@ f (@ x x))
+   (! n1 (@ f (@ x (((suiv n0) f) x)))
+   (! n2 (@ f (@ x (((suiv n1) f) x)))
+   (! n3 (@ f (@ x (((suiv n2) f) x)))
+
+   ; y combinator OR fixed-point combinator
+   (! y (@ f ((@ x ((f x) x)) (@ x ((f x) x))))
+
+   ; math
+   ;(! fact (@ n (@ f (@ x 
+
    ,body
-)))))))))))))
+))))))))))))))))
