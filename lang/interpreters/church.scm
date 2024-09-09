@@ -53,18 +53,25 @@
    (! n1 (@ f (@ x (((suiv n0) f) x)))
    (! n2 (@ f (@ x (((suiv n1) f) x)))
    (! n3 (@ f (@ x (((suiv n2) f) x)))
+   (! n4 (@ f (@ x (((suiv n3) f) x)))
+   (! n5 (@ f (@ x (((suiv n4) f) x)))
+   (! n6 (@ f (@ x (((suiv n5) f) x)))
 
    ; y combinator / fixed-point combinator
-   (! y (@ f ((@ x ((f x) x)) (@ x ((f x) x))))
+   ; https://8dcc.github.io/programming/understanding-y-combinator.html
+   (! y (@ f 
+     ((@ x (f (@ n ((x x) n))))
+      (@ x (f (@ n ((x x) n))))))
 
    ; math
-   (! pfact (@ r (@ n (@ f (@ x 
-     (((si (zero? n)) ; if n == 0
-       ((n1 f) x)) ; then 1
-       ((((mult n) (r (((pred n) f) x))) f) x)) ; else n * r (n - 1)
-   ))))
-   ;(! fact (@ n (@ f (@ x
-   ;  ((((y pfact) n) f) x))))
+   (! presque-fact (@ r (@ n
+     ((((si (zero? n))
+            (@ n n1)) 
+            ; force lazy exec.
+            (@ n ((mult n) (r (pred n)))))
+      n)
+   ))
+   (! fact (y presque-fact)
 
    ,body
-))))))))))))))))))
+))))))))))))))))))))))))
