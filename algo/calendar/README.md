@@ -52,3 +52,10 @@ It took me between 6 and 8 hours to get a working output.
 My answer is very ugly.
 In the future I want to analyze why and write a second,
 more elegant version.
+
+## Use
+
+If you need to generate calendars, you can :
+- Get in a Chez Scheme environment. In a terminal, you should be able to simply run `$ chez`
+- Load the script, using `(load "calendar.scm")`
+- Generate calendars for multiple years, using `(cal-plan '() '(2024 2025 2026))`
