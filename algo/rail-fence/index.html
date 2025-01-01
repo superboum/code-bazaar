@@ -3,14 +3,20 @@
 <head>
 <meta charset="utf-8" />
 <title>✠</title>
+<style>
+textarea, button, canvas {
+  display: block;
+}
+#alphabet {
+  display: none;
+}
+</style>
 </head>
 <body>
-<div>
-<textarea placeholder="votre message"></textarea>
-</div>
-<div>
-<canvas id="render" width="640" height="640" />
-</div>
+<img src="./tmpl.png" id="alphabet" />
+<textarea id="input" cols="64" rows="4" placeholder="votre message"></textarea>
+<button id="gen">valider</button>
+<canvas id="render" width="512" height="512" />
 <script type="module" src="./index.mjs"></script>
 </body>
 </html>

@@ -52,7 +52,10 @@ const dr = inp_str => {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-  ctx.fillStyle = "#ffeeee";
+  const alpha = document.getElementById("alphabet");
+  if (!alpha) return;
+
+  ctx.fillStyle = "#fff";
   ctx.fillRect(0,0, sq*64, sq*64);
 
   ctx.textBaseline = "middle";
@@ -61,17 +64,27 @@ const dr = inp_str => {
   ctx.font = "48px serif";
   for (let i = 0; i < sq; i++) {
     for (let j = 0; j < sq; j++) {
-      ctx.fillText(inp_str[j*sq+i], 32+i*64, 32+j*64);
+      //ctx.fillText(inp_str[j*sq+i], 32+i*64, 32+j*64);
+      const scode_n = inp_str.charCodeAt(j*sq+i) - 97;
+      const scode = scode_n < 0 ? 27 : scode_n;
+      const scode_x = (scode % 6) * 64;
+      const scode_y = Math.floor(scode / 6) * 64;
+      const sq_pos_x = i*64;
+      const sq_pos_y = j*64;
+      ctx.drawImage(alpha, scode_x, scode_y, 64, 64, sq_pos_x, sq_pos_y, 64, 64);
     }
   }
 }
 
-const dbg = () => {
-  const ret1 = str_to_buf("bonne_annee_deux_mille_vingt_cinq_meilleurs_voeux");
+const gen = () => {
+  const txt = document.getElementById('input').value || "lorem_ipsum_dolor_sit_amet";
+  console.debug(txt, txt.length);
+  const ret1 = str_to_buf(txt);
   const ret2 = zig_zag(ret1);
   const ret3 = rotate_cc(ret2);
   const ret4 = dec.decode(ret3);
   dr(ret4);
 }
-dbg();
+gen();
+document.getElementById('gen').addEventListener('click', gen);
   
