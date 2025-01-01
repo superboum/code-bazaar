@@ -1,4 +1,3 @@
-import fs from 'fs';
 // config
 const sq=8;
 
@@ -48,18 +47,31 @@ const zig_zag = inp_buf => {
   return out_buf
 }
 
+const dr = inp_str => {
+  const canvas = document.getElementById("render");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.fillStyle = "#ffeeee";
+  ctx.fillRect(0,0, sq*64, sq*64);
 
-const ret1 = str_to_buf(fs.readFileSync(0, 'utf-8'));
-const ret2 = zig_zag(ret1);
-const ret3 = rotate_cc(ret2);
-const ret4 = dec.decode(ret3);
-for (let i = 0; i < sq; i++) {
-  console.log(ret4.slice(i*sq, (i+1)*sq))
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#000";
+  ctx.font = "48px serif";
+  for (let i = 0; i < sq; i++) {
+    for (let j = 0; j < sq; j++) {
+      ctx.fillText(inp_str[j*sq+i], 32+i*64, 32+j*64);
+    }
+  }
 }
+
+const dbg = () => {
+  const ret1 = str_to_buf("bonne_annee_deux_mille_vingt_cinq_meilleurs_voeux");
+  const ret2 = zig_zag(ret1);
+  const ret3 = rotate_cc(ret2);
+  const ret4 = dec.decode(ret3);
+  dr(ret4);
+}
+dbg();
   
-
-
-/*
-const inp_idx = buffer.forEach((_, idx) => lower.charCodeAt(idx))
-
-console.log(inp_idx, buffer)*/
