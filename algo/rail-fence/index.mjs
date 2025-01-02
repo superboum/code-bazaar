@@ -85,6 +85,6 @@ const gen = () => {
   const ret4 = dec.decode(ret3);
   dr(ret4);
 }
-gen();
+document.getElementById('alphabet').onload = gen;
 document.getElementById('gen').addEventListener('click', gen);
   
