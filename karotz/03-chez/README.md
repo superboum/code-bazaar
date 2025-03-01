@@ -17,3 +17,11 @@ Compile Chez for Karotz:
   CFLAGS="-march=armv4t" \
   LDFLAGS="-static"
 ```
+
+You need to copy the following files:
+
+```
+pb/bin/pb/scheme
+pb/boot/pb/scheme.boot
+pb/boot/pb/petite.boot
+```
