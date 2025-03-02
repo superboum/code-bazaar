@@ -25,3 +25,5 @@ pb/bin/pb/scheme
 pb/boot/pb/scheme.boot
 pb/boot/pb/petite.boot
 ```
+
+Issue: if we compile statically, we can't load dynamic libraries...
