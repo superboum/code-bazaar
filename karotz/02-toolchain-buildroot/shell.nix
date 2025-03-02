@@ -1,12 +1,3 @@
-{ pkgs ? import <nixpkgs> {} }:
-
-with pkgs;
-
-mkShell {
-  hardeningDisable = [ "all" ];
-  buildInputs = [
-    bc
-    ncurses
-  ];
+with (import <nixpkgs> {}).pkgsi686Linux; mkShell {
+  buildInputs = [ ncurses bc ];
 }
-

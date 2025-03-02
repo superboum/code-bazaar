@@ -23,5 +23,17 @@ Linux karotz 2.6.28-pragmatec -g53e06b1-dirty #1 Tue May 31 17:50:18 CEST 2011 a
 
 Used Latest long term support release: 2024.02.11
 
-Manually patched linux 2.6.18 in the `output` folder with this patch (that did not get automatically applied):
-https://github.com/cristim/buildroot/blob/master/toolchain/kernel-headers/linux-2.6.28.10-unifdef-getline.patch
+Prepare:
+
+```bash
+cp linux*.patch builroot/packages/linux-headers/
+cp .config buildroot/
+cp shell.nix buildroot/
+```
+
+Compile:
+
+```
+nix-shell
+make
+```
