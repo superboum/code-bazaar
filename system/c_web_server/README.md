@@ -7,7 +7,7 @@ gcc -Wall -static main.c -o main
 Launch with param:
 
 ```
-./main Mathieu
+HTTP_PORT=8081 DISPLAY_NAME=Mathieu ./main 
 ```
 
 Query:

@@ -8,25 +8,25 @@
 #include <strings.h>
 #include <string.h>
 
+#define INPUT_BUFFER_SZ 256
+
 int main(int argc, char* argv[]) {
   int sockfd, connfd, pid, err, enable; 
   socklen_t len;
   struct sockaddr_in servaddr, client; 
-  char *name = "inconnu";
+  char *envTmp = NULL;
+  char name[INPUT_BUFFER_SZ] = "inconnu";
   int opt, port = 8080;
-
-  while ((opt = getopt(argc, argv, "p:n:")) != -1) {
-    switch(opt) {
-    case 'p':
-      port = atoi(optarg);
-      break;
-    case 'n':
-      name = optarg;
-      break;
-    default:
-      break;
-    }
+  
+  if ((envTmp = getenv("HTTP_PORT")) != NULL) {
+    port = atoi(envTmp);
+    envTmp = NULL;
   }
+  if ((envTmp = getenv("DISPLAY_NAME")) != NULL) {
+    strncpy(name, envTmp, INPUT_BUFFER_SZ - 1);
+    envTmp = NULL;
+  }
+  
 
   char http_content[256];
   sprintf(http_content, "<h1>salut %s</h1>\r\n", name);
