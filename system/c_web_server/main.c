@@ -8,7 +8,7 @@
 #include <strings.h>
 #include <string.h>
 
-#define INPUT_BUFFER_SZ 256
+#define INPUT_BUFFER_SZ 64
 
 int main(int argc, char* argv[]) {
   int sockfd, connfd, pid, err, enable; 
@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
   struct sockaddr_in servaddr, client; 
   char *envTmp = NULL;
   char name[INPUT_BUFFER_SZ] = "inconnu";
-  int opt, port = 8080;
+  int port = 8080;
   
   if ((envTmp = getenv("HTTP_PORT")) != NULL) {
     port = atoi(envTmp);
