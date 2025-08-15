@@ -88,7 +88,7 @@
     subchain 
     (car rev-prevs)
     (cond
-      ((null? (cdr rev-prevs)) (lambda (tx) hashtable-update! tx next add1 0))
+      ((null? (cdr rev-prevs)) (lambda (tx) (hashtable-update! tx next add1 0) tx))
       (#t (lambda (tx) (learn-markov-tuple tx (cdr rev-prevs) next))))
     (make-hashtable string-hash string=?))
   subchain
@@ -105,9 +105,14 @@
 ; ---
 ; MARKOV TEACH
 
-;(define (bootstrap chain prev-sz)
-
-
+(define (markov-rng subchain)
+  (let* ([subkeys (hashtable-keys subchain)]
+	 [sel-key (vector-ref subkeys (- (vector-length subkeys) 1))]
+	 [new-sub (hashtable-ref subchain sel-key #f)])
+    (cond
+      ((hashtable? new-sub) (cons sel-key (markov-rng new-sub)))
+      (#t `(,sel-key ,new-sub))
+)))
 
 ;----
 ; I/O
