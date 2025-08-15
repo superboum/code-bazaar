@@ -1,4 +1,4 @@
-(define PREV-TOKENS 6)
+(define PREV-TOKENS 3)
 
 ; UTILS
 (define (firsts lst n)
