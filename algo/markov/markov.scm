@@ -192,5 +192,19 @@
     (#t (learn-markov-corpus (learn-markov-file chain (car path-lst)) (cdr path-lst)))
 ))
 
-(define marx (learn-markov-corpus (learn-markov-make) '("dataset/capital.txt" "dataset/lutte.txt" "dataset/manifeste.txt")))
+(define marx (learn-markov-corpus 
+  (learn-markov-make) 
+  '(
+    "dataset/capital.txt" 
+    "dataset/lutte.txt" 
+    "dataset/manifeste.txt"
+    "dataset/guerre.txt"
+    "dataset/bonaparte.txt"
+    "dataset/cologne.txt"
+    "dataset/economie.txt"
+    "dataset/echange.txt"
+    "dataset/salaires.txt"
+    "dataset/philosophie.txt"
+  )
+))
 (define (demo1) (markov->string (markov-until marx (markov-init marx) PREV-TOKENS fixed-tokens)))
