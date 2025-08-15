@@ -105,14 +105,16 @@
 ; ---
 ; MARKOV TEACH
 
-(define (markov-rng subchain)
+(define (markov-init subchain)
   (let* ([subkeys (hashtable-keys subchain)]
-	 [sel-key (vector-ref subkeys (- (vector-length subkeys) 1))]
+	 [sel-key (vector-ref subkeys (random (vector-length subkeys)))]
 	 [new-sub (hashtable-ref subchain sel-key #f)])
     (cond
-      ((hashtable? new-sub) (cons sel-key (markov-rng new-sub)))
-      (#t `(,sel-key ,new-sub))
+      ((hashtable? new-sub) (cons sel-key (markov-init new-sub)))
+      (#t `())
 )))
+
+
 
 ;----
 ; I/O
