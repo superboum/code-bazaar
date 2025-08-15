@@ -1,3 +1,21 @@
+; UTILS
+(define (firsts lst n)
+  (cond
+    ((or (= n 0) (null? lst)) '())
+    (#t (cons (car lst) (firsts (cdr lst) (- n 1))))
+))
+
+;---
+; TOKEN EXTRACT
+
+; Find Eof-Of-Token index, very basic logic
+; 3 possibles tokens kind: 'none, 'punct and 'word
+;
+; Example output:
+; > (find-eot-idx "  coucou, le monde!" 0 0 'none)
+; 'word
+; 2
+; 8
 (define (find-eot-idx line-part bidx eidx specialization)
   (cond
     ((eq? specialization 'punct) (values specialization bidx eidx))
@@ -28,17 +46,57 @@
     )))
 ))
 
+; ---
+; TEST FX
+(define (line-counter any acc) (+ acc 1))
 
-(define (line-counter line acc) (+ acc 1))
+; ---
+; MARKOV CHAIN
 
-; unroll
-(define (apply-line ip fx acc)
-  (let ([maybe-line (get-line ip)])
+; Used to register token association (from a ref text)
+(define (learn-markov-tuple chain prev next)
+  (hashtable-update! 
+    chain 
+    prev 
+    (lambda (tx) hashtable-update! tx next add1 0) 
+    (make-eqv-hashtable)))
+
+(define (learn-markov-sequence chain prev-sz seq)
+  (cond
+    ((< (length seq) (+ 1 prev-sz)) chain)
+    (#t (let ([prevs (firsts seq prev-sz)] [cur (list-ref seq (+ 1 prev-sz))])
+	(learn-markov-tuple chain (apply string-append prevs) cur)))
+))
+
+; ---
+; WINDOWING
+
+;(define (apply-token-line-win win-sz token-fx learn-fx)
+;  (lambda (line acc)
+;    (let*-values (
+;        [(ext-acc win) acc] 
+;        [(tokens) (token-fx line)]
+;      )
+;    )
+;))
+
+(define (apply-line ip acc fx)
+  (let* ([maybe-line (get-line ip)])
     (cond
       ((eof-object? maybe-line) acc)
-      (#t (apply-line ip fx (fx maybe-line acc)))
+      (#t 
+       (apply-line ip (fx maybe-line acc) fx))
 )))
 
+; (apply-line 
+;    source-fd 
+;    (make-token-line-win (make-markov))
+;    (apply-token-line-win 3 extract-token)) 
+;
+
+;----
+
+; I/O
 ; Open file
 (call-with-port 
   (open-file-input-port 
@@ -48,6 +106,5 @@
     (native-transcoder))
 
   (lambda (source-fd)
-    (format #t "~a~%" (apply-line source-fd line-counter 0)))
-
+    (format #t "~a~%" (apply-line source-fd 0 line-counter)))
 )
