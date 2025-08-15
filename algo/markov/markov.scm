@@ -51,40 +51,14 @@
 (define (line-counter any acc) (+ acc 1))
 
 ; ---
-; MARKOV CHAIN
-
-; Used to register token association (from a ref text)
-; Can register an arbitrary serie of token
-; Prev must be reversed, such that when we will infer, we will be able
-; to give more importance to the first previous word, then find if the previous one matches, etc.
-(define (learn-markov-tuple subchain rev-prevs next)
-  (hashtable-update! 
-    subchain 
-    (car rev-prevs)
-    (cond
-      ((null? (cdr rev-prevs)) (lambda (tx) hashtable-update! tx next add1 0))
-      (#t (lambda (tx) (learn-markov-tuple tx (cdr rev-prevs) next))))
-    (make-eqv-hashtable))
-  subchain
-)
-
-(define (learn-markov-sequence chain prev-sz seq)
-  (cond
-    ((< (length seq) (+ 1 prev-sz)) chain)
-    (#t (let ([prevs (firsts seq prev-sz)] [cur (list-ref seq prev-sz)])
-	(learn-markov-tuple chain (reverse prevs) cur))))
-  chain
-)
-
-; ---
 ; WINDOWING
 
 (define (apply-token-line-win prev-sz token-fx learn-fx)
   (lambda (line acc)
     (let* (
-        [learn-acc (cdr (assoc 'learn acc))]
+	[learn-acc (cdr (assoc 'learn acc))]
 	[prev-tokens (cdr (assoc 'prev-tokens acc))]
-        [line-tokens (token-fx line)]
+	[line-tokens (token-fx line)]
 	[win-tokens (append prev-tokens line-tokens)]
 	[next-prev-tokens (list-tail win-tokens (max 0 (- (length win-tokens) prev-sz)))]
       )
@@ -102,14 +76,40 @@
        (apply-line ip (fx maybe-line acc) fx))
 )))
 
-; (apply-line 
-;    source-fd 
-;    (make-token-line-win (make-markov))
-;    (apply-token-line-win 2 extract-token learn-markov-sequence)) 
-;
+; ---
+; MARKOV LEARN
+
+; Used to register token association (from a ref text)
+; Can register an arbitrary serie of token
+; Prev must be reversed, such that when we will infer, we will be able
+; to give more importance to the first previous word, then find if the previous one matches, etc.
+(define (learn-markov-tuple subchain rev-prevs next)
+  (hashtable-update! 
+    subchain 
+    (car rev-prevs)
+    (cond
+      ((null? (cdr rev-prevs)) (lambda (tx) hashtable-update! tx next add1 0))
+      (#t (lambda (tx) (learn-markov-tuple tx (cdr rev-prevs) next))))
+    (make-hashtable string-hash string=?))
+  subchain
+)
+
+(define (learn-markov-sequence chain prev-sz seq)
+  (cond
+    ((< (length seq) (+ 1 prev-sz)) chain)
+    (#t (let ([prevs (firsts seq prev-sz)] [cur (list-ref seq prev-sz)])
+	(learn-markov-tuple chain (reverse prevs) cur))))
+  chain
+)
+
+; ---
+; MARKOV TEACH
+
+;(define (bootstrap chain prev-sz)
+
+
 
 ;----
-
 ; I/O
 ; Open file
 (define (learn-capital)
@@ -123,7 +123,7 @@
     (lambda (source-fd)
       (cdar (apply-line 
         source-fd 
-        `((learn . ,(make-eqv-hashtable)) (prev-tokens . ())) 
+        `((learn . ,(make-hashtable string-hash string=?)) (prev-tokens . ())) 
         (apply-token-line-win 2 extract-token learn-markov-sequence))))
 ))
 
