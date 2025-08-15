@@ -124,6 +124,7 @@
   (cond
     ; in this case, we found the "next" leaf as we crossed all "prev" ones
     ((null? rev-prevs) (let ([nexts (hashtable-keys subchain)])
+      ; we select a random leaf here -- maybe we should use either the most probable one or pick multiple solutions
       (vector-ref nexts (random (vector-length nexts)))))
     ; otherwise, we need to progress in the tree, if the word exists
     ((hashtable-contains? subchain (car rev-prevs))
