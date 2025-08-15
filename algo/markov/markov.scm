@@ -85,6 +85,8 @@
 ; Can register an arbitrary serie of token
 ; Prev must be reversed, such that when we will infer, we will be able
 ; to give more importance to the first previous word, then find if the previous one matches, etc.
+(define (learn-markov-make) (make-hashtable string-hash string=?))
+
 (define (learn-markov-tuple subchain rev-prevs next)
   (hashtable-update! 
     subchain 
@@ -168,22 +170,27 @@
   (> (length txt) 3000))
 
 ;----
-; I/O
-; Open file
-(define (learn-capital)
+; IO
+(define (learn-markov-file chain path)
+  (format #t "learning ~a...~%" path)
   (call-with-port 
     (open-file-input-port 
-      "capital.txt" 
+      path
       (file-options) 
       (buffer-mode line) 
       (native-transcoder))
 
     (lambda (source-fd)
       (cdar (apply-line 
-        source-fd 
-        `((learn . ,(make-hashtable string-hash string=?)) (prev-tokens . ())) 
+        source-fd
+	`((learn . ,chain) (prev-tokens . ()))
         (apply-token-line-win PREV-TOKENS extract-token learn-markov-sequence))))
 ))
+(define (learn-markov-corpus chain path-lst)
+  (cond
+    ((null? path-lst) chain)
+    (#t (learn-markov-corpus (learn-markov-file chain (car path-lst)) (cdr path-lst)))
+))
 
-(define marx (learn-capital))
+(define marx (learn-markov-corpus (learn-markov-make) '("dataset/capital.txt" "dataset/lutte.txt" "dataset/manifeste.txt")))
 (define (demo1) (markov->string (markov-until marx (markov-init marx) PREV-TOKENS fixed-tokens)))
