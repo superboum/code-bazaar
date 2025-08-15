@@ -54,31 +54,45 @@
 ; MARKOV CHAIN
 
 ; Used to register token association (from a ref text)
-(define (learn-markov-tuple chain prev next)
+; Can register an arbitrary serie of token
+; Prev must be reversed, such that when we will infer, we will be able
+; to give more importance to the first previous word, then find if the previous one matches, etc.
+(define (learn-markov-tuple subchain rev-prevs next)
   (hashtable-update! 
-    chain 
-    prev 
-    (lambda (tx) hashtable-update! tx next add1 0) 
-    (make-eqv-hashtable)))
+    subchain 
+    (car rev-prevs)
+    (cond
+      ((null? (cdr rev-prevs)) (lambda (tx) hashtable-update! tx next add1 0))
+      (#t (lambda (tx) (learn-markov-tuple tx (cdr rev-prevs) next))))
+    (make-eqv-hashtable))
+  subchain
+)
 
 (define (learn-markov-sequence chain prev-sz seq)
   (cond
     ((< (length seq) (+ 1 prev-sz)) chain)
-    (#t (let ([prevs (firsts seq prev-sz)] [cur (list-ref seq (+ 1 prev-sz))])
-	(learn-markov-tuple chain (apply string-append prevs) cur)))
-))
+    (#t (let ([prevs (firsts seq prev-sz)] [cur (list-ref seq prev-sz)])
+	(learn-markov-tuple chain (reverse prevs) cur))))
+  chain
+)
 
 ; ---
 ; WINDOWING
 
-;(define (apply-token-line-win win-sz token-fx learn-fx)
-;  (lambda (line acc)
-;    (let*-values (
-;        [(ext-acc win) acc] 
-;        [(tokens) (token-fx line)]
-;      )
-;    )
-;))
+(define (apply-token-line-win prev-sz token-fx learn-fx)
+  (lambda (line acc)
+    (let* (
+        [learn-acc (cdr (assoc 'learn acc))]
+	[prev-tokens (cdr (assoc 'prev-tokens acc))]
+        [line-tokens (token-fx line)]
+	[win-tokens (append prev-tokens line-tokens)]
+	[next-prev-tokens (list-tail win-tokens (max 0 (- (length win-tokens) prev-sz)))]
+      )
+      `(
+	(learn . ,(learn-fx learn-acc prev-sz win-tokens)) 
+	(prev-tokens . ,next-prev-tokens)
+      )
+)))
 
 (define (apply-line ip acc fx)
   (let* ([maybe-line (get-line ip)])
@@ -91,20 +105,26 @@
 ; (apply-line 
 ;    source-fd 
 ;    (make-token-line-win (make-markov))
-;    (apply-token-line-win 3 extract-token)) 
+;    (apply-token-line-win 2 extract-token learn-markov-sequence)) 
 ;
 
 ;----
 
 ; I/O
 ; Open file
-(call-with-port 
-  (open-file-input-port 
-    "capital.txt" 
-    (file-options) 
-    (buffer-mode line) 
-    (native-transcoder))
+(define (learn-capital)
+  (call-with-port 
+    (open-file-input-port 
+      "capital.txt" 
+      (file-options) 
+      (buffer-mode line) 
+      (native-transcoder))
 
-  (lambda (source-fd)
-    (format #t "~a~%" (apply-line source-fd 0 line-counter)))
-)
+    (lambda (source-fd)
+      (cdar (apply-line 
+        source-fd 
+        `((learn . ,(make-eqv-hashtable)) (prev-tokens . ())) 
+        (apply-token-line-win 2 extract-token learn-markov-sequence))))
+))
+
+(define marx (learn-capital))
