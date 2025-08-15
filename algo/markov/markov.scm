@@ -1,3 +1,5 @@
+(define PREV-TOKENS 6)
+
 ; UTILS
 (define (firsts lst n)
   (cond
@@ -98,9 +100,11 @@
   (cond
     ((< (length seq) (+ 1 prev-sz)) chain)
     (#t (let ([prevs (firsts seq prev-sz)] [cur (list-ref seq prev-sz)])
-	(learn-markov-tuple chain (reverse prevs) cur))))
-  chain
-)
+	(learn-markov-sequence 
+	  (learn-markov-tuple chain (reverse prevs) cur)
+	  prev-sz
+	  (cdr seq))))
+))
 
 ; ---
 ; MARKOV TEACH
@@ -114,7 +118,54 @@
       (#t `())
 )))
 
+(define (markov-next-token subchain rev-prevs)
+  (cond
+    ; in this case, we found the "next" leaf as we crossed all "prev" ones
+    ((null? rev-prevs) (let ([nexts (hashtable-keys subchain)])
+      (vector-ref nexts (random (vector-length nexts)))))
+    ; otherwise, we need to progress in the tree, if the word exists
+    ((hashtable-contains? subchain (car rev-prevs))
+      (markov-next-token (hashtable-ref subchain (car rev-prevs) #f) (cdr rev-prevs)))
+    ; if the ref does not exist, peek a random prev
+    (#t (let* ([all-prevs (hashtable-keys subchain)] 
+	       [replaced (vector-ref all-prevs (random (vector-length all-prevs)))])
+      (markov-next-token (hashtable-ref subchain replaced #f) (cdr rev-prevs))))
+))
 
+(define (markov-until chain initial-text prev-sz stop?)
+  (cond
+    ((stop? initial-text) initial-text)
+    (#t (markov-until 
+	  chain 
+	  (cons 
+	    (markov-next-token 
+	      chain 
+	      (firsts initial-text prev-sz)) 
+	    initial-text) 
+	  prev-sz
+	  stop?))
+))
+
+;----
+(define (add-spaces lst)
+  (cond
+    ((null? lst) '())
+    (#t (cons (car lst) (cons " " (add-spaces (cdr lst)))))))
+
+(define (markov->string markov-tokens)
+  (apply string-append (add-spaces (reverse markov-tokens))))
+
+;---
+; STOP CONDITIONS
+;
+(define (end-of-sentence txt)
+  (or
+    (string=? (car txt) ".")
+    (string=? (car txt) "!")
+    (string=? (car txt) "?")))
+
+(define (fixed-tokens txt)
+  (> (length txt) 3000))
 
 ;----
 ; I/O
@@ -131,7 +182,8 @@
       (cdar (apply-line 
         source-fd 
         `((learn . ,(make-hashtable string-hash string=?)) (prev-tokens . ())) 
-        (apply-token-line-win 2 extract-token learn-markov-sequence))))
+        (apply-token-line-win PREV-TOKENS extract-token learn-markov-sequence))))
 ))
 
 (define marx (learn-capital))
+(define (demo1) (markov->string (markov-until marx (markov-init marx) PREV-TOKENS fixed-tokens)))
