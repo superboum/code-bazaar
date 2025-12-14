@@ -19,7 +19,6 @@
 	   ((and (= 0 next) (eq? side #\L)) (+ pre-crossed2 1))
 	   (#t pre-crossed2))
 	 ])
-	(format #t "~a~a ; ~a -> ~a ; ~a ~%" side amount prev next crossed)
         (+ crossed (clic next))
 )))))
 
