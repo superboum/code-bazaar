@@ -12,8 +12,8 @@
       ((or (eq? side "") (eq? amount "")) (clic prev))
       (#t (let*-values
         ([(pre-crossed1 next) (apply-rot prev side amount)]
-	      [(pre-crossed2) (abs pre-crossed1)]
-	      [(crossed) (cond 
+	     [(pre-crossed2) (abs pre-crossed1)]
+		 [(crossed) (cond 
            ; fix the 0 specific case when rotating left.
            ((and (= 0 prev) (eq? side #\L)) (- pre-crossed2 1))
            ((and (= 0 next) (eq? side #\L)) (+ pre-crossed2 1))
