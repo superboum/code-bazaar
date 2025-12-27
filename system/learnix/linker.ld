@@ -9,16 +9,20 @@ SECTIONS {
     . = 0x7c00;
 
     /*
-      Currently, we have nothing on the binary,
-      if we write the signature now, it will be at the start of the binary.
-      Because we want the signature to start at the offset of 510 in our binary,
-      we pad it with zeros.
+      Rust also mangles segment names.
+      The "<segment_name>.*" syntax is used to also include all the mangles
     */
-    .fill : {
-        FILL(0)
-        . = 0x7c00 + 510;
+
+    .text : { *(.text .text.*) }
+    .bss : { *(.bss .bss.*) }
+    .rodata : { *(.rodata .rodata.*) }
+    .data : { *(.data .data.*) }
+    /DISCARD/ : {
+        *(.eh_frame .eh_frame.*)
+        *(.eh_frame_hdr .eh_frame_hdr.*)
     }
 
+    . = 0x7c00 + 510;
 
     /* Write the boot signature to make the sector bootable */
     .magic_number : { SHORT(0xaa55) }
