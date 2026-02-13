@@ -5,6 +5,16 @@ use core::arch::asm;
 
 #[unsafe(no_mangle)]
 fn main() {
+    unsafe {
+        asm!(
+            "mov ah, 0x01",   // INT 10h function to setup the cursor
+            "int 0x10",       // Call the bios interrupt function
+            out("ax") _,      // Lock the 'ax' as output reg, so it won't be used elsewhere
+        );
+    }
+
+
+
     let msg = b"Hello, World!";
     for &ch in msg {
         unsafe {
