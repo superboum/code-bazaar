@@ -1,32 +1,84 @@
-function love.load()
-    x = 0
-    a = 0
-    love.graphics.setDefaultFilter("nearest", "nearest", 1)
-    cat = love.graphics.newImage("cat.png")
-    cat_sprite = {
-      love.graphics.newQuad(0, 0, 32, 32, cat:getDimensions()),
-      love.graphics.newQuad(32, 0, 32, 32, cat:getDimensions()),
-      love.graphics.newQuad(64, 0, 32, 32, cat:getDimensions()),
-      love.graphics.newQuad(96, 0, 32, 32, cat:getDimensions()),
-    }
-    love.graphics.setBackgroundColor(1, 1, 1, 0)
+CatAnimation = {
+  -- global parameter
+  spritesheet = nil,
+  sprite_size = 32,
+
+  current_time = 0,
+  current_frame = 1,
+  current_anim = nil,
+
+  pos_x = 0,
+  pos_y = 0,
+
+  -- quad is computed later
+  spritemap = {
+    idle_face = { row = 0, len = 4, dur=3, quads = {} },
+    idle_side = { row = 1, len = 4, dur=3, quads = {} },
+    meow = { row = 2, len = 4, dur=3, quads = {} },
+    clean = { row = 3, len = 4, dur=3, quads = {} },
+    walk = { row = 4, len = 8, dur=1, quads = {} },
+    run = { row = 5, len = 8, dur=1, quads = {} },
+    sleep = { row = 6, len = 4, dur=3, quads = {} },
+    unknown = { row = 7, len = 7, dur=3, quads = {} },
+    jump = { row = 8, len = 7, dur=3, quads = {} },
+    angry = { row = 9, len = 8, dur=3, quads = {} },
+  },
+}
+function CatAnimation:load()
+    spr_sz = CatAnimation.sprite_size
+    CatAnimation.spritesheet = love.graphics.newImage("cat.png")
+
+    for anim_name, anim_data in pairs(CatAnimation.spritemap) do
+        anim_idx = 1
+	print(anim_name)
+	while anim_idx <= anim_data.len do
+	    anim_data.quads[anim_idx] = love.graphics.newQuad(
+		    (anim_idx-1)*spr_sz, -- col (x), here frame selection for anim
+		    anim_data.row*spr_sz, -- row (y), here anim selection
+		    spr_sz, -- sprite width
+		    spr_sz, -- sprite height
+		    CatAnimation.spritesheet:getDimensions())
+	    anim_idx = anim_idx + 1
+	end
+    end
+
+    CatAnimation.current_anim = CatAnimation.spritemap.run
 end
 
-function love.update()
+function CatAnimation.tick(dt)
+    CatAnimation.current_time = (CatAnimation.current_time + dt) % CatAnimation.current_anim.dur
+    CatAnimation.current_frame = math.floor(CatAnimation.current_time / CatAnimation.current_anim.dur * #CatAnimation.current_anim.quads) + 1
+end
+
+function CatAnimation.draw()
+    love.graphics.draw(
+	CatAnimation.spritesheet, 
+	CatAnimation.current_anim.quads[CatAnimation.current_frame], 
+	CatAnimation.pos_x,
+	CatAnimation.pos_y, 
+	0, 
+	4
+    )
+end
+
+function love.load()
+    love.graphics.setDefaultFilter("nearest", "nearest", 1)
+    love.graphics.setBackgroundColor(1, 1, 1, 0)
+    CatAnimation.load()
+end
+
+function love.update(dt)
+    CatAnimation.tick(dt)
+
     if love.keyboard.isDown("right") then
-    	x = x + 5
     end
     if love.keyboard.isDown("left") then
-    	x = x - 5
-    end
-    if love.keyboard.isDown("up") then
-    	a = (a+1)%4
-    	x = x + 1
     end
 end
 
 function love.draw()
     --love.graphics.rectangle("fill", x, 200, 50, 80)
-    love.graphics.draw(cat, cat_sprite[a+1], x, 0, 0, 4)
+    --
+    CatAnimation.draw()
     love.graphics.print("Hello World", 400, 300)
 end
