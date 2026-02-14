@@ -7,21 +7,23 @@ CatAnimation = {
   current_frame = 1,
   current_anim = nil,
 
+  speed = 100,
+
   pos_x = 0,
-  pos_y = 0,
+  pos_y = 400,
 
   -- quad is computed later
   spritemap = {
-    idle_face = { row = 0, len = 4, dur=3, quads = {} },
-    idle_side = { row = 1, len = 4, dur=3, quads = {} },
-    meow = { row = 2, len = 4, dur=3, quads = {} },
-    clean = { row = 3, len = 4, dur=3, quads = {} },
+    idle_face = { row = 0, len = 4, dur=1, quads = {} },
+    idle_side = { row = 1, len = 4, dur=1, quads = {} },
+    meow = { row = 2, len = 4, dur=1, quads = {} },
+    clean = { row = 3, len = 4, dur=1, quads = {} },
     walk = { row = 4, len = 8, dur=1, quads = {} },
     run = { row = 5, len = 8, dur=1, quads = {} },
-    sleep = { row = 6, len = 4, dur=3, quads = {} },
-    unknown = { row = 7, len = 7, dur=3, quads = {} },
-    jump = { row = 8, len = 7, dur=3, quads = {} },
-    angry = { row = 9, len = 8, dur=3, quads = {} },
+    sleep = { row = 6, len = 4, dur=1, quads = {} },
+    unknown = { row = 7, len = 7, dur=1, quads = {} },
+    jump = { row = 8, len = 7, dur=1, quads = {} },
+    angry = { row = 9, len = 8, dur=1, quads = {} },
   },
 }
 function CatAnimation:load()
@@ -42,12 +44,30 @@ function CatAnimation:load()
 	end
     end
 
-    CatAnimation.current_anim = CatAnimation.spritemap.run
+    CatAnimation.current_anim = CatAnimation.spritemap.idle_face
 end
 
 function CatAnimation.tick(dt)
     CatAnimation.current_time = (CatAnimation.current_time + dt) % CatAnimation.current_anim.dur
     CatAnimation.current_frame = math.floor(CatAnimation.current_time / CatAnimation.current_anim.dur * #CatAnimation.current_anim.quads) + 1
+end
+
+function CatAnimation.move(dt)
+    if CatAnimation.current_anim ~= CatAnimation.spritemap.walk then
+	CatAnimation.current_anim = CatAnimation.spritemap.walk
+	CatAnimation.current_time = 0
+	CatAnimation.current_frame = 1
+    end
+
+    CatAnimation.pos_x = CatAnimation.pos_x + dt * CatAnimation.speed
+end
+
+function CatAnimation.rest()
+    if CatAnimation.current_anim ~= CatAnimation.spritemap.clean then
+	CatAnimation.current_anim = CatAnimation.spritemap.clean
+	CatAnimation.current_time = 0
+	CatAnimation.current_frame = 1
+    end
 end
 
 function CatAnimation.draw()
@@ -71,8 +91,11 @@ function love.update(dt)
     CatAnimation.tick(dt)
 
     if love.keyboard.isDown("right") then
-    end
-    if love.keyboard.isDown("left") then
+	CatAnimation.move(dt)
+    elseif love.keyboard.isDown("left") then
+	CatAnimation.move(-dt)
+    else
+	CatAnimation.rest()
     end
 end
 
