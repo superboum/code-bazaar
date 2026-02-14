@@ -6,6 +6,7 @@ CatAnimation = {
   current_time = 0,
   current_frame = 1,
   current_anim = nil,
+  orientation = 1, -- 1 = right, -1 = left
 
   speed = 100,
 
@@ -59,6 +60,12 @@ function CatAnimation.move(dt)
 	CatAnimation.current_frame = 1
     end
 
+    if dt < 0 then
+	CatAnimation.orientation = -1
+    else
+	CatAnimation.orientation = 1
+    end
+
     CatAnimation.pos_x = CatAnimation.pos_x + dt * CatAnimation.speed
 end
 
@@ -77,7 +84,10 @@ function CatAnimation.draw()
 	CatAnimation.pos_x,
 	CatAnimation.pos_y, 
 	0, 
-	4
+	CatAnimation.orientation * 4,
+	4,
+	CatAnimation.sprite_size/2,
+	CatAnimation.sprite_size/2
     )
 end
 
