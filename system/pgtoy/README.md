@@ -1,4 +1,4 @@
-# Dummy database implementing PostgreSQL wire protocol
+# pgtoy: understanding PostgreSQL by re-implementing some parts
 
 What works:
  - [X] Network Handshake
