@@ -28,7 +28,7 @@ async def read_len_prefixed_msg(reader) -> bytes:
 
 async def read_type_and_len_prefixed_msg(reader) -> tuple[bytes, bytes]:
     msg_type = await read_msg_type(reader)
-    raw_msg = await read_len_prefixed_message(reader)
+    raw_msg = await read_len_prefixed_msg(reader)
     return msg_type, raw_msg
 
 
@@ -194,7 +194,6 @@ class NoticeResponse(Serializable):
             self.msg_type.value,
             msg_len,
         ) + pl
-        print(msg_len, len(r))
         return r
 
 class TxStatus(enum.Enum):
@@ -261,13 +260,14 @@ class CoState(enum.Enum):
     ENDED = 0x03
 
 async def accept(reader, writer):
-    print("co accepted")
+    addr = writer.get_extra_info('peername')
+    print(f"connection accepted from {addr}")
+
     state = CoState.INITIAL
     while state is not CoState.ENDED:
         match state:
             case CoState.INITIAL:
                 handshake = Handshake.deserialize(await read_len_prefixed_msg(reader))
-                print(handshake)
                 match handshake.inner:
                     case GSSRequest() | SSLRequest():
                         writer.write(handshake.refuse().serialize())
@@ -275,12 +275,14 @@ async def accept(reader, writer):
                     case InvalidHandshake():
                         state = CoState.ENDED
                     case StartupMessage():
+                        state = CoState.LOGGED
                         for msg in handshake.accept():
-                            print(msg.serialize())
                             writer.write(msg.serialize())
                         await writer.drain()
             case CoState.LOGGED:
-                state = await decode_frontend_message(await read_type_and_len_prefixed_msg(reader))
+                raw_msg = await read_type_and_len_prefixed_msg(reader)
+                print(raw_msg)
+                state = CoState.ENDED
             case CoState.ENDED:
                 break # redundant but for clarity
             case _:
