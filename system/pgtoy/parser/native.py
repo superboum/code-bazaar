@@ -31,4 +31,5 @@ async def read_u32(reader: asyncio.StreamReader) -> i64:
 
 
 async def read_mlen(reader: asyncio.StreamReader) -> i64:
-    return (await read_u32(reader)) - Sz.U32.value
+    pg_len = await read_u32(reader)
+    return pg_len - Sz.U32.value

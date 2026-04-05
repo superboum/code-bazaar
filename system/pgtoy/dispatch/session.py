@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Sequence, assert_never
+import logging
 
 import error as err
 import ctrl.markers as markers
@@ -8,6 +9,8 @@ import dispatch.query as query
 import msg.all as msg
 import msg.handshake as hmsg
 import msg.serializable as ser
+
+logger = logging.getLogger(__name__)
 
 class Disconnected:
     pass
@@ -44,6 +47,7 @@ class Dispatcher:
                 self.state = query.Dispatcher()
                 to_add: list[msg.BackMsg] = list(self.state.init_msg())
                 to_send = to_send + to_add
+                logger.info("handshake -> query")
             case _:
                 pass
 

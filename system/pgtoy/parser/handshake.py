@@ -4,6 +4,7 @@ from typing import assert_never
 import error as error
 import msg.proto_version as mproto
 import msg.handshake as mhs
+import msg.serializable as ser
 import parser.native as native
 import parser.startup_message as parse_next
 
@@ -20,6 +21,8 @@ async def proto_version(reader: asyncio.StreamReader) -> mproto.ProtoVersion:
 async def front(reader: asyncio.StreamReader) -> mhs.FrontMsg:
     mlen = await native.read_mlen(reader)
     proto = await proto_version(reader)
+    mlen -= ser.Sz.U32.value
+
     match proto:
         case mproto.ProtoVersion.GSSENCRequest:
             return mhs.GSSRequest()
