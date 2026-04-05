@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import msg.serializable as ser
 
 @dataclass
 class Close:
@@ -7,5 +8,6 @@ class Close:
 
 
 @dataclass
-class CloseComplete:
-    pass
+class CloseComplete(ser.Serializable):
+    def serialize(self, writer: ser.Writer) -> None:
+        raise Exception("Not yet implemented")

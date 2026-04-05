@@ -44,4 +44,4 @@ class FrontMsgType(enum.Enum):
     TERMINATE = b"X"
 
 
-type MsgType = FrontMsgType | BackMsgType
+MsgType = FrontMsgType | BackMsgType

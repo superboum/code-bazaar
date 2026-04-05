@@ -7,7 +7,7 @@ class AuthenticationOk(ser.Serializable):
     static_len = 8
     success_val = 0
 
-    def serialize(self, writer: ser.ExtStreamWriter) -> None:
+    def serialize(self, writer: ser.Writer) -> None:
         pl = self.success_val.to_bytes(
             ser.Sz.U32.value,
             ser.ENDIAN,

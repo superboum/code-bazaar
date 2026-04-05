@@ -1,15 +1,17 @@
+import msg.serializable as ser
+
 class SSLRequest:
     pass
 
 
-class SSLResponseOk:
-    def serialize(self) -> bytes:
-        return b"S"
+class SSLResponseOk(ser.Serializable):
+    def serialize(self, writer: ser.Writer) -> None:
+        writer.write(b"S")
 
 
-class SSLResponseNo:
-    def serialize(self) -> bytes:
-        return b"N"
+class SSLResponseNo(ser.Serializable):
+    def serialize(self, writer: ser.Writer) -> None:
+        writer.write(b"N")
 
 
-type SSLResponse = SSLResponseOk | SSLResponseNo
+SSLResponse = SSLResponseOk | SSLResponseNo

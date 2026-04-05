@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
+import msg.serializable as ser
 
 @dataclass
-class DataRow:
-    pass
+class DataRow(ser.Serializable):
+    def serialize(self, writer: ser.Writer) -> None:
+        raise Exception("Not yet implemented")

@@ -12,11 +12,22 @@ from msg.command_complete import CommandComplete
 from msg.empty_query_response import EmptyQueryResponse
 from msg.data_row import DataRow
 from msg.row_description import RowDescription
-from msg.ready_for_query import ReadyForQuery
+from msg.ready_for_query import ReadyForQuery as ReadyForQuery
+from msg.notice_response import NoticeResponse as NoticeResponse
 
 
-type FrontMsg = Query | Parse | Bind | Execute | Describe | Close | Flush | Sync
-type BackMsg = (
+FrontMsg = (
+    Query 
+    | Parse 
+    | Bind 
+    | Execute 
+    | Describe 
+    | Close 
+    | Flush 
+    | Sync
+)
+
+BackMsg = (
     ParseComplete
     | ErrorResponse
     | PortalSuspended
@@ -26,4 +37,5 @@ type BackMsg = (
     | DataRow
     | CloseComplete
     | ReadyForQuery
+    | NoticeResponse
 )

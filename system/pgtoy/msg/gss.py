@@ -1,15 +1,16 @@
+import msg.serializable as ser
+
 class GSSRequest:
     pass
 
 
-class GSSResponseOk:
-    def serialize(self) -> bytes:
-        return b"G"
+class GSSResponseOk(ser.Serializable):
+    def serialize(self, writer: ser.Writer) -> None:
+        writer.write(b"G")
+
+class GSSResponseNo(ser.Serializable):
+    def serialize(self, writer: ser.Writer) -> None:
+        writer.write(b"N")
 
 
-class GSSResponseNo:
-    def serialize(self) -> bytes:
-        return b"N"
-
-
-type GSSResponse = GSSResponseOk | GSSResponseNo
+GSSResponse = GSSResponseOk | GSSResponseNo

@@ -16,7 +16,7 @@ class ReadyForQuery(ser.Serializable):
     msg_type: cmd_id.BackMsgType = cmd_id.BackMsgType.READY_FOR_QUERY
     status: TxStatus = TxStatus.IDLE
 
-    def serialize(self, writer: ser.ExtStreamWriter) -> None:
+    def serialize(self, writer: ser.Writer) -> None:
         writer.write_type_len_head(
             self.msg_type,
             len(self.status.value),

@@ -1,6 +1,7 @@
 import asyncio
 from typing import assert_never
 
+import error as error
 import msg.proto_version as mproto
 import msg.handshake as mhs
 import parser.native as native
@@ -16,7 +17,7 @@ async def proto_version(reader: asyncio.StreamReader) -> mproto.ProtoVersion:
         return mproto.ProtoVersion.Unknown
 
 
-async def hfront(reader: asyncio.StreamReader) -> mhs.FrontMsg | None:
+async def front(reader: asyncio.StreamReader) -> mhs.FrontMsg:
     mlen = await native.read_mlen(reader)
     proto = await proto_version(reader)
     match proto:
@@ -25,11 +26,10 @@ async def hfront(reader: asyncio.StreamReader) -> mhs.FrontMsg | None:
         case mproto.ProtoVersion.SSLRequest:
             return mhs.SSLRequest()
         case mproto.ProtoVersion.Postgres20:
-            print("Protocol 2.0 is not supported.")
-            return None
+            raise error.Protocolv2NotSupported()
         case mproto.ProtoVersion.Postgres30 | mproto.ProtoVersion.Postgres32:
             return await parse_next.startup_message(reader, mlen)
         case mproto.ProtoVersion.Unknown:
-            print("Unknown protocol")
-            return None
-    assert_never()
+            raise error.UnknownPostgresProtocolVersion()
+        case _:
+            assert_never(proto)

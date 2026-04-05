@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import enum
 
+import msg.serializable as ser
 
 class ErrorCode(enum.Enum):
     # see: https://www.postgresql.org/docs/current/errcodes-appendix.html
@@ -10,5 +11,6 @@ class ErrorCode(enum.Enum):
 
 
 @dataclass
-class ErrorResponse:
-    pass
+class ErrorResponse(ser.Serializable):
+    def serialize(self, writer: ser.Writer) -> None:
+        raise Exception("Not yet implemented")

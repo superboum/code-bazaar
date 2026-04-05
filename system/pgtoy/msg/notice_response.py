@@ -30,7 +30,7 @@ class NoticeResponse(ser.Serializable):
     error_code: err.ErrorCode = err.ErrorCode.SUCCESSFUL_COMPLETION
     message: bytes = b"hello world"
 
-    def serialize(self, writer: ser.ExtStreamWriter) -> None:
+    def serialize(self, writer: ser.Writer) -> None:
         EOS = b"\x00"
         pl = (
             NoticeField.SEVERITY.value
