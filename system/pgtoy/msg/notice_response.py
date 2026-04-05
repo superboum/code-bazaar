@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import enum
+from typing import ClassVar
 
 import msg.serializable as ser
 import msg.cmd_id as cmd_id
@@ -24,11 +25,11 @@ class NoticeSeverity(enum.Enum):
 
 @dataclass
 class NoticeResponse(ser.Serializable):
-    msg_type: cmd_id.BackMsgType = cmd_id.BackMsgType.NOTICE_RESPONSE
+    msg_type: ClassVar[cmd_id.BackMsgType] = cmd_id.BackMsgType.NOTICE_RESPONSE
 
+    message: str
     severity: NoticeSeverity = NoticeSeverity.INFO
     error_code: err.ErrorCode = err.ErrorCode.SUCCESSFUL_COMPLETION
-    message: bytes = b"hello world"
 
     def serialize(self, writer: ser.Writer) -> None:
         EOS = b"\x00"
@@ -43,7 +44,7 @@ class NoticeResponse(ser.Serializable):
             + self.error_code.value
             + EOS
             + NoticeField.MESSAGE.value
-            + self.message
+            + self.message.encode()
             + EOS
             + NoticeField.TERMINATOR.value
         )

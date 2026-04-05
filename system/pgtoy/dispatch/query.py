@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Sequence
 
 import msg.query as msg
+import msg.parameter_status as params
 import ctrl.simple_query as ctrl
 
 
@@ -22,7 +23,8 @@ class Dispatcher:
 
     def init_msg(self) -> Sequence[msg.BackMsg]:
         return [
-            msg.NoticeResponse(),
+            msg.NoticeResponse("Welcome on pgtoy!"),
+            msg.ParameterStatus({params.ParamField.SERVER_VERSION: "17.99"}),
             msg.ReadyForQuery(),
         ]
 
