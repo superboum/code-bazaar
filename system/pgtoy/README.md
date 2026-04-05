@@ -3,7 +3,7 @@
 What works:
  - [ ] [pgwire protocol](https://www.postgresql.org/docs/current/protocol.html)
    - [X] Network Handshake
-   - [/] Simple query
+   - [ ] Simple query
    - [ ] Extended query
    - [ ] Cancelling requests
    - [ ] Pipelining
