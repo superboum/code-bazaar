@@ -8,7 +8,7 @@ import parser.native as native
 
 async def front(reader: asyncio.StreamReader) -> mq.FrontMsg:
     kind_raw = await native.read_u8(reader)
-    mlen = await native.read_mlen(reader)
+    _mlen = await native.read_mlen(reader)
 
     try:
         kind = cmd_id.FrontMsgType(kind_raw)
