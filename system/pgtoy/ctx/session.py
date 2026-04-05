@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-from ctx.base import SessionState
 from msg.handshake import StartupMessage
 
 @dataclass

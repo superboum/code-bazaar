@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import enum
 
 class ErrorCode(enum.Enum):
@@ -5,3 +6,7 @@ class ErrorCode(enum.Enum):
     SUCCESSFUL_COMPLETION = b'00000'
     WARNING = b'00001'
     # ...
+
+@dataclass
+class ErrorResponse:
+    pass

@@ -1,19 +1,22 @@
+from dataclasses import dataclass
+import enum
+
+import msg.serializable as ser
+import msg.cmd_id as cmd_id
+
 class TxStatus(enum.Enum):
     IDLE = b'I'
     IN_TX = b'T'
     FAILED = b'E'
 
 @dataclass
-class ReadyForQuery(Serializable):
-    msg_type: BackMsgType = BackMsgType.READY_FOR_QUERY
-    static_len = 5
-
+class ReadyForQuery(ser.Serializable):
+    msg_type: cmd_id.BackMsgType = cmd_id.BackMsgType.READY_FOR_QUERY
     status: TxStatus = TxStatus.IDLE
 
-    def serialize(self) -> bytes:
-        return struct.pack(
-            "!cIc",
-            self.msg_type.value,
-            self.static_len,
-            self.status.value,
+    def serialize(self, writer: ser.ExtStreamWriter) -> None:
+        writer.write_type_len_head(
+            self.msg_type,
+            len(self.status.value),
         )
+        writer.write(self.status.value)

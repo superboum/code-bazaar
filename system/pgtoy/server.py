@@ -6,11 +6,11 @@ from dataclasses import dataclass
 from abc import abstractmethod, ABC
 
 
-async def accept(reader, writer):
+async def accept(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
     addr = writer.get_extra_info('peername')
     print(f"connection accepted from {addr}")
 
-    session 
+    # @FIXME: todo
 
     #writer.write(data)
     #await writer.drain()
@@ -19,7 +19,7 @@ async def accept(reader, writer):
     await writer.wait_closed()
 
 
-async def main():
+async def main() -> None:
     server = await asyncio.start_server(accept, '127.0.0.1', 5430)
 
     addrs = ', '.join(str(sock.getsockname()) for sock in server.sockets)

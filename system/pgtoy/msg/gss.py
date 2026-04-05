@@ -9,4 +9,4 @@ class GSSResponseNo:
     def serialize(self) -> bytes:
         return b'N'
 
-type GSSResponse = GSSResponseOk | GSS
+type GSSResponse = GSSResponseOk | GSSResponseNo

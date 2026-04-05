@@ -1,9 +1,11 @@
-import ..ctx.auth as ctx
-import ..msg.handshake as msg
+from dataclasses import dataclass
+
+import ctx.auth as ctx
+import msg.handshake as msg
 
 @dataclass
-class Dispath:
-    ctx: State
+class Dispatch:
+    state: ctx.State
 
-    def register(m: msg.HFrontMsg) ->  None:
+    def register(self, m: msg.FrontMsg) ->  None:
         pass

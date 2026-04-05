@@ -1,9 +1,19 @@
 [project]
-name = "dummy-sql"
+name = "pgtoy"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = []
+
+[dependency-groups]
+dev = [
+    "mypy>=1.20.0",
+]
+
+[tool.mypy]
+files = "."
+explicit_package_bases = true
+strict = true
 
 # https://www.postgresql.eu/events/pgconfeu2024/sessions/session/5897/slides/589/Postgres%20protocol.pdf

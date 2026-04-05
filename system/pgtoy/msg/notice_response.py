@@ -1,6 +1,10 @@
 from dataclasses import dataclass
 import enum
 
+import msg.serializable as ser
+import msg.cmd_id as cmd_id
+import msg.error as err
+
 class NoticeField(enum.Enum):
     TERMINATOR = b'\x00'
     SEVERITY = b'S'
@@ -16,15 +20,14 @@ class NoticeSeverity(enum.Enum):
     LOG = b'LOG'
 
 @dataclass
-class NoticeResponse(Serializable):
-    msg_type: BackMsgType = BackMsgType.NOTICE_RESPONSE
+class NoticeResponse(ser.Serializable):
+    msg_type: cmd_id.BackMsgType = cmd_id.BackMsgType.NOTICE_RESPONSE
 
     severity: NoticeSeverity = NoticeSeverity.INFO
-    error_code: ErrorCode = ErrorCode.SUCCESSFUL_COMPLETION
+    error_code: err.ErrorCode = err.ErrorCode.SUCCESSFUL_COMPLETION
     message: bytes = b'hello world'
 
-    def serialize(self) -> bytes:
-        MSG_LEN_SZ = 4
+    def serialize(self, writer: ser.ExtStreamWriter) -> None:
         EOS = b'\x00'
         pl = (
             NoticeField.SEVERITY.value + self.severity.value + EOS +
@@ -33,10 +36,8 @@ class NoticeResponse(Serializable):
             NoticeField.MESSAGE.value + self.message + EOS +
             NoticeField.TERMINATOR.value
         )
-        msg_len = MSG_LEN_SZ + len(pl) 
-        r = struct.pack(
-            "!cI", 
-            self.msg_type.value,
-            msg_len,
-        ) + pl
-        return r
+        writer.write_type_len_head(
+            self.msg_type,
+            len(pl),
+        )
+        writer.write(pl)

@@ -42,3 +42,5 @@ class FrontMsgType(enum.Enum):
     QUERY = b'Q'
     SYNC = b'S'
     TERMINATE = b'X'
+
+type MsgType = FrontMsgType | BackMsgType

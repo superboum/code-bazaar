@@ -1,4 +1,5 @@
 import enum
+from dataclasses import dataclass
 
 class Params(enum.Enum):
     USER = b'user'
