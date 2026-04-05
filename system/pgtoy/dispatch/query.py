@@ -3,6 +3,7 @@ from typing import Sequence
 
 import msg.query as msg
 
+
 @dataclass
 class Dispatcher:
     def init_msg(self) -> Sequence[msg.BackMsg]:

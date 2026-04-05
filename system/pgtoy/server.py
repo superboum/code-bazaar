@@ -11,11 +11,12 @@ import parser.handshake as parse_handshake
 import parser.query as parse_query
 
 logging.basicConfig(
-    encoding='utf-8', 
+    encoding="utf-8",
     level=logging.DEBUG,
-)
+)  # type: ignore
 
 logger = logging.getLogger(__name__)
+
 
 async def accept(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
     addr = writer.get_extra_info("peername")

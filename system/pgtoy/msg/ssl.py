@@ -1,5 +1,6 @@
 import msg.serializable as ser
 
+
 class SSLRequest:
     pass
 

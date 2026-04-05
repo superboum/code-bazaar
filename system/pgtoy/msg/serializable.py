@@ -14,6 +14,7 @@ class Sz(enum.Enum):
     U16 = 2
     U32 = 4
 
+
 @dataclass
 class Writer:
     inner: asyncio.StreamWriter

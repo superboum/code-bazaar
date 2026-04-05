@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 import msg.serializable as ser
 
+
 @dataclass
 class Parse:
     pass

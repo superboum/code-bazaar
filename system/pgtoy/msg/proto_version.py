@@ -2,7 +2,6 @@ import enum
 
 
 class ProtoVersion(enum.Enum):
-    Unknown = (0, 0)
     GSSENCRequest = (1234, 5680)
     SSLRequest = (1234, 5679)
     Postgres20 = (2, 0)

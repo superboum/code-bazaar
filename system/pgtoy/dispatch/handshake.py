@@ -6,6 +6,7 @@ import msg.handshake as msg
 import ctrl.handshake as ctrl
 import ctrl.markers as mark
 
+
 @dataclass
 class Anonymous:
     pass
@@ -20,7 +21,9 @@ class FailedAuth:
 class Done:
     pass
 
+
 State = Anonymous | FailedAuth | Done
+
 
 @dataclass
 class Dispatcher:
