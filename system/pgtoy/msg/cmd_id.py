@@ -42,11 +42,3 @@ class FrontMsgType(enum.Enum):
     QUERY = b'Q'
     SYNC = b'S'
     TERMINATE = b'X'
-
-    @staticmethod
-    async def deserialize(reader: io.Reader) -> Self:
-        buf = await reader.read(1)
-        try:
-            return BackMsgType(b)
-        except Exception:
-            return BackMsgType.UNKNOWN

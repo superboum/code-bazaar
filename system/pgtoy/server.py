@@ -10,22 +10,7 @@ async def accept(reader, writer):
     addr = writer.get_extra_info('peername')
     print(f"connection accepted from {addr}")
 
-    state = CoState.INITIAL
-    while state is not CoState.ENDED:
-        match state:
-            case CoState.INITIAL:
-                handshake = Handshake.deserialize(await read_len_prefixed_msg(reader))
-                match handshake.inner:
-
-            case CoState.LOGGED:
-                raw_msg = await read_type_and_len_prefixed_msg(reader)
-                print(raw_msg)
-                state = CoState.ENDED
-            case CoState.ENDED:
-                break # redundant but for clarity
-            case _:
-                state = CoState.ENDED
-
+    session 
 
     #writer.write(data)
     #await writer.drain()

@@ -1,22 +1,22 @@
 from dataclasses import dataclass
 
-from .base import SessionState
-from ..msg.handshake import StartupMessage
+from ctx.base import SessionState
+from msg.handshake import StartupMessage
 
 @dataclass
-class SessionState:
+class Ctx:
     pass
 
 @dataclass
-class FreshConnection(SessionState):
+class Fresh(Ctx):
     pass
 
 @dataclass
-class Logged(SessionState):
+class Logged(Ctx):
     connection_params: StartupMessage
 
 @dataclass
-class Disconnected(SessionState):
+class Disconnected(Ctx):
     pass
     
 
