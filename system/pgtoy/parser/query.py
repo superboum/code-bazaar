@@ -32,5 +32,7 @@ async def front(reader: asyncio.StreamReader) -> mq.FrontMsg:
             return mq.Sync()
         case cmd_id.FrontMsgType.EXECUTE:
             return mq.Execute()
+        case cmd_id.FrontMsgType.TERMINATE:
+            return mq.Terminate()
         case _:
             raise error.ParsingUnimplemented()

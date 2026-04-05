@@ -10,11 +10,6 @@ import msg.all as msg
 import parser.handshake as parse_handshake
 import parser.query as parse_query
 
-logging.basicConfig(
-    encoding="utf-8",
-    level=logging.DEBUG,
-)  # type: ignore
-
 logger = logging.getLogger(__name__)
 
 
@@ -51,14 +46,21 @@ async def accept(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> 
     await writer.wait_closed()
 
 
-async def main() -> None:
-    server = await asyncio.start_server(accept, "127.0.0.1", 5430)
+class PgToy:
+    host: str
+    port: int
 
-    addrs = ", ".join(str(sock.getsockname()) for sock in server.sockets)
-    logger.info(f"Serving on {addrs}")
+    def __init__(self, host: str | None = None, port: int | None = None):
+        if host is None:
+            host = "::1"
+        if port is None:
+            port = 5430
+        self.host = host
+        self.port = port
 
-    async with server:
-        await server.serve_forever()
-
-
-asyncio.run(main())
+    async def listen(self) -> None:
+        server = await asyncio.start_server(accept, self.host, self.port)
+        addrs = ", ".join(str(sock.getsockname()) for sock in server.sockets)
+        logger.info(f"Serving on {addrs}")
+        async with server:
+            await server.serve_forever()

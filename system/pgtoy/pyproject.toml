@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "coloredlogs>=15.0.1",
+]
 
 [dependency-groups]
 dev = [
@@ -16,5 +18,9 @@ dev = [
 files = "."
 explicit_package_bases = true
 strict = true
+
+[[tool.mypy.overrides]]
+module = ["coloredlogs"]
+ignore_missing_imports = true
 
 # https://www.postgresql.eu/events/pgconfeu2024/sessions/session/5897/slides/589/Postgres%20protocol.pdf

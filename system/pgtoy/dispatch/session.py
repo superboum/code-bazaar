@@ -2,10 +2,12 @@ from dataclasses import dataclass, field
 from typing import Sequence, assert_never
 import logging
 
+import error
 import dispatch.handshake as handshake
 import dispatch.query as query
 import msg.all as msg
 import msg.handshake as hmsg
+import msg.query as qmsg
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +38,10 @@ class Dispatcher:
         match (self.state, recv_msg):
             case (handshake.Dispatcher(), m) if isinstance(m, hmsg.FrontMsg):
                 to_send = list(self.state.register(m))
-            case (_, _):
-                raise Exception("Not yet implemented")
+            case (query.Dispatcher(), m) if isinstance(m, qmsg.FrontMsg):
+                to_send = list(self.state.register(m))
+            case (_, m):
+                raise error.InvalidMessageForState(str(m))
             case rest:
                 assert_never(rest)
 
@@ -47,8 +51,8 @@ class Dispatcher:
                 self.state = query.Dispatcher()
                 to_add: list[msg.BackMsg] = list(self.state.init_msg())
                 to_send = to_send + to_add
-                logger.info("handshake -> query")
-            case _:
-                pass
+            case query.Dispatcher(state=query.Terminated()):
+                self.state = Disconnected()
+                to_send = []  # We don't send any message on termination
 
         return to_send

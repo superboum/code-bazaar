@@ -14,9 +14,10 @@ from msg.data_row import DataRow as DataRow
 from msg.row_description import RowDescription as RowDescription
 from msg.ready_for_query import ReadyForQuery as ReadyForQuery
 from msg.notice_response import NoticeResponse as NoticeResponse
+from msg.terminate import Terminate as Terminate
 
 
-FrontMsg = Query | Parse | Bind | Execute | Describe | Close | Flush | Sync
+FrontMsg = Query | Parse | Bind | Execute | Describe | Close | Flush | Sync | Terminate
 
 BackMsg = (
     ParseComplete
