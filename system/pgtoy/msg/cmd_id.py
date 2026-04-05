@@ -6,7 +6,8 @@ class BackMsgType(enum.Enum):
     AUTHENTICATION = b"R"  # multiple alternatives in context
     BACKEND_KEY_DATA = b"K"
     BIND_COMPLETE = b"2"
-    COMMAND_COMPLETE = b"3"  # also CLOSE_COMPLETE
+    CLOSE_COMPLETE = b"3"
+    COMMAND_COMPLETE = b"C"
     COPY_DATA = b"d"
     COPY_DONE = b"c"
     COPY_IN_RESPONSE = b"G"

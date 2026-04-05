@@ -31,12 +31,14 @@ async def accept(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> 
                 break
             case _:
                 assert_never(cur_sess.state)
+        logger.debug("Received message: %s", recv_msg)
 
         # DISPATCH
         to_send = cur_sess.register(recv_msg)
 
         # SERIALIZE
         for send_msg in to_send:
+            logger.debug("Send message: %s", send_msg)
             send_msg.serialize(msg_writer)
 
         # FLUSH
