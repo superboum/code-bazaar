@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Sequence
 
 import msg.query as msg
+import ctrl.simple_query as ctrl
 
 
 class Live:
@@ -30,5 +31,7 @@ class Dispatcher:
             case msg.Terminate():
                 self.state = Terminated()
                 return []
+            case msg.Query():
+                return ctrl.simple_query(m)
             case _:
                 raise Exception("Not yet implemented")

@@ -6,9 +6,14 @@ import msg.cmd_id as cmd_id
 import parser.native as native
 
 
+async def query(reader: asyncio.StreamReader, mlen: int) -> mq.Query:
+    statement = (await native.read_many(reader, mlen)).decode("utf-8")
+    return mq.Query(statement)
+
+
 async def front(reader: asyncio.StreamReader) -> mq.FrontMsg:
     kind_raw = await native.read_u8(reader)
-    _mlen = await native.read_mlen(reader)
+    mlen = await native.read_mlen(reader)
 
     try:
         kind = cmd_id.FrontMsgType(kind_raw)
@@ -17,7 +22,7 @@ async def front(reader: asyncio.StreamReader) -> mq.FrontMsg:
 
     match kind:
         case cmd_id.FrontMsgType.QUERY:
-            return mq.Query()
+            return await query(reader, mlen)
         case cmd_id.FrontMsgType.PARSE:
             return mq.Parse()
         case cmd_id.FrontMsgType.BIND:
