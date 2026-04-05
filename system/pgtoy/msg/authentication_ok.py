@@ -4,7 +4,6 @@ import msg.cmd_id as cmd_id
 
 class AuthenticationOk(ser.Serializable):
     msg_type = cmd_id.BackMsgType.AUTHENTICATION
-    static_len = 8
     success_val = 0
 
     def serialize(self, writer: ser.Writer) -> None:

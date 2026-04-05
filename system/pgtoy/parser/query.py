@@ -9,14 +9,12 @@ import parser.native as native
 async def front(reader: asyncio.StreamReader) -> mq.FrontMsg:
     kind_raw = await native.read_u8(reader)
     mlen = await native.read_mlen(reader)
-    print(mlen)
 
     try:
         kind = cmd_id.FrontMsgType(kind_raw)
     except Exception:
         raise error.InvalidFrontMsgType()
 
-    print(kind)
     match kind:
         case cmd_id.FrontMsgType.QUERY:
             return mq.Query()
