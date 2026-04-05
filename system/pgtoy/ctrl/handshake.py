@@ -29,7 +29,12 @@ def handle_ssl(req: ssl.SSLRequest) -> MsgAndMarks:
 
 
 def handle_startup_message(req: start.StartupMessage) -> MsgAndMarks:
-    logger.info("Handshake done for user=%s", req.params[start.Params.USER])
+    logger.info(
+        "Handshake done (%s, %s)",
+        req.proto,
+        req.params[start.Params.USER],
+    )
+
     return (
         [msg.AuthenticationOk()],
         mark.HandshakeMarkers(sent_authentication_ok=True),

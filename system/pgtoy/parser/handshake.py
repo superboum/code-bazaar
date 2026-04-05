@@ -31,6 +31,6 @@ async def front(reader: asyncio.StreamReader) -> mhs.FrontMsg:
         case mproto.ProtoVersion.Postgres20:
             raise error.Protocolv2NotSupported()
         case mproto.ProtoVersion.Postgres30 | mproto.ProtoVersion.Postgres32:
-            return await parse_next.startup_message(reader, mlen)
+            return await parse_next.startup_message(reader, proto, mlen)
         case _:
             assert_never(proto)

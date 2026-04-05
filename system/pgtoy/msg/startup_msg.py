@@ -1,6 +1,8 @@
 import enum
 from dataclasses import dataclass
 
+import msg.proto_version as proto
+
 
 class Params(enum.Enum):
     USER = b"user"
@@ -14,4 +16,5 @@ class Params(enum.Enum):
 
 @dataclass
 class StartupMessage:
+    proto: proto.ProtoVersion
     params: dict[Params, bytes]

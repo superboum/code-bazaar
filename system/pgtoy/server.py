@@ -42,6 +42,7 @@ async def accept(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> 
         # FLUSH
         await writer.drain()
 
+    logger.info(f"{addr} disconnected")
     writer.close()
     await writer.wait_closed()
 
