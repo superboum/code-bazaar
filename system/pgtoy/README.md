@@ -38,7 +38,7 @@ What works:
  Launch the server:
 
  ```
- uv run main.py
+ uv run server.py
  ```
 
  Start your psql client:
