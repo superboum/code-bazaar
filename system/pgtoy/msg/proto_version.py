@@ -1,5 +1,6 @@
 import enum
 
+
 class ProtoVersion(enum.Enum):
     Unknown = (0, 0)
     GSSENCRequest = (1234, 5680)

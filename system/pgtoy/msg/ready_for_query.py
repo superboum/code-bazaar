@@ -4,10 +4,12 @@ import enum
 import msg.serializable as ser
 import msg.cmd_id as cmd_id
 
+
 class TxStatus(enum.Enum):
-    IDLE = b'I'
-    IN_TX = b'T'
-    FAILED = b'E'
+    IDLE = b"I"
+    IN_TX = b"T"
+    FAILED = b"E"
+
 
 @dataclass
 class ReadyForQuery(ser.Serializable):

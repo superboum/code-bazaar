@@ -1,6 +1,7 @@
 import msg.serializable as ser
 import msg.cmd_id as cmd_id
 
+
 class AuthenticationOk(ser.Serializable):
     msg_type = cmd_id.BackMsgType.AUTHENTICATION
     static_len = 8

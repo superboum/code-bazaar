@@ -16,4 +16,14 @@ from msg.ready_for_query import ReadyForQuery
 
 
 type FrontMsg = Query | Parse | Bind | Execute | Describe | Close | Flush | Sync
-type BackMsg = ParseComplete | ErrorResponse | PortalSuspended | CommandComplete | EmptyQueryResponse | RowDescription | DataRow | CloseComplete | ReadyForQuery
+type BackMsg = (
+    ParseComplete
+    | ErrorResponse
+    | PortalSuspended
+    | CommandComplete
+    | EmptyQueryResponse
+    | RowDescription
+    | DataRow
+    | CloseComplete
+    | ReadyForQuery
+)
