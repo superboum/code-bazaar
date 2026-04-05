@@ -8,6 +8,7 @@ import dispatch.query as query
 import msg.all as msg
 import msg.handshake as hmsg
 import msg.query as qmsg
+import persist.inmem as persist
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ AnyDispatcher = handshake.Dispatcher | query.Dispatcher | Disconnected
 
 @dataclass
 class Dispatcher:
+    inst: persist.Instance
     state: AnyDispatcher = field(default_factory=lambda: handshake.Dispatcher())
 
     def is_connected(self) -> bool:
@@ -48,7 +50,7 @@ class Dispatcher:
         # State update (ie. state machine transition)
         match self.state:
             case handshake.Dispatcher(state=handshake.Done()):
-                self.state = query.Dispatcher()
+                self.state = query.Dispatcher(self.inst)
                 to_add: list[msg.BackMsg] = list(self.state.init_msg())
                 to_send = to_send + to_add
             case query.Dispatcher(state=query.Terminated()):

@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "coloredlogs>=15.0.1",
+    "sqlglot>=30.2.1",
 ]
 
 [dependency-groups]

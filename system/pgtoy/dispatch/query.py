@@ -4,6 +4,7 @@ from typing import Sequence
 import msg.query as msg
 import msg.parameter_status as params
 import ctrl.simple_query as ctrl
+import persist.inmem as persist
 
 
 class Live:
@@ -19,6 +20,7 @@ State = Live | Terminated
 
 @dataclass
 class Dispatcher:
+    inst: persist.Instance
     state: State = field(default_factory=lambda: Live())
 
     def init_msg(self) -> Sequence[msg.BackMsg]:
@@ -34,6 +36,6 @@ class Dispatcher:
                 self.state = Terminated()
                 return []
             case msg.Query():
-                return ctrl.simple_query(m)
+                return ctrl.simple_query(self.inst, m)
             case _:
                 raise Exception("Not yet implemented")

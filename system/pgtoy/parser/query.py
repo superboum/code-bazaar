@@ -7,7 +7,9 @@ import parser.native as native
 
 
 async def query(reader: asyncio.StreamReader, mlen: int) -> mq.Query:
-    statement = (await native.read_many(reader, mlen)).decode("utf-8")
+    # @FIXME: utf8 is hardcoded, but encoding should probably read from client
+    # @INFO: strings are null-terminated in postgres. We drop that.
+    statement = (await native.read_many(reader, mlen))[:-1].decode("utf-8")
     return mq.Query(statement)
 
 
