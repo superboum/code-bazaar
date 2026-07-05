@@ -51,6 +51,15 @@ export class Manager {
       recommendations,
     )
   }
+
+  requirements_upsert(appid, platform, kind, content) {
+    return this._requirements_upsert.run(
+      appid,
+      platform,
+      kind,
+      content,
+    )
+  }
 }
 
 export function init() {

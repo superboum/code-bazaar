@@ -23,7 +23,11 @@ export class Game {
       this.recommendations
     );
 
-    // @FIXME: save requirements, tags, arts.
+    this.requirements
+      .filter(r => r != null)
+      .forEach(r => r.persist(manager));
+
+    // @FIXME: save tags, arts.
   }
 
   static from_appdetails(appdetails_data) {
