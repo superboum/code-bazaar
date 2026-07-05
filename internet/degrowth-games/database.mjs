@@ -5,7 +5,7 @@ const database = new sqlite.DatabaseSync('steam.db');
 
 export class Manager {
   constructor() {
-    this.games_upsert = database.prepare(`
+    this._games_upsert = database.prepare(`
       INSERT INTO games(appid, last_appdetails_update, name, description, release_date, recommendations)
       VALUES(?, ?, ?, ?, ?, ?) ON CONFLICT DO UPDATE SET 
         last_appdetails_update=excluded.last_appdetails_update,
@@ -14,31 +14,42 @@ export class Manager {
         release_date=excluded.release_date,
         recommendations=excluded.recommendations
       ;
-    `).run; 
+    `); 
 
-    this.requirements_upsert = database.prepare(`
+    this._requirements_upsert = database.prepare(`
       INSERT INTO requirements(appid, platform, kind, content)
       VALUES(?, ?, ?, ?) ON CONFLICT DO UPDATE SET
         content=excluded.content
       ;
-    `).run;
+    `);
 
-    this.images_upsert = database.prepare(`
+    this._images_upsert = database.prepare(`
       INSERT INTO images(appid, kind, url)
       VALUES(?, ?, ?) ON CONFLICT DO NOTHING;
-    `).run;
+    `);
 
-    this.tags_upsert = database.prepare(`
+    this._tags_upsert = database.prepare(`
       INSERT INTO tags(kind, steam_id, name)
       VALUES(?, ?, ?) ON CONFLICT DO UPDATE SET
         name=excluded.name
       ;
-    `).run;
+    `);
 
-    this.games_xref_tags_upsert = database.prepare(`
-      INSERT INTO games_xref_tags(kind, steam_id, app_id)
+    this._games_xref_tags_upsert = database.prepare(`
+      INSERT INTO games_xref_tags(kind, steam_id, appid)
       VALUES(?, ?, ?) ON CONFLICT DO NOTHING;
-    `).run;
+    `);
+  }
+
+  games_upsert(appid, last_update, name, description, release_date, recommendations) {
+    return this._games_upsert.run(
+      appid,
+      last_update,
+      name,
+      description,
+      release_date,
+      recommendations,
+    )
   }
 }
 
@@ -80,12 +91,11 @@ export function init() {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_steam_ref ON tags(kind, steam_id);
 
     CREATE TABLE IF NOT EXISTS games_xref_tags(
-      kind INTEGER,
+      kind TEXT,
       steam_id INTEGER,
       appid INTEGER,
       FOREIGN KEY(appid) REFERENCES games(appid),
-      FOREIGN KEY(kind) REFERENCES tags(kind),
-      FOREIGN KEY(steam_id) REFERENCES tags(steam_id)
+      FOREIGN KEY(kind, steam_id) REFERENCES tags(kind, steam_id)
     ) STRICT;
     CREATE INDEX IF NOT EXISTS idx_games_xref_tags_forward ON games_xref_tags(appid);
     CREATE INDEX IF NOT EXISTS idx_games_xref_tags_backward ON games_xref_tags(kind, steam_id);
