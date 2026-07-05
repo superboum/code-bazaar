@@ -19,24 +19,61 @@ class Requirement {
     this.min = min
     this.recommended = recommended
   }
+
+  static win_from_appdetails(appdetails_data) {
+    if (!appdetails_data.platforms.windows) {
+      return null
+    }
+    return new Requirement(
+      "windows",
+      appdetails_data.pc_requirements.minimum || null,
+      appdetails_data.pc_requirements.recommended || null,
+    );
+  }
+
+  static mac_from_appdetails(appdetails_data) {
+    if (!appdetails_data.platforms.mac) {
+      return null
+    }
+    return new Requirement(
+      "mac",
+      appdetails_data.mac_requirements.minimum || null,
+      appdetails_data.mac_requirements.recommended || null,
+    );
+  }
+
+  static linux_from_appdetails(appdetails_data) {
+    if (!appdetails_data.platforms.linux) {
+      return null
+    }
+    return new Requirement(
+      "mac",
+      appdetails_data.linux_requirements.minimum || null,
+      appdetails_data.linux_requirements.recommended || null,
+    );
+  }
 }
 
 class Game {
-  constructor() {
-
+  constructor(appid, name, description, requirements, arts, tags) {
+    this.appid = appid
+    this.name = name
+    this.description = description
+    this.requirements = requirements
+    this.arts = arts
+    this.tags = tags
   }
 
   static from_appdetails(appdetails_data) {
-    return Game(
+    return new Game(
       appdetails_data.steam_appid,
       appdetails_data.name,
       appdetails_data.detailed_description,
-      appdetails_data.pc_requirements.minimum || null,
-      appdetails_data.pc_requirements.recommended || null,
-      appdetails_data.mac_requirements.minimum || null,
-      appdetails_data.mac_requirements.recommended || null,
-      appdetails_data.linux_requirements.minimum || null,
-      appdetails_data.linux_requirements.recommended || null,
+      [ 
+        Requirement.win_from_appdetails(appdetails_data), 
+	Requirement.mac_from_appdetails(appdetails_data), 
+	Requirement.linux_from_appdetails(appdetails_data), 
+      ],
     );
   }
 }
@@ -45,4 +82,4 @@ class Game {
 const appdetails_json = await appdetails_req.json()*/
 const appdetails_json = JSON.parse(readFileSync("cs.json"));
 const appdetails_data = appdetails_json[candidate_ref.appid].data
-console.log(appdetails_data);
+console.log(Game.from_appdetails(appdetails_data));
