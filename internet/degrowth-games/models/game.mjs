@@ -1,13 +1,14 @@
 import { Requirement } from "./requirement.mjs";
 
 export class Game {
-  constructor(appid, name, description, recommendations, requirements, arts, tags) {
+  constructor(appid, name, description, release_date, recommendations, requirements, arts, tags) {
     this.appid = appid
     this.name = name
     this.description = description
+    this.release_date = release_date
     this.recommendations = recommendations
-    this.requirements = requirements
 
+    this.requirements = requirements
     this.arts = arts
     this.tags = tags
   }
@@ -15,10 +16,10 @@ export class Game {
   persist(manager) {
     manager.games_upsert(
       this.appid,
-      null, // last appdetails update (@now)
+      Date.now(),
       this.name,
       this.description,
-      null, // release_date
+      this.release_date,
       this.recommendations
     );
 
@@ -30,6 +31,7 @@ export class Game {
       appdetails_data.steam_appid,
       appdetails_data.name,
       appdetails_data.detailed_description,
+      Date.parse(appdetails_data.release_date.date),
       appdetails_data.recommendations.total,
       [ 
         Requirement.win_from_appdetails(appdetails_data), 
