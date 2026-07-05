@@ -8,16 +8,19 @@ database.exec(`
     last_appdetails_update INTEGER,
     name TEXT,
     description TEXT,
-    win_min_requirements TEXT,
-    win_reco_requirements TEXT,
-    mac_min_requirements TEXT,
-    mac_reco_requirements TEXT,
-    lin_min_requirements TEXT,
-    lin_reco_requirements TEXT,
     release_date INTEGER,
     recommendations INTEGER
   ) STRICT;
   CREATE UNIQUE INDEX IF NOT EXISTS idx_game_appid ON games(appid);
+
+  CREATE TABLE IF NOT EXISTS requirements(
+    appid INTEGER,
+    platform TEXT,
+    kind TEXT,
+    content TEXT,
+    FOREIGN KEY(appid) REFERENCES games(appid)
+  ) STRICT;
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_requirements_appid_platform_kind ON requirements(appid, platform, kind);
 
   CREATE TABLE IF NOT EXISTS images(
     appid INTEGER,
