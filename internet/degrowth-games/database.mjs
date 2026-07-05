@@ -27,6 +27,18 @@ export class Manager {
       INSERT INTO images(appid, kind, url)
       VALUES(?, ?, ?) ON CONFLICT DO NOTHING;
     `).run;
+
+    this.tags_upsert = database.prepare(`
+      INSERT INTO tags(kind, steam_id, name)
+      VALUES(?, ?, ?) ON CONFLICT DO UPDATE SET
+        name=excluded.name
+      ;
+    `).run;
+
+    this.games_xref_tags_upsert = database.prepare(`
+      INSERT INTO games_xref_tags(kind, steam_id, app_id)
+      VALUES(?, ?, ?) ON CONFLICT DO NOTHING;
+    `).run;
   }
 }
 
@@ -67,7 +79,7 @@ export function init() {
     ) STRICT;
     CREATE UNIQUE INDEX IF NOT EXISTS idx_tags_steam_ref ON tags(kind, steam_id);
 
-    CREATE TABLE IF NOT EXISTS games_tags(
+    CREATE TABLE IF NOT EXISTS games_xref_tags(
       kind INTEGER,
       steam_id INTEGER,
       appid INTEGER,
@@ -75,8 +87,8 @@ export function init() {
       FOREIGN KEY(kind) REFERENCES tags(kind),
       FOREIGN KEY(steam_id) REFERENCES tags(steam_id)
     ) STRICT;
-    CREATE INDEX IF NOT EXISTS idx_game_to_tags ON games_tags(appid);
-    CREATE INDEX IF NOT EXISTS idx_tags_to_game ON games_tags(kind, steam_id);
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_game_tag_uniqueness ON games_tags(appid, kind, steam_id);
+    CREATE INDEX IF NOT EXISTS idx_games_xref_tags_forward ON games_xref_tags(appid);
+    CREATE INDEX IF NOT EXISTS idx_games_xref_tags_backward ON games_xref_tags(kind, steam_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_games_xref_tags_uniqueness ON games_xref_tags(appid, kind, steam_id);
   `);
 }
