@@ -13,8 +13,6 @@ export function appid() {
 export async function appdetails() {
   const list = JSON.parse(await readFile(games_appid_list_dst));
   console.log(`known games: ${list.length}`);
-  // @FIXME: shorten list for test
-  list.length = 10
 
   const out = await open(games_appdetails_dst, 'a');
 
