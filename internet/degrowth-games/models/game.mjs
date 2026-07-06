@@ -1,4 +1,5 @@
 import { Requirement } from "./requirement.mjs";
+import { Arts } from "./arts.mjs";
 
 export class Game {
   constructor(appid, name, description, release_date, recommendations, requirements, arts, tags) {
@@ -8,9 +9,9 @@ export class Game {
     this.release_date = release_date
     this.recommendations = recommendations
 
-    this.requirements = requirements
-    this.arts = arts
-    this.tags = tags
+    this.requirements = requirements || []
+    this.arts = arts || []
+    this.tags = tags || []
   }
 
   persist(manager) {
@@ -27,7 +28,11 @@ export class Game {
       .filter(r => r != null)
       .forEach(r => r.persist(manager));
 
-    // @FIXME: save tags, arts.
+    this.arts
+      .filter(a => a != null)
+      .forEach(a => a.persist(manager));
+
+    // @FIXME: save tags.
   }
 
   static from_appdetails(appdetails_data) {
@@ -43,7 +48,14 @@ export class Game {
 	Requirement.linux_from_appdetails(appdetails_data), 
       ],
       [
-	// arts
+	Arts.header_from_appdetails(appdetails_data),
+	Arts.background_from_appdetails(appdetails_data),
+	...appdetails_data.screenshots.map(screenshot => 
+          Arts.screenshot_from_appdetails_fragment(
+	    appdetails_data, 
+	    screenshot
+	  )
+	)
       ],
       [
         // tags

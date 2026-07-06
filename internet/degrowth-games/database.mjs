@@ -23,8 +23,8 @@ export class Manager {
       ;
     `);
 
-    this._images_upsert = database.prepare(`
-      INSERT INTO images(appid, kind, url)
+    this._arts_upsert = database.prepare(`
+      INSERT INTO arts(appid, kind, url)
       VALUES(?, ?, ?) ON CONFLICT DO NOTHING;
     `);
 
@@ -60,6 +60,30 @@ export class Manager {
       content,
     )
   }
+
+  arts_upsert(appid, kind, url) {
+    return this._arts_upsert.run(
+      appid,
+      kind,
+      url,
+    )
+  }
+
+  tags_upsert(kind, steam_id, name) {
+    return this._tags_upsert.run(
+      kind,
+      steam_id,
+      name,
+    )
+  }
+
+  games_xref_tags_upsert(kind, steam_id, appid) {
+    return this._games_xref_tags_upsert.run(
+      kind,
+      steam_id,
+      appid,
+    )
+  }
 }
 
 export function init() {
@@ -83,14 +107,14 @@ export function init() {
     ) STRICT;
     CREATE UNIQUE INDEX IF NOT EXISTS idx_requirements_appid_platform_kind ON requirements(appid, platform, kind);
 
-    CREATE TABLE IF NOT EXISTS images(
+    CREATE TABLE IF NOT EXISTS arts(
       appid INTEGER,
       kind TEXT,
       url TEXT,
       FOREIGN KEY(appid) REFERENCES games(appid)
     ) STRICT;
-    CREATE INDEX IF NOT EXISTS idx_images_appid_kind ON images(appid, kind);
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_images_unique_url ON images(appid, kind, url);
+    CREATE INDEX IF NOT EXISTS idx_images_appid_kind ON arts(appid, kind);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_images_unique_url ON arts(appid, kind, url);
 
     CREATE TABLE IF NOT EXISTS tags(
       kind TEXT,
