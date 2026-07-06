@@ -17,13 +17,16 @@ export async function appdetails() {
   const out = await open(games_appdetails_dst, 'a');
 
   await list.reduce(async (promise, appdesc) => {
+    // At most 200 req per 5 min
+    // ie. one request every 1.5 sec.
     await promise 
     const appid = appdesc.appid
     console.log(`fetch ${appid}`);
     const appdetails_req = await fetch(games_appdetails_api + appid);
     const appdetails_json = await appdetails_req.json()
     await out.write(JSON.stringify(appdetails_json)+"\n");
-    console.log(`wrote ${appid}`);
+    await (new Promise(resolve => setTimeout(resolve, 1500)));
+    console.log(`wrote ${appid} & slept 1.5 sec.`);
   }, Promise.resolve());
   await out?.close();
 }
