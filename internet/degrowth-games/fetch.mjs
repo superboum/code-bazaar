@@ -1,4 +1,5 @@
 import { readFile, open } from 'node:fs/promises';
+import { setTimeout } from 'node:timers/promises';
 
 // Queried API endpoint -> https://api.steampowered.com/IStoreService/GetAppList/v1/
 const games_appid_list_src = "https://github.com/jsnli/steamappidlist/raw/refs/heads/master/data/games_appid.json"
@@ -25,7 +26,7 @@ export async function appdetails() {
     const appdetails_req = await fetch(games_appdetails_api + appid);
     const appdetails_json = await appdetails_req.json()
     await out.write(JSON.stringify(appdetails_json)+"\n");
-    await (new Promise(resolve => setTimeout(resolve, 1500)));
+    await setTimeout(1500);
     console.log(`wrote ${appid} & slept 1.5 sec.`);
   }, Promise.resolve());
   await out?.close();
