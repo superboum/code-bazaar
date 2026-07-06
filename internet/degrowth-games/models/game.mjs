@@ -1,5 +1,6 @@
 import { Requirement } from "./requirement.mjs";
 import { Arts } from "./arts.mjs";
+import { Tags } from "./tags.mjs";
 
 export class Game {
   constructor(appid, name, description, release_date, recommendations, requirements, arts, tags) {
@@ -32,7 +33,9 @@ export class Game {
       .filter(a => a != null)
       .forEach(a => a.persist(manager));
 
-    // @FIXME: save tags.
+    this.tags
+      .filter(t => t != null)
+      .forEach(t => t.persist(manager));
   }
 
   static from_appdetails(appdetails_data) {
@@ -58,7 +61,18 @@ export class Game {
 	)
       ],
       [
-        // tags
+	...appdetails_data.genres.map(genre =>
+	  Tags.genre_from_appdetails(
+	    appdetails_data,
+	    genre,
+	  ),
+	),
+	...appdetails_data.categories.map(category =>
+	  Tags.category_from_appdetails(
+	    appdetails_data,
+	    category,
+	  ),
+	),
       ],
     );
   }
