@@ -3,11 +3,11 @@ import { argv } from 'node:process';
 import * as repo from "./repository.mjs";
 import * as fetch from "./fetch.mjs";
 
-function main() {
+async function main() {
   const subcmd = name => argv.length >= 3 && argv[2] == name;
 
   if (subcmd('fetch:appid')) return fetch.appid();
-  if (subcmd('fetch:appdetails')) return fetch.appdetails();
+  if (subcmd('fetch:appdetails')) return await fetch.appdetails();
   if (subcmd('repo:init')) return repo.init();
   if (subcmd('repo:inject:appdetails')) return repo.inject_appdetails();
 
@@ -22,4 +22,4 @@ repo:inject:appdetails    parse appdetails and inject them in the repo
 }
 
 
-main();
+await main();
