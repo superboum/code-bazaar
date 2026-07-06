@@ -3,7 +3,7 @@ import sqlite from 'node:sqlite';
 const database = new sqlite.DatabaseSync('steam.db');
 
 
-export class Manager {
+export class Query {
   constructor() {
     this._games_upsert = database.prepare(`
       INSERT INTO games(appid, last_appdetails_update, name, description, release_date, recommendations)
