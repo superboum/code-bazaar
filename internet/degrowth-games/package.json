@@ -2,10 +2,15 @@
   "name": "degrowth-games",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "EUPL-1.2"
+  "author": "Quentin Dufour <quentin@dufour.io>",
+  "license": "EUPL-1.2",
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "typescript": "^6.0.3"
+  }
 }

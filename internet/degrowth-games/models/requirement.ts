@@ -1,12 +1,21 @@
+import { type IQuery } from "../irepository.ts" 
+
+export type MaybeRequirement = Requirement | null;
+
 export class Requirement {
-  constructor(appid, platform, min, recommended) {
+  appid: number
+  platform: string
+  min: string
+  recommended: string
+
+  constructor(appid: number, platform: string, min: string, recommended: string) {
     this.appid = appid
     this.platform = platform
     this.min = min
     this.recommended = recommended
   }
 
-  persist(manager) {
+  persist(manager: IQuery) {
     if (this.min) {
       manager.requirements_upsert(
         this.appid,
@@ -26,7 +35,7 @@ export class Requirement {
     }
   }
 
-  static win_from_appdetails(appdetails_data) {
+  static win_from_appdetails(appdetails_data: any): MaybeRequirement {
     if (!appdetails_data.platforms.windows) {
       return null
     }
@@ -38,7 +47,7 @@ export class Requirement {
     );
   }
 
-  static mac_from_appdetails(appdetails_data) {
+  static mac_from_appdetails(appdetails_data: any): MaybeRequirement {
     if (!appdetails_data.platforms.mac) {
       return null
     }
@@ -50,7 +59,7 @@ export class Requirement {
     );
   }
 
-  static linux_from_appdetails(appdetails_data) {
+  static linux_from_appdetails(appdetails_data: any): MaybeRequirement {
     if (!appdetails_data.platforms.linux) {
       return null
     }

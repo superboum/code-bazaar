@@ -13,7 +13,7 @@ export function appid() {
 }
 
 export async function appdetails() {
-  const list = JSON.parse(await readFile(games_appid_list_dst));
+  const list = JSON.parse(await readFile(games_appid_list_dst, { encoding: 'utf8' }));
   console.log(`known games: ${list.length}`);
 
   if (argv.length > 3) {
@@ -29,7 +29,7 @@ export async function appdetails() {
 	.map(obj_key => parseInt(obj_key))
         // We expect the appid to be at the beginning of the list
 	// We find its index
-	.map(appid => list.findIndex(elem => elem.appid === appid))
+	.map(appid => list.findIndex((elem: any) => elem.appid === appid))
 	.forEach(appid_idx => {
           if (appid_idx < 0) {
 	    //appid_idx is -1 if not found
@@ -45,7 +45,7 @@ export async function appdetails() {
 
   const out = await open(games_appdetails_dst, 'a');
 
-  await list.reduce(async (promise, appdesc) => {
+  await list.reduce(async (promise: Promise<null>, appdesc: any) => {
     // At most 200 req per 5 min
     // ie. one request every 1.5 sec.
     await promise 

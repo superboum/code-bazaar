@@ -1,10 +1,10 @@
 import { argv } from 'node:process';
 
-import * as repo from "./repository.mjs";
-import * as fetch from "./fetch.mjs";
+import * as repo from "./repository.ts";
+import * as fetch from "./fetch.ts";
 
 async function main() {
-  const subcmd = name => argv.length >= 3 && argv[2] == name;
+  const subcmd = (name: string) => argv.length >= 3 && argv[2] == name;
 
   if (subcmd('fetch:appid')) return fetch.appid();
   if (subcmd('fetch:appdetails')) return await fetch.appdetails();

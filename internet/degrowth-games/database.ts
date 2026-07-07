@@ -1,9 +1,17 @@
 import sqlite from 'node:sqlite';
 
+import { type IQuery } from "./irepository.ts"
+
 const database = new sqlite.DatabaseSync('steam.db');
 
 
-export class Query {
+export class Query implements IQuery {
+  _games_upsert: any
+  _requirements_upsert: any
+  _arts_upsert: any
+  _tags_upsert: any
+  _games_xref_tags_upsert: any
+
   constructor() {
     this._games_upsert = database.prepare(`
       INSERT INTO games(appid, last_appdetails_update, name, description, release_date, recommendations)
@@ -41,7 +49,7 @@ export class Query {
     `);
   }
 
-  games_upsert(appid, last_update, name, description, release_date, recommendations) {
+  games_upsert(appid: number, last_update: number, name: string, description: string, release_date: number, recommendations: number) {
     return this._games_upsert.run(
       appid,
       last_update,
@@ -52,7 +60,7 @@ export class Query {
     )
   }
 
-  requirements_upsert(appid, platform, kind, content) {
+  requirements_upsert(appid: number, platform: string, kind: string, content: string) {
     return this._requirements_upsert.run(
       appid,
       platform,
@@ -61,7 +69,7 @@ export class Query {
     )
   }
 
-  arts_upsert(appid, kind, url) {
+  arts_upsert(appid: number, kind: string, url: string) {
     return this._arts_upsert.run(
       appid,
       kind,
@@ -69,7 +77,7 @@ export class Query {
     )
   }
 
-  tags_upsert(kind, steam_id, name) {
+  tags_upsert(kind: string, steam_id: number, name: string) {
     return this._tags_upsert.run(
       kind,
       steam_id,
@@ -77,7 +85,7 @@ export class Query {
     )
   }
 
-  games_xref_tags_upsert(kind, steam_id, appid) {
+  games_xref_tags_upsert(kind: string, steam_id: number, appid: number) {
     return this._games_xref_tags_upsert.run(
       kind,
       steam_id,
