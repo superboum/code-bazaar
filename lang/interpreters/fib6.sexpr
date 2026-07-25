@@ -1,0 +1,44 @@
+(! faux (@ x (@ y y))
+(! vrai (@ x (@ y x))
+(! si (@ b (@ x (@ y ((b x) y) )))
+(! non (@ a (((si a) faux) vrai))
+(! et (@ a (@ b (((si a) b) faux)))
+(! ou (@ a (@ b (((si a) vrai) b)))
+
+(! zero? (@ n ((n (@ x faux)) vrai))
+(! suiv (@ n (@ f (@ x (f ((n f) x)) )))
+(! plus (@ m (@ n (@ f (@ x ((m f) ((n f) x)) ))))
+(! mult (@ m (@ n (@ f (@ x ((m (n f)) x)))))
+
+(! pred (@ n (@ f (@ x
+(((n
+ (@ g (@ h (h (g f))))) 
+ (@ u x)) 
+ (@ u u))
+)))
+
+(! n0 (@ f (@ x x))
+(! n1 (@ f (@ x (((suiv n0) f) x)))
+(! n2 (@ f (@ x (((suiv n1) f) x)))
+(! n3 (@ f (@ x (((suiv n2) f) x)))
+(! n4 (@ f (@ x (((suiv n3) f) x)))
+(! n5 (@ f (@ x (((suiv n4) f) x)))
+(! n6 (@ f (@ x (((suiv n5) f) x)))
+
+(! y (@ f
+  ((@ x (f (@ n ((x x) n))))
+  (@ x (f (@ n ((x x) n))))))
+
+(! presque-fact (@ r (@ n
+  ((((si (zero? n))
+    (@ n n1))
+    (@ n ((mult n) (r (pred n)))))
+  n)
+))
+(! fact (y presque-fact)
+
+
+(fact n6)
+
+
+)))))))))))))))))))))
