@@ -3,6 +3,7 @@
 #include <string.h>
 
 #define MALLOC_FAILED 13
+#define LOGIC_ERROR 14
 
 // ---- Generic datastructures
 // -- List
@@ -138,7 +139,31 @@ struct lexer_tokens new_lexer_tokens() {
   return res;
 }
 
+int valid_atom_char(char c) {
+  if (c <= 32) return -1;
+  if (c >= 127) return -1;
+  return 0;
+}
+
+struct symbol_res lex_atom(struct list* atom_env) {
+  char stack_buffer[256] = {0};
+  struct string atom_str = { .len = 0, .buffer=stack_buffer };
+
+  while(atom_str.len < 256) {
+    int candidate = getchar();
+    if (candidate < 0 || candidate > 255 || valid_atom_char((char)candidate) != 0) {
+      ungetc(candidate, stdin);
+      break;
+    }
+    atom_str.buffer[atom_str.len++] = (char)candidate;
+  }
+
+  if (atom_str.len < 1) exit(LOGIC_ERROR);
+  return symbol(atom_env, &atom_str);
+}
+
 struct list* lex(struct lexer_tokens* tok) {
+  struct list* atom_env = NULL;
   struct list* tokens = NULL;
 
   while (true) {
@@ -148,15 +173,19 @@ struct list* lex(struct lexer_tokens* tok) {
     }
     char safe_cur = (char) cur;
     if (safe_cur == '(') {
-      tokens = cons(tok->lparen, tokens);
+      tokens = cons(cons(tok->lparen, NULL), tokens);
     } else if (safe_cur == ')') {
-      tokens = cons(tok->rparen, tokens);
+      tokens = cons(cons(tok->rparen, NULL), tokens);
     } else if (safe_cur == '!') {
-      tokens = cons(tok->define, tokens);
+      tokens = cons(cons(tok->define, NULL), tokens);
     } else if (safe_cur == '@') {
-      tokens = cons(tok->lambda, tokens);
+      tokens = cons(cons(tok->lambda, NULL), tokens);
+    } else if (valid_atom_char(safe_cur) == 0) {
+      ungetc(safe_cur, stdin);
+      struct symbol_res atom = lex_atom(atom_env);
+      tokens = cons(cons(tok->atom, cons(atom.symbol_ref, NULL)), tokens);
     } else {
-      // do nothing for now...
+      // ignore
     }
   }
 }
@@ -166,7 +195,15 @@ int main(void) {
   //symbol_env_print(reverse(toks.env));
   struct list* prog_tokens = lex(&toks);
   while (prog_tokens != NULL) {
-    str_print(prog_tokens->value);
+    struct list* token_with_data = prog_tokens->value;
+    struct string* token_alone = token_with_data->value;
+    str_print(token_alone);
+    if(token_with_data->next != NULL) {
+      struct list* data_part = token_with_data->next;
+      printf("(");
+      str_print(data_part->value);
+      printf(")");
+    }
     printf(" ");
     prog_tokens = prog_tokens->next;
   }
