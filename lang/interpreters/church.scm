@@ -75,3 +75,6 @@
 
    ,body
 ))))))))))))))))))))))
+
+; -- example
+; (lcalc-num (with-stdenv '(fact n6)))
