@@ -80,34 +80,77 @@ struct symbol_res symbol(struct list* symbol_env, struct string* name) {
   return res;
 }
 
+void symbol_env_print(struct list* symbol_env) {
+  while(symbol_env != NULL) {
+    str_print(symbol_env->value);
+    printf("\n");
+    symbol_env = symbol_env->next;
+  }
+}
+
 // --- Lexer
+struct lexer_tokens {
+  struct list* env;
+  struct string* lparen;
+  struct string* rparen;
+  struct string* define;
+  struct string* lambda;
+  struct string* atom;
+};
+
+struct lexer_tokens new_lexer_tokens() {
+  struct lexer_tokens res = { .env = NULL, .lparen = NULL, .rparen = NULL, .define = NULL, .lambda = NULL, .atom = NULL };
+
+  // Prepare tokens
+  struct symbol_res lparen_res = symbol(res.env, &(struct string){ .len=10, .buffer="LEFT_PAREN"});
+  res.lparen = lparen_res.symbol_ref;
+  res.env = lparen_res.symbol_env;
+
+  struct symbol_res rparen_res = symbol(res.env, &(struct string){ .len=11, .buffer="RIGHT_PAREN"});
+  res.rparen = rparen_res.symbol_ref;
+  res.env = rparen_res.symbol_env;
+
+  struct symbol_res define_res = symbol(res.env, &(struct string){ .len=6, .buffer="DEFINE"});
+  res.define = define_res.symbol_ref;
+  res.env = define_res.symbol_env;
+
+  struct symbol_res lambda_res = symbol(res.env, &(struct string){ .len=6, .buffer="LAMBDA"});
+  res.lambda = lambda_res.symbol_ref;
+  res.env = lambda_res.symbol_env;
+
+  struct symbol_res atom_res = symbol(res.env, &(struct string){ .len=6, .buffer="ATOM"});
+  res.atom = atom_res.symbol_ref;
+  res.env = atom_res.symbol_env;
+
+  return res;
+}
+
+struct list* lex(struct lexer_tokens* tok) {
+  struct list* tokens = NULL;
+
+  while (true) {
+    int cur = getchar();
+    if (cur == EOF || cur > 255 || cur < 0) {
+      return tokens;
+    }
+    char safe_cur = (char) cur;
+    if (safe_cur == '(') {
+      tokens = cons(tok->lparen, tokens);
+    } else if (safe_cur == ')') {
+      tokens = cons(tok->rparen, tokens);
+    } else if (safe_cur == '!') {
+      tokens = cons(tok->define, tokens);
+    } else if (safe_cur == '@') {
+      tokens = cons(tok->lambda, tokens);
+    } else {
+      // do nothing for now...
+    }
+  }
+}
 
 int main(void) {
-  /*struct list* r;
-  int a = 5;
-  int b = 6;
-  int c = 9;
-  r = cons(&a, NULL);
-  r = cons(&b, r);
-  r = cons(&c, r);
-
-  while (!empty(r)) {
-    int* v = head(r);
-    r = rest(r);
-    printf("val: %d\n", *v);
-  }*/
-
-  struct string test1 = { 5, "HELLO" };
-  struct string test2 = { 5, "HELLO" };
-
-  struct list* env1 = NULL;
-  struct symbol_res res1 = symbol(env1, &test1);
-  struct list* env2 = res1.symbol_env;
-  struct symbol_res res2 = symbol(env2, &test2);
-  struct list* env3 = res2.symbol_env;
-  if (env1 == env2) exit(100);
-  if (env2 != env3) exit(101);
-  str_print(&test1);
+  struct lexer_tokens toks = new_lexer_tokens();
+  symbol_env_print(toks.env);
 
   return 0;
 }
