@@ -200,6 +200,11 @@ struct lex_res lex(struct lexer_tokens* tok) {
   }
 }
 
+struct string* token_symbol(struct list* prog_tokens) {
+  struct list* token_with_data = prog_tokens->value;
+  return token_with_data->value;
+}
+
 void lex_print(struct list* prog_tokens) {
   while (prog_tokens != NULL) {
     struct list* token_with_data = prog_tokens->value;
@@ -214,34 +219,98 @@ void lex_print(struct list* prog_tokens) {
     printf(" ");
     prog_tokens = prog_tokens->next;
   }
+  printf("\n");
 }
 
 // --- PARSER
 
 /*
- * expr = LPAREN sub-expr RPAREN | ATOM
- * sub-expr =
+ * expr = LPAREN comp-expr RPAREN | ATOM
+ * comp-expr =
  *   DEFINE define-expr | 
  *   LAMBDA lambda-expr |
  *   expr expr
- * define-expr = ATOM expr
+ * define-expr = ATOM expr expr
  * lambda-expr = ATOM expr
  */
 
-/*struct list* pexpr(struct list* prog_tokens) {
-  if (prog_tokens == NULL) exit(PARSER_ERROR);
-  struct list* token_with_data = prog_tokens->value;
-  struct string* token = 
-}*/
+struct list* p_expr(struct lexer_tokens* tok, struct list* tokens);
+
+struct list* p_define_expr(struct lexer_tokens* tok, struct list* tokens) {
+  if (tokens == NULL) exit(PARSER_ERROR);
+  struct string* symb = token_symbol(tokens);
+  printf("@define-expr\n");
+  lex_print(tokens);
+
+  if (tok->atom != symb) exit(PARSER_ERROR);
+  tokens = tokens->next;
+
+  tokens = p_expr(tok, tokens);
+  tokens = p_expr(tok, tokens);
+  return tokens;
+}
+
+struct list* p_lambda_expr(struct lexer_tokens* tok, struct list* tokens) {
+  if (tokens == NULL) exit(PARSER_ERROR);
+  struct string* symb = token_symbol(tokens);
+  printf("@lambda-expr\n");
+  lex_print(tokens);
+
+  if (tok->atom != symb) exit(PARSER_ERROR);
+  tokens = tokens->next;
+
+  tokens = p_expr(tok, tokens);
+  return tokens;
+}
+
+struct list* p_comp_expr(struct lexer_tokens* tok, struct list* tokens) {
+  if (tokens == NULL) exit(PARSER_ERROR);
+  struct string* symb = token_symbol(tokens);
+  printf("@comp-expr\n");
+  lex_print(tokens);
+
+  if (tok->define == symb) {
+    tokens = p_define_expr(tok, tokens->next);
+  } else if (tok->lambda == symb) {
+    tokens = p_lambda_expr(tok, tokens->next);
+  } else {
+    tokens = p_expr(tok, tokens);
+    tokens = p_expr(tok, tokens);
+  }
+
+  return tokens;
+}
+
+struct list* p_expr(struct lexer_tokens* tok, struct list* tokens) {
+  if (tokens == NULL) exit(PARSER_ERROR);
+  struct string* symb = token_symbol(tokens);
+  printf("@expr\n");
+  lex_print(tokens);
+
+  if (tok->lparen == symb) {
+    tokens = p_comp_expr(tok, tokens->next);
+    symb = token_symbol(tokens);
+    if (tok->rparen != symb) exit(PARSER_ERROR);
+    tokens = tokens->next;
+  } else if (tok->atom == symb) {
+    tokens = tokens->next;
+  } else {
+    exit(PARSER_ERROR);
+  }
+
+  return tokens;
+}
 
 
 
 int main(void) {
   struct lexer_tokens toks = new_lexer_tokens();
   //symbol_env_print(reverse(toks.env));
+  printf("-- lex --\n");
   struct lex_res prog_lex = lex(&toks);
   lex_print(prog_lex.tokens);
-
+  printf("-- parse --\n");
+  p_expr(&toks, prog_lex.tokens);
 
   return 0;
 }
