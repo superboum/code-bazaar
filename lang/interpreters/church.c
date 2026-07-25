@@ -239,8 +239,6 @@ struct list* p_expr(struct lexer_tokens* tok, struct list* tokens);
 struct list* p_define_expr(struct lexer_tokens* tok, struct list* tokens) {
   if (tokens == NULL) exit(PARSER_ERROR);
   struct string* symb = token_symbol(tokens);
-  printf("@define-expr\n");
-  lex_print(tokens);
 
   if (tok->atom != symb) exit(PARSER_ERROR);
   tokens = tokens->next;
@@ -253,8 +251,6 @@ struct list* p_define_expr(struct lexer_tokens* tok, struct list* tokens) {
 struct list* p_lambda_expr(struct lexer_tokens* tok, struct list* tokens) {
   if (tokens == NULL) exit(PARSER_ERROR);
   struct string* symb = token_symbol(tokens);
-  printf("@lambda-expr\n");
-  lex_print(tokens);
 
   if (tok->atom != symb) exit(PARSER_ERROR);
   tokens = tokens->next;
@@ -266,8 +262,6 @@ struct list* p_lambda_expr(struct lexer_tokens* tok, struct list* tokens) {
 struct list* p_comp_expr(struct lexer_tokens* tok, struct list* tokens) {
   if (tokens == NULL) exit(PARSER_ERROR);
   struct string* symb = token_symbol(tokens);
-  printf("@comp-expr\n");
-  lex_print(tokens);
 
   if (tok->define == symb) {
     tokens = p_define_expr(tok, tokens->next);
@@ -284,8 +278,6 @@ struct list* p_comp_expr(struct lexer_tokens* tok, struct list* tokens) {
 struct list* p_expr(struct lexer_tokens* tok, struct list* tokens) {
   if (tokens == NULL) exit(PARSER_ERROR);
   struct string* symb = token_symbol(tokens);
-  printf("@expr\n");
-  lex_print(tokens);
 
   if (tok->lparen == symb) {
     tokens = p_comp_expr(tok, tokens->next);
