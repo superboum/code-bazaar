@@ -5,6 +5,7 @@
 #define MALLOC_FAILED 13
 
 // ---- Generic datastructures
+// -- List
 struct string {
   size_t len;
   char* buffer;
@@ -57,6 +58,17 @@ bool empty(struct list* cell) {
   return cell == NULL;
 }
 
+struct list* reverse(struct list* source) {
+  struct list* dst = NULL;
+  while (source != NULL) {
+    dst = cons(source->value, dst);
+    source = source->next;
+  }
+  return dst;
+}
+
+// -- Symbols
+
 struct symbol_res {
   struct list* symbol_env;
   struct string* symbol_ref;
@@ -88,7 +100,8 @@ void symbol_env_print(struct list* symbol_env) {
   }
 }
 
-// --- Lexer
+// ------ Compilation
+// -- Lexer
 struct lexer_tokens {
   struct list* env;
   struct string* lparen;
@@ -131,7 +144,7 @@ struct list* lex(struct lexer_tokens* tok) {
   while (true) {
     int cur = getchar();
     if (cur == EOF || cur > 255 || cur < 0) {
-      return tokens;
+      return reverse(tokens);
     }
     char safe_cur = (char) cur;
     if (safe_cur == '(') {
@@ -150,7 +163,13 @@ struct list* lex(struct lexer_tokens* tok) {
 
 int main(void) {
   struct lexer_tokens toks = new_lexer_tokens();
-  symbol_env_print(toks.env);
+  //symbol_env_print(reverse(toks.env));
+  struct list* prog_tokens = lex(&toks);
+  while (prog_tokens != NULL) {
+    str_print(prog_tokens->value);
+    printf(" ");
+    prog_tokens = prog_tokens->next;
+  }
 
   return 0;
 }
