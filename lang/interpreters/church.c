@@ -4,6 +4,7 @@
 
 #define MALLOC_FAILED 13
 #define LOGIC_ERROR 14
+#define PARSER_ERROR 15
 
 // ---- Generic datastructures
 // -- List
@@ -142,6 +143,7 @@ struct lexer_tokens new_lexer_tokens() {
 int valid_atom_char(char c) {
   if (c <= 32) return -1;
   if (c >= 127) return -1;
+  if (c == ')' || c == '('  || c == '@' || c == '!') return -1;
   return 0;
 }
 
@@ -162,14 +164,22 @@ struct symbol_res lex_atom(struct list* atom_env) {
   return symbol(atom_env, &atom_str);
 }
 
-struct list* lex(struct lexer_tokens* tok) {
+struct lex_res {
+  struct list *tokens;
+  struct list *atom_env;
+};
+
+struct lex_res lex(struct lexer_tokens* tok) {
   struct list* atom_env = NULL;
   struct list* tokens = NULL;
 
   while (true) {
     int cur = getchar();
     if (cur == EOF || cur > 255 || cur < 0) {
-      return reverse(tokens);
+      return (struct lex_res){ 
+	.tokens = reverse(tokens), 
+	.atom_env = atom_env,
+      };
     }
     char safe_cur = (char) cur;
     if (safe_cur == '(') {
@@ -190,10 +200,7 @@ struct list* lex(struct lexer_tokens* tok) {
   }
 }
 
-int main(void) {
-  struct lexer_tokens toks = new_lexer_tokens();
-  //symbol_env_print(reverse(toks.env));
-  struct list* prog_tokens = lex(&toks);
+void lex_print(struct list* prog_tokens) {
   while (prog_tokens != NULL) {
     struct list* token_with_data = prog_tokens->value;
     struct string* token_alone = token_with_data->value;
@@ -207,6 +214,34 @@ int main(void) {
     printf(" ");
     prog_tokens = prog_tokens->next;
   }
+}
+
+// --- PARSER
+
+/*
+ * expr = LPAREN sub-expr RPAREN | ATOM
+ * sub-expr =
+ *   DEFINE define-expr | 
+ *   LAMBDA lambda-expr |
+ *   expr expr
+ * define-expr = ATOM expr
+ * lambda-expr = ATOM expr
+ */
+
+/*struct list* pexpr(struct list* prog_tokens) {
+  if (prog_tokens == NULL) exit(PARSER_ERROR);
+  struct list* token_with_data = prog_tokens->value;
+  struct string* token = 
+}*/
+
+
+
+int main(void) {
+  struct lexer_tokens toks = new_lexer_tokens();
+  //symbol_env_print(reverse(toks.env));
+  struct lex_res prog_lex = lex(&toks);
+  lex_print(prog_lex.tokens);
+
 
   return 0;
 }
