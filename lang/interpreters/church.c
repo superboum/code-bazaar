@@ -430,12 +430,16 @@ struct eval_symbols {
   struct string* apply;
   struct string* atom;
   struct string* clo;
+  // handle boolean logic
   struct string* vtrue;
   struct string* vfalse;
+  // handle peano
+  struct string* number;
+  struct string* incr;
 };
 
 struct eval_symbols new_eval_symbols(struct parser_symbols* psym) {
-  struct eval_symbols res = { .env = psym->env, .let = psym->let, .lambda = psym->lambda, .apply = psym->apply, .atom = psym->atom, .clo = NULL, .vtrue = NULL, .vfalse = NULL };
+  struct eval_symbols res = { .env = psym->env, .let = psym->let, .lambda = psym->lambda, .apply = psym->apply, .atom = psym->atom, .clo = NULL, .vtrue = NULL, .vfalse = NULL, .number = NULL, .incr = NULL };
 
   struct symbol_res clo_res = symbol(res.env, &(struct string){ .len=7, .buffer="CLOSURE"});
   res.clo = clo_res.symbol_ref;
@@ -448,6 +452,14 @@ struct eval_symbols new_eval_symbols(struct parser_symbols* psym) {
   struct symbol_res false_res = symbol(res.env, &(struct string){ .len=5, .buffer="FALSE"});
   res.vfalse = false_res.symbol_ref;
   res.env = false_res.symbol_env;
+
+  struct symbol_res number_res = symbol(res.env, &(struct string){ .len=6, .buffer="NUMBER"});
+  res.number = number_res.symbol_ref;
+  res.env = number_res.symbol_env;
+
+  struct symbol_res incr_res = symbol(res.env, &(struct string){ .len=4, .buffer="INCR"});
+  res.incr = incr_res.symbol_ref;
+  res.env = incr_res.symbol_env;
 
   return res;
 }
@@ -546,7 +558,19 @@ struct list* eval(struct eval_symbols* psym, struct list* ast, struct list* env)
       eval(psym, operand, env)
     );
 
-  } else if (kind == psym->vtrue || kind == psym->vfalse) { 
+  } else if (kind == psym->incr) {
+    if (rest(ast) == NULL) exit(INTERPRETER_ERROR);
+    ast = rest(ast);
+    struct list* evalued = eval(psym, head(ast), env);
+    if (evalued == NULL) exit(INTERPRETER_ERROR);
+    if (evalued->value != psym->number) exit(INTERPRETER_ERROR);
+    if (evalued->next == NULL) exit(INTERPRETER_ERROR);
+    int* val = evalued->next->value;
+    int* new_val = malloc(sizeof(int));
+    if (new_val == NULL) exit(INTERPRETER_ERROR);
+    *new_val = *val+1;
+    return cons(psym->number, cons(new_val, NULL));
+  } else if (kind == psym->vtrue || kind == psym->vfalse || kind == psym->number) { 
     return ast;
   } else {
     printf("unknown AST node: ");
@@ -619,6 +643,19 @@ void print_eval(struct eval_symbols* psym, struct list* ast, int depth) {
     printf("\n");
 
     if (ast->next != NULL) exit(AST_ERROR);
+  } else if (psym->incr == head) {
+    printf("\n");
+    if (ast->next == NULL) exit(INTERPRETER_ERROR);
+    ast = ast->next;
+    print_eval(psym, ast->value, depth+1);
+
+    if (ast->next != NULL) exit(AST_ERROR);
+  } else if (psym->number == head) {
+    if (ast->next == NULL) exit(INTERPRETER_ERROR);
+    ast = ast->next;
+    int* val = ast->value;
+    printf(" %d\n", *val);
+    if (ast->next != NULL) exit(INTERPRETER_ERROR);
   } else if (psym->atom == head) {
     ast = ast->next;
     printf(" ");
@@ -648,10 +685,19 @@ int main(void) {
 
   // eval
   struct eval_symbols esym = new_eval_symbols(&psym);
-  struct list* wrap_true = cons(esym.apply, cons(parse_res.ast, cons(cons(esym.vtrue, NULL), NULL)));
+  /*struct list* wrap_true = cons(esym.apply, cons(parse_res.ast, cons(cons(esym.vtrue, NULL), NULL)));
   struct list* wrap_false = cons(esym.apply, cons(wrap_true, cons(cons(esym.vfalse, NULL), NULL)));
-  struct list* out = eval(&esym, wrap_false, NULL);
+  struct list* out = eval(&esym, wrap_false, NULL);*/
 
+  struct symbol_res vres = symbol(prog_lex.atom_env, &(struct string){ .len=1, .buffer="v"});
+  struct list* atom_v = cons(esym.atom, cons(vres.symbol_ref, NULL));
+  struct list* lambda_body = cons(esym.incr, cons(atom_v, NULL));
+  struct list* incr_lambda = cons(esym.lambda, cons(atom_v, cons(lambda_body, NULL)));
+  struct list* wrap_incr = cons(esym.apply, cons(parse_res.ast, cons(incr_lambda, NULL)));
+  int zero = 0;
+  struct list* zero_num = cons(esym.number, cons(&zero, NULL));
+  struct list* wrap_zero = cons(esym.apply, cons(wrap_incr, cons(zero_num, NULL)));
+  struct list* out = eval(&esym, wrap_zero, NULL);
   print_eval(&esym, out, 0);
 
   return 0;
