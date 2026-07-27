@@ -1,0 +1,1 @@
+(! vrai (@ x (@ y x)) vrai)

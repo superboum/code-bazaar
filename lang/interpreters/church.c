@@ -250,11 +250,10 @@ struct parser_symbols {
   struct string* lambda;
   struct string* apply;
   struct string* atom;
-  struct string* clo;
 };
 
 struct parser_symbols new_parser_symbols() {
-  struct parser_symbols res = { .env = NULL, .let = NULL, .lambda = NULL, .apply = NULL, .atom = NULL, .clo=NULL };
+  struct parser_symbols res = { .env = NULL, .let = NULL, .lambda = NULL, .apply = NULL, .atom = NULL };
 
   struct symbol_res let_res = symbol(res.env, &(struct string){ .len=3, .buffer="LET"});
   res.let = let_res.symbol_ref;
@@ -271,10 +270,6 @@ struct parser_symbols new_parser_symbols() {
   struct symbol_res atom_res = symbol(res.env, &(struct string){ .len=4, .buffer="ATOM"});
   res.atom = atom_res.symbol_ref;
   res.env = atom_res.symbol_env;
-
-  struct symbol_res clo_res = symbol(res.env, &(struct string){ .len=3, .buffer="CLO"});
-  res.clo = clo_res.symbol_ref;
-  res.env = clo_res.symbol_env;
 
   return res;
 }
@@ -428,15 +423,47 @@ void print_ast(struct parser_symbols* psym, struct list* ast, int depth) {
 }
 
 // --- Tree-Walk Interpreter
-struct list* eval(struct parser_symbols* psym, struct list* ast, struct list* env);
+struct eval_symbols {
+  struct list* env;
+  struct string* let;
+  struct string* lambda;
+  struct string* apply;
+  struct string* atom;
+  struct string* clo;
+  struct string* vtrue;
+  struct string* vfalse;
+};
 
-struct list* apply(struct parser_symbols* psym, struct list* operator, struct list* operand) {
+struct eval_symbols new_eval_symbols(struct parser_symbols* psym) {
+  struct eval_symbols res = { .env = psym->env, .let = psym->let, .lambda = psym->lambda, .apply = psym->apply, .atom = psym->atom, .clo = NULL, .vtrue = NULL, .vfalse = NULL };
+
+  struct symbol_res clo_res = symbol(res.env, &(struct string){ .len=7, .buffer="CLOSURE"});
+  res.clo = clo_res.symbol_ref;
+  res.env = clo_res.symbol_env;
+
+  struct symbol_res true_res = symbol(res.env, &(struct string){ .len=4, .buffer="TRUE"});
+  res.vtrue = true_res.symbol_ref;
+  res.env = true_res.symbol_env;
+
+  struct symbol_res false_res = symbol(res.env, &(struct string){ .len=5, .buffer="FALSE"});
+  res.vfalse = false_res.symbol_ref;
+  res.env = false_res.symbol_env;
+
+  return res;
+}
+
+struct list* eval(struct eval_symbols* psym, struct list* ast, struct list* env);
+void print_eval(struct eval_symbols* psym, struct list* ast, int depth);
+
+struct list* apply(struct eval_symbols* psym, struct list* operator, struct list* operand) {
   if (operator == NULL) exit(INTERPRETER_ERROR);
   if (operand == NULL) exit(INTERPRETER_ERROR);
   if (head(operator) != psym->clo) exit(INTERPRETER_ERROR);
   if (rest(operator) == NULL) exit(INTERPRETER_ERROR);
   operator = rest(operator);
-  struct string* free_var = head(operator);
+  struct list* free_atom = head(operator);
+  if (head(free_atom) != psym->atom) exit(INTERPRETER_ERROR);
+  struct string* free_var = head(rest(free_atom));
   if (rest(operator) == NULL) exit(INTERPRETER_ERROR);
   operator = rest(operator);
   struct list* xator_ast = head(operator);
@@ -444,12 +471,13 @@ struct list* apply(struct parser_symbols* psym, struct list* operator, struct li
   operator = rest(operator);
   struct list* xator_env = head(operator);
 
-  struct list* env = cons(cons(free_var, head(operand)), xator_env);
+  struct list* new_env_entry = cons(free_var, cons(operand, NULL));
+  struct list* env = cons(new_env_entry, xator_env);
   return eval(psym, xator_ast, env);
 }
 
 
-struct list* eval(struct parser_symbols* psym, struct list* ast, struct list* env) {
+struct list* eval(struct eval_symbols* psym, struct list* ast, struct list* env) {
   if (ast == NULL) exit(INTERPRETER_ERROR);
   struct string* kind = head(ast);
 
@@ -470,7 +498,6 @@ struct list* eval(struct parser_symbols* psym, struct list* ast, struct list* en
     printf("\n");
     exit(INTERPRETER_ERROR);
   } else if (kind == psym->let) {
-    printf("let\n");
     if (rest(ast) == NULL) exit(INTERPRETER_ERROR);
     ast = rest(ast);
     struct list* let_atom = head(ast);
@@ -481,7 +508,8 @@ struct list* eval(struct parser_symbols* psym, struct list* ast, struct list* en
     ast = rest(ast);
     struct list* internal_ast = head(ast);
     struct list* internal_clo = eval(psym, internal_ast, env);
-    env = cons(cons(let_var, cons(internal_clo, NULL)), env);
+    struct list* new_env_entry = cons(let_var, cons(internal_clo, NULL));
+    env = cons(new_env_entry, env);
 
     if (rest(ast) == NULL) exit(INTERPRETER_ERROR);
     ast = rest(ast);
@@ -490,7 +518,6 @@ struct list* eval(struct parser_symbols* psym, struct list* ast, struct list* en
     if (rest(ast) != NULL) exit(INTERPRETER_ERROR);
     return eval(psym, new_ast, env);
   } else if (kind == psym->lambda) {
-    printf("lambda\n");
     if (rest(ast) == NULL) exit(INTERPRETER_ERROR);
     ast = rest(ast);
     struct list* free_var_atom = head(ast);
@@ -502,7 +529,8 @@ struct list* eval(struct parser_symbols* psym, struct list* ast, struct list* en
     struct list* body_ast = head(ast);
 
     if (rest(ast) != NULL) exit(INTERPRETER_ERROR);
-    return cons(psym->clo, cons(free_var, cons(body_ast, cons(env, NULL))));
+    struct list* free_atom = cons(psym->atom, cons(free_var, NULL));
+    return cons(psym->clo, cons(free_atom, cons(body_ast, cons(env, NULL))));
   } else if (kind == psym->apply) {
     if (rest(ast) == NULL) exit(INTERPRETER_ERROR);
     ast = rest(ast);
@@ -518,6 +546,8 @@ struct list* eval(struct parser_symbols* psym, struct list* ast, struct list* en
       eval(psym, operand, env)
     );
 
+  } else if (kind == psym->vtrue || kind == psym->vfalse) { 
+    return ast;
   } else {
     printf("unknown AST node: ");
     str_print(kind);
@@ -526,14 +556,88 @@ struct list* eval(struct parser_symbols* psym, struct list* ast, struct list* en
   }
 }
 
+void print_eval(struct eval_symbols* psym, struct list* ast, int depth) {
+  if (ast == NULL) exit(AST_ERROR);
+  struct string* head = ast->value;
+
+  if (depth > 0) printf("%*c", depth*2, ' ');
+  str_print(head);
+
+  if (psym->let == head) {
+    printf("\n");
+    struct list* binding_name = ast->next;
+    print_eval(psym, binding_name->value, depth+1);
+
+    struct list* binding_val = binding_name->next;
+    print_eval(psym, binding_val->value, depth+1);
+
+    struct list* body = binding_val->next;
+    print_eval(psym, body->value, depth+1);
+
+    if (body->next != NULL) exit(AST_ERROR);
+  } else if (psym->lambda == head) {
+    printf("\n");
+    struct list* var_name = ast->next;
+    print_eval(psym, var_name->value, depth+1);
+
+    struct list* lambda_body = var_name->next;
+    print_eval(psym, lambda_body->value, depth+1);
+
+    if (lambda_body->next != NULL) exit(AST_ERROR);
+  } else if (psym->apply == head) {
+    printf("\n");
+    struct list* operator = ast->next;
+    print_eval(psym, operator->value, depth+1);
+
+    struct list* operand = operator->next;
+    print_eval(psym, operand->value, depth+1);
+
+    if (operand->next != NULL) exit(AST_ERROR);
+  } else if (psym->clo == head) {
+    printf("\n");
+
+    // free var
+    ast = ast->next;
+    print_eval(psym, ast->value, depth+1);
+
+    // body
+    ast = ast->next;
+    print_eval(psym, ast->value, depth+1);
+
+    // env
+    ast = ast->next;
+    struct list* att_env = ast->value;
+    if (depth > 0) printf("%*c", depth*2, ' ');
+    printf("ENV: ");
+    while (att_env != NULL) {
+      struct list* att_env_entry = att_env->value;
+      struct string* env_name = att_env_entry->value;
+      str_print(env_name);
+      printf(" ");
+      att_env = att_env->next;
+    }
+    printf("\n");
+
+    if (ast->next != NULL) exit(AST_ERROR);
+  } else if (psym->atom == head) {
+    ast = ast->next;
+    printf(" ");
+    str_print(ast->value);
+    printf("\n");
+
+    if (ast->next != NULL) exit(AST_ERROR);
+  } else {
+    printf("\n");
+  }
+}
+
 
 int main(void) {
+  // lexer
   struct lexer_symbols toks = new_lexer_symbols();
-  //symbol_env_print(reverse(toks.env));
-  printf("-- lex --\n");
   struct lex_res prog_lex = lex(&toks);
-  lex_print(prog_lex.tokens);
-  printf("-- parse --\n");
+
+  // parser
   struct parser_symbols psym = new_parser_symbols();
   struct p_acc parse_res = p_expr((struct p_acc){ 
     .tok = &toks, 
@@ -541,9 +645,14 @@ int main(void) {
     .rem = prog_lex.tokens, 
     .ast = NULL
   });
-  print_ast(&psym, parse_res.ast, 0);
-  printf("-- eval --\n");
-  eval(&psym, parse_res.ast, NULL);
+
+  // eval
+  struct eval_symbols esym = new_eval_symbols(&psym);
+  struct list* wrap_true = cons(esym.apply, cons(parse_res.ast, cons(cons(esym.vtrue, NULL), NULL)));
+  struct list* wrap_false = cons(esym.apply, cons(wrap_true, cons(cons(esym.vfalse, NULL), NULL)));
+  struct list* out = eval(&esym, wrap_false, NULL);
+
+  print_eval(&esym, out, 0);
 
   return 0;
 }

@@ -1,0 +1,5 @@
+(! suiv (@ n (@ f (@ x (f ((n f) x)) )))
+(! n0 (@ f (@ x x))
+(! n1 (@ f (@ x (((suiv n0) f) x)))
+(! n2 (@ f (@ x (((suiv n1) f) x)))
+n2))))
