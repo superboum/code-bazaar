@@ -5,6 +5,7 @@
 #define MALLOC_FAILED 13
 #define LOGIC_ERROR 14
 #define PARSER_ERROR 15
+#define AST_ERROR 16
 
 // ---- Generic datastructures
 // -- List
@@ -104,17 +105,17 @@ void symbol_env_print(struct list* symbol_env) {
 
 // ------ Compilation
 // -- Lexer
-struct lexer_tokens {
+struct lexer_symbols {
   struct list* env;
   struct string* lparen;
   struct string* rparen;
-  struct string* define;
+  struct string* let;
   struct string* lambda;
   struct string* atom;
 };
 
-struct lexer_tokens new_lexer_tokens() {
-  struct lexer_tokens res = { .env = NULL, .lparen = NULL, .rparen = NULL, .define = NULL, .lambda = NULL, .atom = NULL };
+struct lexer_symbols new_lexer_symbols() {
+  struct lexer_symbols res = { .env = NULL, .lparen = NULL, .rparen = NULL, .let = NULL, .lambda = NULL, .atom = NULL };
 
   // Prepare tokens
   struct symbol_res lparen_res = symbol(res.env, &(struct string){ .len=10, .buffer="LEFT_PAREN"});
@@ -125,9 +126,9 @@ struct lexer_tokens new_lexer_tokens() {
   res.rparen = rparen_res.symbol_ref;
   res.env = rparen_res.symbol_env;
 
-  struct symbol_res define_res = symbol(res.env, &(struct string){ .len=6, .buffer="DEFINE"});
-  res.define = define_res.symbol_ref;
-  res.env = define_res.symbol_env;
+  struct symbol_res let_res = symbol(res.env, &(struct string){ .len=6, .buffer="LET"});
+  res.let = let_res.symbol_ref;
+  res.env = let_res.symbol_env;
 
   struct symbol_res lambda_res = symbol(res.env, &(struct string){ .len=6, .buffer="LAMBDA"});
   res.lambda = lambda_res.symbol_ref;
@@ -169,7 +170,7 @@ struct lex_res {
   struct list *atom_env;
 };
 
-struct lex_res lex(struct lexer_tokens* tok) {
+struct lex_res lex(struct lexer_symbols* tok) {
   struct list* atom_env = NULL;
   struct list* tokens = NULL;
 
@@ -187,7 +188,7 @@ struct lex_res lex(struct lexer_tokens* tok) {
     } else if (safe_cur == ')') {
       tokens = cons(cons(tok->rparen, NULL), tokens);
     } else if (safe_cur == '!') {
-      tokens = cons(cons(tok->define, NULL), tokens);
+      tokens = cons(cons(tok->let, NULL), tokens);
     } else if (safe_cur == '@') {
       tokens = cons(cons(tok->lambda, NULL), tokens);
     } else if (valid_atom_char(safe_cur) == 0) {
@@ -203,6 +204,12 @@ struct lex_res lex(struct lexer_tokens* tok) {
 struct string* token_symbol(struct list* prog_tokens) {
   struct list* token_with_data = prog_tokens->value;
   return token_with_data->value;
+}
+
+struct string* token_attached_data(struct list* prog_tokens) {
+  struct list* token_with_data = prog_tokens->value;
+  struct list* data_part = token_with_data->next;
+  return data_part->value;
 }
 
 void lex_print(struct list* prog_tokens) {
@@ -225,84 +232,208 @@ void lex_print(struct list* prog_tokens) {
 // --- PARSER
 
 /*
- * expr = LPAREN comp-expr RPAREN | ATOM
+ * expr = LPAREN comp-expr RPAREN | atom
  * comp-expr =
- *   DEFINE define-expr | 
+ *   LET let-expr | 
  *   LAMBDA lambda-expr |
  *   expr expr
- * define-expr = ATOM expr expr
- * lambda-expr = ATOM expr
+ * let-expr = atom expr expr
+ * lambda-expr = atom expr
+ * atom = ATOM
  */
 
-struct list* p_expr(struct lexer_tokens* tok, struct list* tokens);
+struct parser_symbols {
+  struct list* env;
+  struct string* let;
+  struct string* lambda;
+  struct string* apply;
+  struct string* atom;
+};
 
-struct list* p_define_expr(struct lexer_tokens* tok, struct list* tokens) {
-  if (tokens == NULL) exit(PARSER_ERROR);
-  struct string* symb = token_symbol(tokens);
+struct parser_symbols new_parser_symbols() {
+  struct parser_symbols res = { .env = NULL, .let = NULL, .lambda = NULL, .apply = NULL, .atom = NULL };
 
-  if (tok->atom != symb) exit(PARSER_ERROR);
-  tokens = tokens->next;
+  struct symbol_res let_res = symbol(res.env, &(struct string){ .len=3, .buffer="LET"});
+  res.let = let_res.symbol_ref;
+  res.env = let_res.symbol_env;
 
-  tokens = p_expr(tok, tokens);
-  tokens = p_expr(tok, tokens);
-  return tokens;
+  struct symbol_res lambda_res = symbol(res.env, &(struct string){ .len=6, .buffer="LAMBDA"});
+  res.lambda = lambda_res.symbol_ref;
+  res.env = lambda_res.symbol_env;
+
+  struct symbol_res apply_res = symbol(res.env, &(struct string){ .len=5, .buffer="APPLY"});
+  res.apply = apply_res.symbol_ref;
+  res.env = apply_res.symbol_env;
+
+  struct symbol_res atom_res = symbol(res.env, &(struct string){ .len=4, .buffer="ATOM"});
+  res.atom = atom_res.symbol_ref;
+  res.env = atom_res.symbol_env;
+
+  return res;
 }
 
-struct list* p_lambda_expr(struct lexer_tokens* tok, struct list* tokens) {
-  if (tokens == NULL) exit(PARSER_ERROR);
-  struct string* symb = token_symbol(tokens);
+struct p_acc {
+  struct list* ast;
+  struct list* rem;
+  struct lexer_symbols* tok;
+  struct parser_symbols* psym;
+};
 
-  if (tok->atom != symb) exit(PARSER_ERROR);
-  tokens = tokens->next;
+struct p_acc p_expr(struct p_acc acc);
 
-  tokens = p_expr(tok, tokens);
-  return tokens;
+struct p_acc p_atom(struct p_acc acc) {
+  if (acc.rem == NULL) exit(PARSER_ERROR);
+
+  struct string* lex_symb = token_symbol(acc.rem);
+  if (acc.tok->atom != lex_symb) exit(PARSER_ERROR);
+  struct string* parse_symb = token_attached_data(acc.rem);
+
+  acc.ast = cons(acc.psym->atom, cons(parse_symb, NULL));
+  acc.rem = acc.rem->next;
+
+  return acc;
 }
 
-struct list* p_comp_expr(struct lexer_tokens* tok, struct list* tokens) {
-  if (tokens == NULL) exit(PARSER_ERROR);
-  struct string* symb = token_symbol(tokens);
+struct p_acc p_let_expr(struct p_acc acc) {
+  if (acc.rem == NULL) exit(PARSER_ERROR);
 
-  if (tok->define == symb) {
-    tokens = p_define_expr(tok, tokens->next);
-  } else if (tok->lambda == symb) {
-    tokens = p_lambda_expr(tok, tokens->next);
+  // atom
+  acc = p_atom(acc);
+  struct list* let_name = acc.ast;
+
+  // let binding
+  acc = p_expr(acc);
+  struct list* let_binding_ast = acc.ast;
+
+  // let body
+  acc = p_expr(acc);
+  struct list* body_ast = acc.ast;
+
+  // rebuild AST
+  acc.ast = cons(acc.psym->let, cons(let_name, cons(let_binding_ast, cons(body_ast, NULL))));
+
+  return acc;
+}
+
+struct p_acc p_lambda_expr(struct p_acc acc) {
+  if (acc.rem == NULL) exit(PARSER_ERROR);
+
+  // lambda var
+  acc = p_atom(acc);
+  struct list* lambda_var = acc.ast;
+
+  // lambda body
+  acc = p_expr(acc);
+  struct list* body_ast = acc.ast;
+
+  // rebuild AST
+  acc.ast = cons(acc.psym->lambda, cons(lambda_var, cons(body_ast, NULL)));
+
+  return acc;
+}
+
+struct p_acc p_comp_expr(struct p_acc acc) {
+  if (acc.rem == NULL) exit(PARSER_ERROR);
+  struct string* symb = token_symbol(acc.rem);
+
+  if (acc.tok->let == symb) {
+    acc.rem = acc.rem->next;
+    acc = p_let_expr(acc);
+  } else if (acc.tok->lambda == symb) {
+    acc.rem = acc.rem->next;
+    acc = p_lambda_expr(acc);
   } else {
-    tokens = p_expr(tok, tokens);
-    tokens = p_expr(tok, tokens);
+    acc = p_expr(acc);
+    struct list* operator = acc.ast;
+    acc = p_expr(acc);
+    struct list* operand = acc.ast;
+    acc.ast = cons(acc.psym->apply, cons(operator, cons(operand, NULL)));
   }
 
-  return tokens;
+  return acc;
 }
 
-struct list* p_expr(struct lexer_tokens* tok, struct list* tokens) {
-  if (tokens == NULL) exit(PARSER_ERROR);
-  struct string* symb = token_symbol(tokens);
+struct p_acc p_expr(struct p_acc acc) {
+  if (acc.rem == NULL) exit(PARSER_ERROR);
+  struct string* symb = token_symbol(acc.rem);
 
-  if (tok->lparen == symb) {
-    tokens = p_comp_expr(tok, tokens->next);
-    symb = token_symbol(tokens);
-    if (tok->rparen != symb) exit(PARSER_ERROR);
-    tokens = tokens->next;
-  } else if (tok->atom == symb) {
-    tokens = tokens->next;
+  if (acc.tok->lparen == symb) {
+    acc.rem = acc.rem->next;
+    acc = p_comp_expr(acc);
+    if (acc.rem == NULL) exit(PARSER_ERROR);
+    symb = token_symbol(acc.rem);
+    if (acc.tok->rparen != symb) exit(PARSER_ERROR);
+    acc.rem = acc.rem->next;
+  } else if (acc.tok->atom == symb) {
+    acc = p_atom(acc);
   } else {
     exit(PARSER_ERROR);
   }
 
-  return tokens;
+  return acc;
+}
+
+void print_ast(struct parser_symbols* psym, struct list* ast, int depth) {
+  if (ast == NULL) exit(AST_ERROR);
+  struct string* head = ast->value;
+
+  if (depth > 0) printf("%*c", depth*2, ' ');
+  str_print(head);
+  printf("\n");
+
+  if (psym->let == head) {
+    struct list* binding_name = ast->next;
+    print_ast(psym, binding_name->value, depth+1);
+
+    struct list* binding_val = binding_name->next;
+    print_ast(psym, binding_val->value, depth+1);
+
+    struct list* body = binding_val->next;
+    print_ast(psym, body->value, depth+1);
+
+    if (body->next != NULL) exit(AST_ERROR+1);
+  } else if (psym->lambda == head) {
+    struct list* var_name = ast->next;
+    print_ast(psym, var_name->value, depth+1);
+
+    struct list* lambda_body = var_name->next;
+    print_ast(psym, lambda_body->value, depth+1);
+
+    if (lambda_body->next != NULL) exit(AST_ERROR+2);
+  } else if (psym->apply == head) {
+    struct list* operator = ast->next;
+    print_ast(psym, operator->value, depth+1);
+
+    struct list* operand = operator->next;
+    print_ast(psym, operand->value, depth+1);
+
+    if (operand->next != NULL) exit(AST_ERROR+3);
+  } else {
+    ast = ast->next;
+    printf("%*c", (depth+1)*2, ' ');
+    str_print(ast->value);
+    printf("\n");
+
+    if (ast->next != NULL) exit(AST_ERROR+4);
+  }
 }
 
 
-
 int main(void) {
-  struct lexer_tokens toks = new_lexer_tokens();
+  struct lexer_symbols toks = new_lexer_symbols();
   //symbol_env_print(reverse(toks.env));
   printf("-- lex --\n");
   struct lex_res prog_lex = lex(&toks);
   lex_print(prog_lex.tokens);
   printf("-- parse --\n");
-  p_expr(&toks, prog_lex.tokens);
+  struct parser_symbols psym = new_parser_symbols();
+  struct p_acc parse_res = p_expr((struct p_acc){ 
+    .tok = &toks, 
+    .psym = &psym,
+    .rem = prog_lex.tokens, 
+    .ast = NULL
+  });
+  print_ast(&psym, parse_res.ast, 0);
 
   return 0;
 }
