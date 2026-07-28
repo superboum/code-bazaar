@@ -1,119 +1,107 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "stdlib.h"
+#include "stdio.h"
+#include "string.h"
 
-#define MALLOC_ERR 100
-#define MALLOC_MSG "Malloc failed"
-#define SYMB_TOO_LONG_ERR 101
-#define SYMB_TOO_LONG_MSG "symbol can be up to 32 chars"
-#define SYMB_EMPTY_ERR 102
-#define SYMB_EMPTY_MSG "symbol must be at least 1 char"
+/*
+ * ERROR MANAGEMENT
+ */
+#define ERR_MALLOC_CODE 100
+#define ERR_MALLOC_MSG "Not enough memory."
+#define ERR_LOGIC_CODE 101
+#define ERR_LOGIC_MSG "Internal logic error."
 
-/****
- * ERROR
- ****/
 void error(int code, char* msg) {
-  fprintf(stderr, "error: %s\n", msg);
+  fprintf(stderr, "Fatal Error. %s\n", msg);
   exit(code);
 }
 
-/****
+/*
  * DATATYPES
- ****/
+ */
 
-// -- string
+#define NUMBER 1
+#define STRING 2
+#define SYMBOL 3
+#define NIL 4
+
 typedef struct string {
   size_t len;
-  char content[];
+  char val[];
 } string_t;
 
-string_t* string(char* s, int len) {
-  string_t* ptr = malloc(sizeof(string_t)+sizeof(char)*len);
-  if (ptr == NULL) error(MALLOC_ERR, MALLOC_MSG);
-  ptr->len = len;
-  strncpy(ptr->content, s, len);
-  return ptr;
-}
-
-void string_free(string_t* ptr) {
-  free(ptr);
-}
-
-// -- symbols
-#define SYMBOL_MAX_LEN 32
-#define SYMBOL_EXTEND 10
-typedef struct symb_repo {
-  size_t sz;
-  size_t cur;
-  unsigned char* buf;
-} symb_repo;
-
-symb_repo* new_symb_repo() {
-  symb_repo* res = malloc(sizeof(symb_repo));
-  if (res == NULL) error(MALLOC_ERR, MALLOC_MSG);
-  size_t max_str = sizeof(string_t)+sizeof(char)*SYMBOL_MAX_LEN;
-  res->sz = max_str*SYMBOL_EXTEND;
-  res->cur = 0;
-  res->buf = malloc(res->sz);
-  if (res->buf == NULL) error(MALLOC_ERR, MALLOC_MSG);
-  memset(res->buf, 0, res->sz);
-  return res;
-}
-
-short symbol(symb_repo* sr, char* s, int len) {
-  if (len <= 0) error(SYMB_EMPTY_ERR, SYMB_EMPTY_MSG);
-  if (len > SYMBOL_MAX_LEN) error(SYMB_TOO_LONG_ERR, SYMB_TOO_LONG_MSG);
-
-  short counter = 0;
-  size_t cursor = 0;
-
-  // try to find
-  while (cursor < sr->cur) {
-    counter += 1;
-    string_t* cand = (string_t*)&sr->buf[cursor];
-    if (cand->len == len && strncmp(cand->content, s, len) == 0) {
-      return counter; // found
-    }
-    cursor += sizeof(string_t) + sizeof(char)*cand->len;
-  }
-
-  // make sure we have enough memory
-  size_t max_str = sizeof(string_t)+sizeof(char)*SYMBOL_MAX_LEN;
-  if (sr->sz - sr->cur < max_str+1) {
-    sr->sz = sr->sz + SYMBOL_EXTEND * max_str + 1;
-    sr->buf = realloc(sr->buf, sr->sz);
-    if (sr->buf == NULL) error(MALLOC_ERR, MALLOC_MSG);
-  }
-
-  // copy
-  string_t* new_symbol = (string_t*)&sr->buf[sr->cur];
-  new_symbol->len = len;
-  strncpy(new_symbol->content, s, len);
-  sr->cur = sr->cur + sizeof(string_t) + sizeof(char) * len;
-  return counter+1;
-}
-
-
-// NIL = special symbol.
-// false = NIL ; true = everything else
-#define SYMBOL 1
-#define INT64 2
-#define STRING 3
-
 typedef struct atom {
-  unsigned char kind;
+  char kind;
   union {
-    int numeric;
-    short atom;
-    string_t* text;
+    int as_number;
+    string_t* as_string;
   } val;
 } atom;
 
+typedef struct cell {
+  atom*        head;
+  struct cell* rest;
+} cell;
+
+cell nil = (cell) { .head = NULL, .rest = NULL };
+cell* cons(atom* head, cell* rest) {
+  cell* ptr = malloc(sizeof(cell));
+  if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+  ptr->head = head;
+  ptr->rest = rest;
+  return ptr;
+}
+atom* car(cell* list) {
+  return list->head;
+}
+cell* cdr(cell* list) {
+  return list->rest;
+}
+int empty(cell* list) {
+  return list == &nil;
+}
+
+atom* string(char* s, size_t len) {
+  size_t memsz = sizeof(string_t)+sizeof(char)*(len+1);
+  string_t* ptr = malloc(memsz);
+  if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+  memset(ptr, 0, memsz);
+  ptr->len = len;
+  strncpy(ptr->val, s, len);
+
+  atom* at = malloc(sizeof(atom));
+  if (at == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+  at->kind = STRING;
+  at->val.as_string = ptr;
+  return at;
+}
+
+struct cell* global_atoms = &nil;
+atom* symbol(char* s, size_t len) {
+  // Try to find symbol
+  cell* iter = global_atoms;
+  while(!empty(iter)) {
+    atom* cur = car(iter);
+    iter = cdr(iter);
+    if (cur->kind != SYMBOL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
+    if (len != cur->val.as_string->len) continue;
+    if (strncmp(s, cur->val.as_string->val, len) != 0) continue;
+    return cur;
+  }
+
+  // Symbol not found, creating it.
+  atom* new_symbol = string(s, len);
+  new_symbol->kind = SYMBOL;
+  global_atoms = cons(new_symbol, global_atoms);
+  return new_symbol;
+}
+
 int main(void) {
-  symb_repo* sr = new_symb_repo();
-  short a = symbol(sr, "hello", 6);
-  short b = symbol(sr, "world", 6);
-  short c = symbol(sr, "hello", 6);
-  printf("%d ; %d ; %d\n", a, b, c);
+  atom* s1 = symbol("hello", 5);
+  atom* s2 = symbol("world", 5);
+  atom* s3 = symbol("hello", 5);
+  if (s1 == s2) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
+  if (s1 != s3) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
+  if (s2 == s3) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
+  printf("all good\n");
   return 0;
 }
