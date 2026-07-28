@@ -1,8 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #define MALLOC_ERR 100
 #define MALLOC_MSG "Malloc failed"
+#define SYMB_TOO_LONG_ERR 101
+#define SYMB_TOO_LONG_MSG "symbol can be up to 32 chars"
+#define SYMB_EMPTY_ERR 102
+#define SYMB_EMPTY_MSG "symbol must be at least 1 char"
 
 /****
  * ERROR
@@ -19,78 +24,75 @@ void error(int code, char* msg) {
 // -- string
 typedef struct string {
   size_t len;
-  char* content;
+  char content[];
 } string_t;
 
 string_t* string(char* s, int len) {
-  char* buf = malloc(sizeof(char)*len);
-  if (buf == NULL) error(MALLOC_ERR, MALLOC_MSG);
-  string_t* final = malloc(sizeof(string_t));
-  if (final == NULL) error(MALLOC_ERR, MALLOC_MSG);
-  final->content = buf;
-  final->len = len;
-  for (size_t i = 0; i < len; i++) {
-    final->content[i] = s[i];
-  }
-  return final;
-}
-
-void string_free(string_t* ptr) {
-  free(ptr->content);
-  free(ptr);
-}
-
-// -- atoms
-#define ATOM_SLOTS 4096
-#define ATOM_MAX_LEN 16
-typedef struct atom_slot {
-  short next;
-  short down;
-  char letter;
-} atom_elem;
-typedef struct atom_trie {
-  atom_elem trie[ATOM_SLOTS];
-  short cursor;
-} atom_trie;
-atom_trie* new_atom_trie() {
-  atom_trie* ptr = malloc(sizeof(atom_trie));
+  string_t* ptr = malloc(sizeof(string_t)+sizeof(char)*len);
   if (ptr == NULL) error(MALLOC_ERR, MALLOC_MSG);
-  memset(ptr, -1, sizeof(atom_trie));
+  ptr->len = len;
+  strncpy(ptr->content, s, len);
   return ptr;
 }
 
-short atom(atom_trie* at, char* v, int len) {
-  if (len > ATOM_MAX_LEN) error(ATOM_LEN_ERR, ATOM_LEN_MSG);
-  atom_slot* as = &(struct atom_slot) { .letter='\0', .next=-1, .down=0 };
-  short pos = -1;
-  for (int i = 0; i < len; i++) {
-    // Find down value (create it if needed)
-    if (as->down == -1) {
-      as->down = at.cursor++;
-      pos = as->down
-      as = &at.trie[pos];
-      as->letter = v[i];
-    } else {
-      pos = as->down;
-      as = &at.trie[pos];
-    }
-
-    // Find current letter at this trie level (or create it)
-    while (true) {
-      if (as->letter == v[i]) break;
-      if (as->next == -1) {
-        as->next = at.cursor++;
-	pos = as->next;
-	as = &at.trie[pos];
-	as->letter = v[i];
-	break;
-      }
-      pos = as->next;
-      as = &at.trie[pos];
-    }
-  }
-  return pos;
+void string_free(string_t* ptr) {
+  free(ptr);
 }
+
+// -- symbols
+#define SYMBOL_MAX_LEN 32
+#define SYMBOL_EXTEND 10
+typedef struct symb_repo {
+  size_t sz;
+  size_t cur;
+  unsigned char* buf;
+} symb_repo;
+
+symb_repo* new_symb_repo() {
+  symb_repo* res = malloc(sizeof(symb_repo));
+  if (res == NULL) error(MALLOC_ERR, MALLOC_MSG);
+  size_t max_str = sizeof(string_t)+sizeof(char)*SYMBOL_MAX_LEN;
+  res->sz = max_str*SYMBOL_EXTEND;
+  res->cur = 0;
+  res->buf = malloc(res->sz);
+  if (res->buf == NULL) error(MALLOC_ERR, MALLOC_MSG);
+  memset(res->buf, 0, res->sz);
+  return res;
+}
+
+short symbol(symb_repo* sr, char* s, int len) {
+  if (len <= 0) error(SYMB_EMPTY_ERR, SYMB_EMPTY_MSG);
+  if (len > SYMBOL_MAX_LEN) error(SYMB_TOO_LONG_ERR, SYMB_TOO_LONG_MSG);
+
+  short counter = 0;
+  size_t cursor = 0;
+
+  // try to find
+  while (cursor < sr->cur) {
+    counter += 1;
+    string_t* cand = (string_t*)&sr->buf[cursor];
+    if (cand->len == len && strncmp(cand->content, s, len) == 0) {
+      return counter; // found
+    }
+    cursor += sizeof(string_t) + sizeof(char)*cand->len;
+  }
+
+  // make sure we have enough memory
+  size_t max_str = sizeof(string_t)+sizeof(char)*SYMBOL_MAX_LEN;
+  if (sr->sz - sr->cur < max_str+1) {
+    sr->sz = sr->sz + SYMBOL_EXTEND * max_str + 1;
+    sr->buf = realloc(sr->buf, sr->sz);
+    if (sr->buf == NULL) error(MALLOC_ERR, MALLOC_MSG);
+  }
+
+  // copy
+  string_t* new_symbol = (string_t*)&sr->buf[sr->cur];
+  new_symbol->len = len;
+  strncpy(new_symbol->content, s, len);
+  sr->cur = sr->cur + sizeof(string_t) + sizeof(char) * len;
+  return counter+1;
+}
+
 
 // NIL = special symbol.
 // false = NIL ; true = everything else
@@ -108,6 +110,10 @@ typedef struct atom {
 } atom;
 
 int main(void) {
-  printf("hello\n");
+  symb_repo* sr = new_symb_repo();
+  short a = symbol(sr, "hello", 6);
+  short b = symbol(sr, "world", 6);
+  short c = symbol(sr, "hello", 6);
+  printf("%d ; %d ; %d\n", a, b, c);
   return 0;
 }
