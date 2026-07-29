@@ -343,12 +343,47 @@ atom* csymbol(char* s) {
 atom* sexpr(atom* a) {
   if (a->kind == NIL) return cstring("NIL", 3);
   if (a->kind == SYMBOL) return cstring(a->val.as_string->val, a->val.as_string->len);
-  if (a->kind == STRING) return a; // @FIXME add double quotes
+  if (a->kind == STRING) {
+    atom* dquote = cstring("\"", 1);
+    atom* part2 = string_concatenate(dquote, a);
+    atom* final = string_concatenate(part2, dquote);
+    atom_rc_decr(dquote);
+    atom_rc_decr(part2);
+    return final;
+  }
   if (a->kind == NUMBER) {
-    
+    const char fmt[] = "%d";
+    int sz = snprintf(NULL, 0, fmt, a->val.as_number);
+    char* tmp = malloc(sz);
+    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    memset(tmp, 0, sz);
+    snprintf(tmp, sz, fmt, a->val.as_number);
+    atom* final = cstring(tmp, strlen(tmp));
+    free(tmp);
+    return final;
+  }
+  if (a->kind == PAIR) {
+    const char fmt[] = "(%s %s) ";
+    atom* left = sexpr(a->val.as_pair.head);
+    atom* right = sexpr(a->val.as_pair.tail);
+    int sz = snprintf(NULL, 0, fmt, left->val.as_string->val, right->val.as_string->val);
+    char* tmp = malloc(sz);
+    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    memset(tmp, 0, sz);
+    snprintf(tmp, sz, fmt, left->val.as_string->val, right->val.as_string->val);
+    atom* final = cstring(tmp, strlen(tmp));
+    free(tmp);
+    atom_rc_decr(left);
+    atom_rc_decr(right);
+    return final;
   }
 
   return a;
+}
+
+void print(atom* a) {
+  if (a->kind != STRING && a->kind != SYMBOL) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  printf("%s\n", a->val.as_string->val);
 }
 
 
@@ -502,6 +537,17 @@ int main(void) {
   c2 = atom_rc_decr(c2);
   c3 = atom_rc_decr(c3);
   if (c1 != NULL || c2 != NULL || c3 != NULL) exit(512);
+
+  atom* p1 = cons(s2, nil());
+  atom* p2 = cons(s1, p1);
+  atom* _sexpr = sexpr(p2);
+  print(_sexpr);
+  atom_rc_decr(p1);
+  atom_rc_decr(p2);
+  atom_rc_decr(_sexpr);
+
+  global_symbols = atom_rc_decr(global_symbols);
+  if (global_symbols != NULL) exit(513);
 
   printf("all good\n");
   return 0;
