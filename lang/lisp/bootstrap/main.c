@@ -421,14 +421,14 @@ atom* lex_string(FILE* f) {
     atom_rc_decr(acc);
     acc = new_acc;
   }
-  atom* value = string(acc);
-  atom* part2 = cons(value, nil());
+  atom* rev = reverse(acc);
+  atom* value = string(rev);
   atom* type = csymbol("string");
-  atom* final = cons(type, part2);
+  atom* final = cons(type, value);
   atom_rc_decr(acc);
+  atom_rc_decr(rev);
   atom_rc_decr(type);
   atom_rc_decr(value);
-  atom_rc_decr(part2);
   return final;
 }
 
@@ -447,15 +447,15 @@ atom* lex_symbol(FILE* f) {
     atom_rc_decr(acc);
     acc = new_acc;
   }
-  atom* parsed_string = string(acc);
+  atom* rev = reverse(acc);
+  atom* parsed_string = string(rev);
   atom* final_symbol = symbol(parsed_string);
-  atom* part2 = cons(final_symbol, nil());
   atom* type = csymbol("symbol");
-  atom* final = cons(type, part2);
+  atom* final = cons(type, final_symbol);
   atom_rc_decr(acc);
+  atom_rc_decr(rev);
   atom_rc_decr(parsed_string);
   atom_rc_decr(final_symbol);
-  atom_rc_decr(part2);
   atom_rc_decr(type);
   return final;
 }
@@ -545,6 +545,9 @@ int main(void) {
   atom_rc_decr(p1);
   atom_rc_decr(p2);
   atom_rc_decr(_sexpr);
+
+  atom* v = lex_token(stdin);
+  print(sexpr(v));
 
   global_symbols = atom_rc_decr(global_symbols);
   if (global_symbols != NULL) exit(513);
