@@ -36,7 +36,12 @@ typedef struct string {
   char val[];
 } string_t;
 
-struct pair;
+struct atom;
+typedef struct pair {
+  struct atom* head;
+  struct atom* tail;
+} pair;
+
 typedef struct atom {
   char kind;
   char rc;
@@ -47,23 +52,20 @@ typedef struct atom {
   } val;
 } atom;
 
-typedef struct pair {
-  atom* head;
-  atom* tail;
-} pair;
+
 
 
 // datatype interface
 //   c-bindings
 atom* atom_alloc();
-void atom_rc_incr(atom* a);
+atom* atom_rc_incr(atom* a);
 atom* atom_rc_decr(atom* a);
-atom cbool(int b);
+atom* cbool(int b);
 int boolc(atom* a);
-atom cnumber(int v);
-atom cstring(char* s, size_t len);
+atom* cnumber(int v);
+atom* cstring(char* s, size_t len);
 int  cstring_eq(string_t* s1, string_t* s2);
-atom csymbol(char* s);
+atom* csymbol(char* s);
 
 //   lisp-compatible
 atom* nil();
@@ -88,13 +90,14 @@ atom* atom_alloc() {
   if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
   memset(ptr, 0, sizeof(atom));
   atom_rc_incr(ptr);
-  atom->kind = NIL;
+  ptr->kind = NIL;
   return ptr;
 }
 
-void atom_rc_incr(atom* a) {
-  if (a == NULL) err(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+atom* atom_rc_incr(atom* a) {
+  if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (a->rc < 255) a->rc++;
+  return a;
   // we don't need to increment recursively.
   // instead, children rc is incremented only when attached to parent.
 }
@@ -114,7 +117,7 @@ atom* atom_rc_decr(atom* a) {
       a->val.as_string = NULL;
     }
     free(a);
-    return NULL
+    return NULL;
   }
   return a;
 }
@@ -150,67 +153,61 @@ int boolc(atom* a) {
   return 1;
 }
 
-atom cons(atom* left, atom* right) {
+atom* cons(atom* left, atom* right) {
   // left & right are now owned by the result; so we decrement as we consume, and increment as we bind to the new struct
   if (left == NULL || right == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   atom* a = atom_alloc();
   a->kind = PAIR;
-  a->val.as_pair.head = left;
-  a->val.as_pair.tail = right;
+  a->val.as_pair.head = atom_rc_incr(left);
+  a->val.as_pair.tail = atom_rc_incr(right);
   return a;
 }
 atom* car(atom* list) {
-  // we consume the list; we return its head.
   if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
-  atom_rc_incr(list->val.as_pair.head);
-  list = atom_rc_decr(list); // consume list
-  return list->val.as_pair.head;
+  
+  return atom_rc_incr(list->val.as_pair.head);
 }
 atom* cdr(atom* list) {
-  // we consume the list; we return its rest.
   if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
-  atom_rc_incr(list->val.as_pair.tail);
-  list = atom_rc_decr(list); // consume list
-  return list->val.as_pair.tail;
+  
+  return atom_rc_incr(list->val.as_pair.tail);;
 }
 atom* empty(atom* a) {
-  // we consume the atom; we return if its nil or true
+  // NO RC with bools
   if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   atom* r = _false();
   if (a->kind == NIL) r = _true();
-  a = atom_rc_decr(a); // consume atom
+
   return r;
 }
-atom* not(atom** a) {
-  // same as empty
+atom* not(atom* a) {
+  // NO RC with bools
   return empty(a);
 }
 
 atom* length(atom* list) {
-  // consume the list, returns it length
   if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   int len = 0;
-  atom* iter = list;
-  while (boolc(iter)) {
+  while (boolc(list)) {
     len++;
-    iter=cdr(iter);
+    list = atom_rc_decr(cdr(list)); // protected by list root
   }
-  list = atom_rc_decr(list);
+
   return cnumber(len);
 }
 
 atom* reverse(atom* list) {
   if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  atom acc = nil();
-
-  atom* iter = list;
+  atom* acc = nil();
   while (boolc(list)) {
-    acc = cons(car(list), acc);
-    list = cdr(list);
+    atom* head = atom_rc_decr(car(list)); // protected by list root
+    atom* new_acc = cons(head, acc);
+    atom_rc_decr(acc); // old accumulator is not required anymore
+    acc = new_acc;
+    list = atom_rc_decr(cdr(list)); // protected by list root
   }
-  list = atom_rc_decr(list);
   return acc;
 }
 
@@ -228,12 +225,9 @@ atom* eq(atom* a1, atom* a2) {
   if (a1->kind != a2->kind) res = _false(); // we don't cast transparently, so trap all type differences here...
   else if (a1->kind == NUMBER) res = cbool(a1->val.as_number == a2->val.as_number); // compare values
   else if (a1->kind == SYMBOL) res = cbool(a1->val.as_string == a2->val.as_string); // compare mem addr as symbols deduplicate strings
-  else if (a1->kind == PAIR) res = cbool(a1->val.as_pair == a2->val.as_pair); // compare mem addr
+  else if (a1->kind == PAIR) res = cbool(a1 == a2); // compare mem addr
   else if (a1->kind == STRING) res = cbool(cstring_eq(a1->val.as_string, a2->val.as_string)); // compare with strcnmp
   else if (a1->kind == NIL) res = _true(); // nil is always equal to nil
-
-  a1 = atom_rc_decr(a1);
-  a2 = aotm_rc_decr(a2);
   return res;
 }
 
@@ -246,7 +240,6 @@ atom* cnumber(int v) {
 
 atom* number(atom* charlist) {
   // @FIXME: numbers as a list of char. Reverse then 10*(converted)+acc
-  atom_rc_decr(charlist);
   atom* a = atom_alloc();
   a->kind = NUMBER;
   a->val.as_number = 0;
@@ -269,11 +262,9 @@ atom* cstring(char* s, size_t len) {
 
 atom* string(atom* charlist) {
   if (charlist == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  atom_rc_incr(charlist); // we'll need charlist again
   atom* alen = length(charlist);
-  size_t len = ->val.as_number;
+  size_t len = alen->val.as_number;
   alen = atom_rc_decr(alen); // we don't need alen past this point
-  atom* iter = charlist; // iter will be consumed by the for loop.
 
   // build string
   size_t memsz = sizeof(string_t)+sizeof(char)*(len+1);
@@ -282,17 +273,14 @@ atom* string(atom* charlist) {
   memset(ptr, 0, memsz); // make sure we initialize with zero
   ptr->len = len;
   for (size_t i = 0; i < len; i++) {
-    atom_rc_incr(iter); // we'll reuse iter
-    atom* acharcode = car(iter); // we use iter here
+    atom* acharcode = atom_rc_decr(car(charlist)); // protected by list root
     if (acharcode->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-    int charcode = acharcode.val.as_number;
-    acharcode = atom_rc_decr(acharcode); // we don't need acharcode anymore
+    int charcode = acharcode->val.as_number;
     if (charcode < 0 || charcode > 255) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
     ptr->val[i] = charcode;
-    iter = cdr(iter); // and we use iter there.
+    charlist = atom_rc_decr(cdr(charlist)); // protected by list root
   }
 
-  atom_rc_decr(charlist); // consume charlist.
   atom* res = atom_alloc();
   res->kind = STRING;
   res->val.as_string = ptr;
@@ -301,21 +289,19 @@ atom* string(atom* charlist) {
 
 atom* string_concatenate(atom* a1, atom* a2) {
   if (a1 == NULL || a2 == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  if (a1.kind != STRING && a2.kind != STRING) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1->kind != STRING && a2->kind != STRING) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
 
   // build new string
-  size_t len = a1.val.as_string->len + a2.val.as_string->len;
+  size_t len = a1->val.as_string->len + a2->val.as_string->len;
   size_t memsz = sizeof(string_t)+sizeof(char)*(len+1);
   string_t* ptr = malloc(memsz);
   if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
   memset(ptr, 0, memsz);
   ptr->len = len;
-  strncpy(ptr->val, a1.val.as_string->val, a1.val.as_string->len);
-  strncpy(ptr->val+a1.val.as_string->len, a2.val.as_string->val, a2.val.as_string->len);
+  strncpy(ptr->val, a1->val.as_string->val, a1->val.as_string->len);
+  strncpy(ptr->val+a1->val.as_string->len, a2->val.as_string->val, a2->val.as_string->len);
 
   // build new atom
-  atom_rc_decr(a1);
-  atom_rc_decr(a2);
   atom* a = atom_alloc();
   a->kind = STRING;
   a->val.as_string = ptr;
@@ -323,40 +309,41 @@ atom* string_concatenate(atom* a1, atom* a2) {
 }
 
 atom* global_symbols = NULL;
-atom symbol(atom* a) {
+atom* symbol(atom* a) {
   // NOTE: do not use Lisp boolean heres as true is defined as a symbol
-  if (a.kind == SYMBOL) return a;
+  if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a->kind == SYMBOL) return a;
   if (global_symbols == NULL) global_symbols = nil();
-  if (a.kind != STRING) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  string_t* inner = a.val.as_string;
+  if (a->kind != STRING) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  string_t* inner = a->val.as_string;
 
   // Try to find symbol
-  atom iter = global_symbols;
-  while(iter.kind != NIL) {
-    atom cur = car(iter);
-    iter = cdr(iter);
-    if (cur.kind != SYMBOL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG); // wrong type
-    string_t* cur_str = cur.val.as_string;
+  atom* iter = global_symbols;
+  while(iter->kind != NIL) {
+    atom* cur = atom_rc_decr(car(iter)); // protected by list root
+    iter = atom_rc_decr(cdr(iter)); // protected by list root
+    if (cur->kind != SYMBOL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG); // wrong type
+    string_t* cur_str = cur->val.as_string;
     if (cur_str->len != inner->len) continue; // length does not match
     if (strncmp(cur_str->val, inner->val, inner->len) != 0) continue; // chars do not match
-    return cur;
+    return atom_rc_incr(cur); // we make a "copy" for the outside.
   }
 
   // Symbol not found, creating it (and trigger an allocation)
-  atom new_symbol = cstring(inner->val, inner->len);
-  new_symbol.kind = SYMBOL;
+  atom* new_symbol = cstring(inner->val, inner->len);
+  new_symbol->kind = SYMBOL;
   global_symbols = cons(new_symbol, global_symbols);
   return new_symbol;
 }
-atom csymbol(char* s) {
+atom* csymbol(char* s) {
   return symbol(cstring(s, strlen(s)));
 }
 
-atom sexpr(atom a) {
-  if (a.kind == NIL) return cstring("NIL", 3);
-  if (a.kind == SYMBOL) return cstring(a.val.as_string->val, a.val.as_string->len);
-  if (a.kind == STRING) return a; // @FIXME add double quotes
-  if (a.kind == NUMBER) {
+atom* sexpr(atom* a) {
+  if (a->kind == NIL) return cstring("NIL", 3);
+  if (a->kind == SYMBOL) return cstring(a->val.as_string->val, a->val.as_string->len);
+  if (a->kind == STRING) return a; // @FIXME add double quotes
+  if (a->kind == NUMBER) {
     
   }
 
@@ -387,52 +374,100 @@ int is_symbol(char c) {
 }
 
 // Returns a (string "foobar")
-atom lex_string(FILE* f) {
-  atom acc = nil();
+atom* lex_string(FILE* f) {
+  atom* acc = nil();
   while (true) {
     int c = fgetc(f);
     if (c > 255 || c < 0 || c == EOF || c == '"') break;
-    acc = cons(cnumber(c), acc);
+    atom* anumber = cnumber(c);
+    atom* new_acc = cons(anumber, acc);
+    atom_rc_decr(anumber);
+    atom_rc_decr(acc);
+    acc = new_acc;
   }
-  return cons(csymbol("string"), cons(string(acc), nil));
+  atom* value = string(acc);
+  atom* part2 = cons(value, nil());
+  atom* type = csymbol("string");
+  atom* final = cons(type, part2);
+  atom_rc_decr(acc);
+  atom_rc_decr(type);
+  atom_rc_decr(value);
+  atom_rc_decr(part2);
+  return final;
 }
 
 // Returns a (symbol foo)
-atom lex_symbol(FILE* f) {
-  atom acc = nil;
+atom* lex_symbol(FILE* f) {
+  atom* acc = nil();
   while (true) {
     int c = fgetc(f);
     if (c > 255 || c < 0 || c == EOF || !(is_symbol(c))) {
       ungetc(c, f);
       break;
     }
-    acc = cons(cnumber(c), acc);
+    atom* anumber = cnumber(c);
+    atom* new_acc = cons(anumber, acc);
+    atom_rc_decr(anumber);
+    atom_rc_decr(acc);
+    acc = new_acc;
   }
-  atom final_symbol = symbol(string(acc));
-  return cons(csymbol("symbol"), cons(final_symbol, nil));
+  atom* parsed_string = string(acc);
+  atom* final_symbol = symbol(parsed_string);
+  atom* part2 = cons(final_symbol, nil());
+  atom* type = csymbol("symbol");
+  atom* final = cons(type, part2);
+  atom_rc_decr(acc);
+  atom_rc_decr(parsed_string);
+  atom_rc_decr(final_symbol);
+  atom_rc_decr(part2);
+  atom_rc_decr(type);
+  return final;
 }
 
 // Returns a (number 67)
-atom lex_number(FILE* f) {
-  atom acc = nil;
+atom* lex_number(FILE* f) {
+  atom* acc = nil();
   while (true) {
     int c = fgetc(f);
     if (c > 255 || c < 0 || c == EOF || !(is_digit(c))) {
       ungetc(c, f);
       break;
     }
+    atom* anumber = cnumber(c);
+    atom* new_acc = cons(anumber, acc);
+    atom_rc_decr(anumber);
+    atom_rc_decr(acc);
+    acc = new_acc;
   }
-  return cons(csymbol("number"), cons(number(acc), nil));
+  atom* anum = number(acc);
+  atom* part2 = cons(anum, nil());
+  atom* type = csymbol("number");
+  atom* final = cons(type, part2);
+  atom_rc_decr(acc);
+  atom_rc_decr(anum);
+  atom_rc_decr(part2);
+  atom_rc_decr(type);
+  return final;
 }
 
 // Returns a token. (lparen) | (rparen) | (number 67) | (symbol foo) | (string "blabla")
-atom lex_token(FILE* f) {
+atom* lex_token(FILE* f) {
   // the loop eats spaces & new lines
   while (true) {
     int c = fgetc(f);
-    if (c > 255 || c < 0 || c == EOF) return nil;
-    if (c == '(') return cons(csymbol("lparen"), nil);
-    if (c == ')') return cons(csymbol("rparen"), nil);
+    if (c > 255 || c < 0 || c == EOF) return nil();
+    if (c == '(') {
+	atom* type = csymbol("lparen");
+	atom* final = cons(type, nil());
+	atom_rc_decr(type);
+	return final;
+    }
+    if (c == ')') {
+	atom* type = csymbol("rparen");
+	atom* final = cons(type, nil());
+	atom_rc_decr(type);
+	return final;
+    }
     if (c == '"') {
       return lex_string(f);
     }
@@ -448,17 +483,25 @@ atom lex_token(FILE* f) {
 }
 
 int main(void) {
-  atom s1 = csymbol("hello");
-  atom s2 = csymbol("world");
-  atom s3 = csymbol("hello");
+  atom* s1 = csymbol("hello");
+  atom* s2 = csymbol("world");
+  atom* s3 = csymbol("hello");
   if (boolc(eq(s1,s2))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
   if (boolc(not(eq(s1, s3)))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
   if (boolc(eq(s2, s3))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
+  atom_rc_decr(s1);
+  atom_rc_decr(s2);
+  atom_rc_decr(s3);
 
-  atom c1 = cstring("hello", 5);
-  atom c2 = cstring(" world\n", 7);
-  atom c3 = string_concatenate(c1, c2);
-  printf("concatenated: %s", c3.val.as_string->val);
+  atom* c1 = cstring("hello", 5);
+  atom* c2 = cstring(" world\n", 7);
+  atom* c3 = string_concatenate(c1, c2);
+  printf("concatenated: %s", c3->val.as_string->val);
+  c1 = atom_rc_decr(c1);
+  c2 = atom_rc_decr(c2);
+  c3 = atom_rc_decr(c3);
+  if (c1 != NULL || c2 != NULL || c3 != NULL) exit(512);
+
   printf("all good\n");
   return 0;
 }
