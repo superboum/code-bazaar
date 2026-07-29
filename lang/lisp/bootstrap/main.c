@@ -189,17 +189,20 @@ atom string(atom charlist) {
 
 atom global_symbols = { .kind = NIL, .val.as_number = 0 };
 atom symbol(atom a) {
+  // NOTE: do not use Lisp boolean heres as true is defined as a symbol
   if (a.kind == SYMBOL) return a;
   if (a.kind != STRING) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
   string_t* inner = a.val.as_string;
 
   // Try to find symbol
   atom iter = global_symbols;
-  while(boolc(not(empty(iter)))) {
+  while(iter.kind != NIL) {
     atom cur = car(iter);
     iter = cdr(iter);
-    if (cur.kind != SYMBOL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
-    if (boolc(not(eq(cur, a)))) continue;
+    if (cur.kind != SYMBOL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG); // wrong type
+    string_t* cur_str = cur.val.as_string;
+    if (cur_str->len != inner->len) continue; // length does not match
+    if (strncmp(cur_str->val, inner->val, inner->len) != 0) continue; // chars do not match
     return cur;
   }
 
@@ -297,17 +300,11 @@ atom lex_token(FILE* f) {
 }
 
 int main(void) {
-  printf("0\n");
   atom s1 = csymbol("hello");
-  printf("1\n");
   atom s2 = csymbol("world");
-  printf("2\n");
   atom s3 = csymbol("hello");
-  printf("a\n");
   if (boolc(eq(s1,s2))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
-  printf("b\n");
   if (boolc(not(eq(s1, s3)))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
-  printf("c\n");
   if (boolc(eq(s2, s3))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
   printf("all good\n");
   return 0;
