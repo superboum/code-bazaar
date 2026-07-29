@@ -72,7 +72,9 @@ atom reverse(atom list); // reverse a list
 atom eq(atom a1, atom a2); // test 2 atoms for equality
 atom number(atom charlist); // build a number from a list of char
 atom string(atom charlist); // build a string from a list of char
+atom string_concatenate(atom a1, atom a2); // concatenate 2 strings
 atom symbol(atom a); // build an atom from a string
+atom sexpr(atom a); // build a string atom representing any atom (including list/pair) as a sexpr
 
 atom nil = { .kind = NIL, .val.as_number = 0 };
 atom _false() {
@@ -187,6 +189,19 @@ atom string(atom charlist) {
   return (atom) { .kind = STRING, .val.as_string = ptr };
 }
 
+atom string_concatenate(atom a1, atom a2) {
+  if (a1.kind != STRING && a2.kind != STRING) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  size_t len = a1.val.as_string->len + a2.val.as_string->len;
+  size_t memsz = sizeof(string_t)+sizeof(char)*(len+1);
+  string_t* ptr = malloc(memsz);
+  if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+  memset(ptr, 0, memsz);
+  ptr->len = len;
+  strncpy(ptr->val, a1.val.as_string->val, a1.val.as_string->len);
+  strncpy(ptr->val+a1.val.as_string->len, a2.val.as_string->val, a2.val.as_string->len);
+  return (atom) { .kind = STRING, .val.as_string = ptr };
+}
+
 atom global_symbols = { .kind = NIL, .val.as_number = 0 };
 atom symbol(atom a) {
   // NOTE: do not use Lisp boolean heres as true is defined as a symbol
@@ -214,6 +229,15 @@ atom symbol(atom a) {
 }
 atom csymbol(char* s) {
   return symbol(cstring(s, strlen(s)));
+}
+
+atom sexpr(atom a) {
+  if (a.kind == NIL) return cstring("NIL", 3);
+  if (a.kind == SYMBOL) return cstring(a.val.as_string->val, a.val.as_string->len);
+  if (a.kind == STRING) return a; // @FIXME add double quotes
+  if (a.kind == NUMBER) return a;
+
+  return a;
 }
 
 
@@ -278,6 +302,7 @@ atom lex_number(FILE* f) {
   return cons(csymbol("number"), cons(number(acc), nil));
 }
 
+// Returns a token. (lparen) | (rparen) | (number 67) | (symbol foo) | (string "blabla")
 atom lex_token(FILE* f) {
   // the loop eats spaces & new lines
   while (true) {
@@ -306,6 +331,11 @@ int main(void) {
   if (boolc(eq(s1,s2))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
   if (boolc(not(eq(s1, s3)))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
   if (boolc(eq(s2, s3))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
+
+  atom c1 = cstring("hello", 5);
+  atom c2 = cstring(" world\n", 7);
+  atom c3 = string_concatenate(c1, c2);
+  printf("concatenated: %s", c3.val.as_string->val);
   printf("all good\n");
   return 0;
 }
