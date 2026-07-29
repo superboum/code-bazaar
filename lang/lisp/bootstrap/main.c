@@ -96,7 +96,7 @@ atom* atom_alloc() {
 
 atom* atom_rc_incr(atom* a) {
   if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  if (a->rc < 255) a->rc++;
+  if (a->rc >= 0) a->rc++;
   return a;
   // we don't need to increment recursively.
   // instead, children rc is incremented only when attached to parent.
@@ -104,7 +104,7 @@ atom* atom_rc_incr(atom* a) {
 
 atom* atom_rc_decr(atom* a) {
   if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  if (a->rc != 255) a->rc--;
+  if (a->rc > 0) a->rc--;
   if (a->rc == 0) {
     if (a->kind == PAIR) {
       a->val.as_pair.head = atom_rc_decr(a->val.as_pair.head);
@@ -127,7 +127,7 @@ atom* nil() {
   if (_nil == NULL) {
     _nil = atom_alloc();
     _nil->kind = NIL;
-    _nil->rc = 255; // disable rc
+    _nil->rc = -128; // disable rc
   }
   return _nil;
 }
@@ -140,7 +140,7 @@ atom* __true = NULL;
 atom* _true() {
   if (__true == NULL) {
     __true = csymbol("t");
-    __true->rc = 255; // disable rc
+    __true->rc = -128; // disable rc
   }
   return __true;
 }
@@ -172,7 +172,7 @@ atom* cdr(atom* list) {
   if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
   
-  return atom_rc_incr(list->val.as_pair.tail);;
+  return atom_rc_incr(list->val.as_pair.tail);
 }
 atom* empty(atom* a) {
   // NO RC with bools
@@ -321,7 +321,8 @@ atom* symbol(atom* a) {
   atom* iter = global_symbols;
   while(iter->kind != NIL) {
     atom* cur = atom_rc_decr(car(iter)); // protected by list root
-    iter = atom_rc_decr(cdr(iter)); // protected by list root
+    iter = atom_rc_decr(cdr(iter));
+			    
     if (cur->kind != SYMBOL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG); // wrong type
     string_t* cur_str = cur->val.as_string;
     if (cur_str->len != inner->len) continue; // length does not match
