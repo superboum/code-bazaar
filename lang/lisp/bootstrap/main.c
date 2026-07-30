@@ -455,7 +455,11 @@ atom* sexpr(atom* a) {
       atom_rc_decr(head);
       iter = iter->val.as_pair.tail;
     }
+    if (iter->kind == NIL) {
+      cursor--;
+    }
     //@FIXME: We must handle the case where tail is not NIL
+    // BUT we may need first to add support for dot notations: `(foo . bar)`
     snprintf(acc+cursor, allocated-cursor, ")");
 
     atom* final = cstring(acc, strlen(acc));
