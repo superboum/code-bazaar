@@ -15,6 +15,8 @@
 #define ERR_CANT_CAR_MSG "can't car or cdr this atom as it's not a pair."
 #define ERR_RC_ERROR_CODE 104
 #define ERR_RC_ERROR_MSG "reference counting logic error; object is freed."
+#define ERR_PARSER_ERROR_CODE 105
+#define ERR_PARSER_ERROR_MSG "Parser failed. You probably have a syntax error in your code"
 
 void error(int code, char* msg) {
   fprintf(stderr, "Fatal Error. %s\n", msg);
@@ -583,6 +585,59 @@ atom* lex(FILE* f) {
   return res;
 }
 
+/*
+ * PARSER
+ * expr:       LPAREN sub-expr RPAREN | patom
+ * sub-expr:   LAMBDA lambda-def | LET let-def
+ * lambda-def: LPAREN atom RPAREN expr
+ * let-def:    LPAREN atom RPAREN expr
+ * patom:      SYMBOL | NUMBER | STRING
+ */
+
+atom* patom(atom* lex) {
+  // @TODO
+  return NULL;
+}
+
+atom* sub_expr(atom* lex) {
+  // @TODO
+  return NULL;
+}
+
+// returns cons(AST . TOKENS)
+atom* expr(atom* lex) {
+  if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (!boolc(lex)) return cons(nil(), nil());
+  atom* candidate = atom_rc_decr(car(lex));
+  atom* next = atom_rc_decr(cdr(lex));
+  atom* kind_cand = atom_rc_decr(car(candidate));
+  atom* lparen = atom_rc_decr(csymbol("lparen"));
+  if (eq(kind_cand, lparen)) {
+    atom* inner = sub_expr(next);
+    atom* ast = car(inner);
+    lex = cdr(inner);
+    atom_rc_decr(inner);
+
+    atom* rparen = atom_rc_decr(csymbol("rparen"));
+    candidate = car(lex);
+    next = cdr(lex);
+    atom_rc_decr(lex);
+    if (!boolc(eq(rparen, candidate))) error(ERR_PARSER_ERROR_CODE, ERR_PARSER_ERROR_MSG);
+
+    atom* res = cons(ast, next);
+    atom_rc_decr(ast);
+    atom_rc_decr(next);
+    return res;
+  } else {
+    //@TODO
+    //atom* inner = patom(next);
+    return NULL;
+  }
+}
+
+/*
+ * MAIN
+ */
 int main(void) {
   atom* s1 = csymbol("hello");
   atom* s2 = csymbol("world");
