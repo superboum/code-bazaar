@@ -81,6 +81,8 @@ atom* csymbol(char* s);
 atom* nil();
 atom* _false(); // false is nil
 atom* _true(); // true is symbol t
+atom* and(atom* left, atom* right);
+atom* or(atom* left, atom* right);
 atom* cons(atom* left, atom* right); // build a pair (or extend a list)
 atom* car(atom* list); // 1st element of a pair (or head of list)
 atom* cdr(atom* list); // 2nd element of a pair (or rest of list)
@@ -173,6 +175,17 @@ atom* _true() {
   }
   return __true;
 }
+
+atom* and(atom* left, atom* right) {
+  if (boolc(left)) return right;
+  return _false();
+}
+
+atom* or(atom* left, atom* right) {
+  if (boolc(left)) return _true();
+  return right;
+}
+
 atom* cbool(int b) {
   if(b) return _true();
   return _false();
@@ -588,51 +601,89 @@ atom* lex(FILE* f) {
 /*
  * PARSER
  * expr:       LPAREN sub-expr RPAREN | patom
- * sub-expr:   LAMBDA lambda-def | LET let-def
+ * sub-expr:   SYMBOL(lambda) lambda-def | SYMBOL(let) let-def | apply-def
  * lambda-def: LPAREN atom RPAREN expr
  * let-def:    LPAREN atom RPAREN expr
+ * apply-def:  expr expr
  * patom:      SYMBOL | NUMBER | STRING
  */
 
 atom* patom(atom* lex) {
-  // @TODO
-  return NULL;
+  printf("patom\n");
+  atom* out_res;
+  if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  atom* local_candidate = car(lex);
+  atom* local_next = cdr(lex);
+  atom* local_kind = car(local_candidate);
+  atom* local_val = cdr(local_candidate);
+  atom* local_symbol = csymbol("symbol");
+  atom* local_number = csymbol("number");
+  atom* local_string = csymbol("string");
+
+  if (!boolc(or(or(eq(local_kind, local_symbol), eq(local_kind, local_number)), eq(local_kind, local_string)))) {
+     error(ERR_PARSER_ERROR_CODE, ERR_PARSER_ERROR_MSG);
+  }
+
+  // @FIXME handle NIL() specific case...
+
+  out_res = cons(local_val, local_next);
+
+  atom_rc_decr(local_candidate);
+  atom_rc_decr(local_next);
+  atom_rc_decr(local_kind);
+  atom_rc_decr(local_val);
+  atom_rc_decr(local_symbol);
+  atom_rc_decr(local_number);
+  atom_rc_decr(local_string);
+  return out_res;
 }
 
 atom* sub_expr(atom* lex) {
+  if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   // @TODO
   return NULL;
 }
 
 // returns cons(AST . TOKENS)
 atom* expr(atom* lex) {
+  atom* out_res;
+  printf("expr\n");
   if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (!boolc(lex)) return cons(nil(), nil());
-  atom* candidate = atom_rc_decr(car(lex));
-  atom* next = atom_rc_decr(cdr(lex));
-  atom* kind_cand = atom_rc_decr(car(candidate));
-  atom* lparen = atom_rc_decr(csymbol("lparen"));
-  if (eq(kind_cand, lparen)) {
-    atom* inner = sub_expr(next);
-    atom* ast = car(inner);
-    lex = cdr(inner);
-    atom_rc_decr(inner);
+  atom* local_candidate = car(lex);
+  atom* local_next = cdr(lex);
+  atom* local_kind = car(local_candidate);
+  atom* local_lparen = csymbol("lparen");
+  if (boolc(eq(local_kind, local_lparen))) {
+    // Get references
+    atom* branch_inner = sub_expr(local_next);
+    atom* branch_ast = car(branch_inner); 
+    atom* branch_lex = cdr(branch_inner); 
+    atom* branch_rparen = csymbol("rparen");
+    atom* branch_candidate = car(branch_lex);
+    atom* branch_kind = car(branch_candidate);
+    atom* branch_next = cdr(branch_lex); 
 
-    atom* rparen = atom_rc_decr(csymbol("rparen"));
-    candidate = car(lex);
-    next = cdr(lex);
-    atom_rc_decr(lex);
-    if (!boolc(eq(rparen, candidate))) error(ERR_PARSER_ERROR_CODE, ERR_PARSER_ERROR_MSG);
+    // Some logic
+    if (!boolc(eq(branch_rparen, branch_kind))) error(ERR_PARSER_ERROR_CODE, ERR_PARSER_ERROR_MSG);
+    out_res = cons(branch_ast, branch_next);
 
-    atom* res = cons(ast, next);
-    atom_rc_decr(ast);
-    atom_rc_decr(next);
-    return res;
+    // Release references
+    atom_rc_decr(branch_next);
+    atom_rc_decr(branch_kind);
+    atom_rc_decr(branch_candidate);
+    atom_rc_decr(branch_rparen);
+    atom_rc_decr(branch_lex);
+    atom_rc_decr(branch_ast);
+    atom_rc_decr(branch_inner);
   } else {
-    //@TODO
-    //atom* inner = patom(next);
-    return NULL;
+    out_res = patom(lex);
   }
+  atom_rc_decr(local_candidate);
+  atom_rc_decr(local_next);
+  atom_rc_decr(local_kind);
+  atom_rc_decr(local_lparen);
+  return out_res;
 }
 
 /*
@@ -667,9 +718,11 @@ int main(void) {
   atom_rc_decr(_sexpr);
 
   atom* v = lex(stdin);
-  _sexpr = sexpr(v);
-  print(_sexpr);
-  atom_rc_decr(_sexpr);
+  atom* w = expr(v);
+  atom* x = sexpr(w);
+  print(x);
+  atom_rc_decr(x);
+  atom_rc_decr(w);
   atom_rc_decr(v);
 
   global_symbols = atom_rc_decr(global_symbols);
