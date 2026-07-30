@@ -1,1 +1,1 @@
-((lambda (x) (+ x 2)) 7)
+((lambda (a b) (+ a b)) 2 3)

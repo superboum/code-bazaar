@@ -96,6 +96,7 @@ atom* string(atom* charlist); // build a string from a list of char
 atom* string_concatenate(atom* a1, atom* a2); // concatenate 2 strings
 atom* symbol(atom* a); // build an atom from a string
 atom* sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
+atom* debug_sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 
 size_t allocated_objects = 0;
 atom* tracker[4096] = {0};
@@ -399,6 +400,60 @@ atom* csymbol(char* s) {
 atom* sexpr(atom* a) {
   if (a->kind == NIL) return cstring("NIL", 3);
   if (a->kind == SYMBOL) {
+    const char fmt[] = "%s";
+    int sz = snprintf(NULL, 0, fmt, a->val.as_string->val)+1;
+    char* tmp = malloc(sz);
+    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    memset(tmp, 0, sz);
+    snprintf(tmp, sz, fmt, a->val.as_string->val);
+    atom* final = cstring(tmp, strlen(tmp));
+    free(tmp);
+    return final;
+  }
+  if (a->kind == STRING) {
+    const char fmt[] = "\"%s\"";
+    int sz = snprintf(NULL, 0, fmt, a->val.as_string->val)+1;
+    char* tmp = malloc(sz);
+    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    memset(tmp, 0, sz);
+    snprintf(tmp, sz, fmt, a->val.as_string->val);
+    atom* final = cstring(tmp, strlen(tmp));
+    free(tmp);
+    return final;
+  }
+  if (a->kind == NUMBER) {
+    const char fmt[] = "%d";
+    int sz = snprintf(NULL, 0, fmt, a->val.as_number)+1;
+    char* tmp = malloc(sz);
+    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    memset(tmp, 0, sz);
+    snprintf(tmp, sz, fmt, a->val.as_number);
+    atom* final = cstring(tmp, strlen(tmp));
+    free(tmp);
+    return final;
+  }
+  if (a->kind == PAIR) {
+    const char fmt[] = "(%s %s) ";
+    atom* left = sexpr(a->val.as_pair.head);
+    atom* right = sexpr(a->val.as_pair.tail);
+    int sz = snprintf(NULL, 0, fmt, left->val.as_string->val, right->val.as_string->val)+1;
+    char* tmp = malloc(sz);
+    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    memset(tmp, 0, sz);
+    snprintf(tmp, sz, fmt, left->val.as_string->val, right->val.as_string->val);
+    atom* final = cstring(tmp, strlen(tmp));
+    free(tmp);
+    atom_rc_decr(left);
+    atom_rc_decr(right);
+    return final;
+  }
+
+  return a;
+}
+
+atom* debug_sexpr(atom* a) {
+  if (a->kind == NIL) return cstring("NIL", 3);
+  if (a->kind == SYMBOL) {
     const char fmt[] = "{%d}%s";
     int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_string->val)+1;
     char* tmp = malloc(sz);
@@ -600,16 +655,39 @@ atom* lex(FILE* f) {
 
 /*
  * PARSER
+ *
+ * -- version 1 (not implemented, not homoiconic, maybe too precise) --
  * expr:       LPAREN sub-expr RPAREN | patom
  * sub-expr:   SYMBOL(lambda) lambda-def | SYMBOL(let) let-def | apply-def
- * lambda-def: LPAREN atom RPAREN expr
- * let-def:    LPAREN atom RPAREN expr
+ * lambda-def: atom expr
+ * let-def:    atom expr expr
  * apply-def:  expr expr
+ * patom:      SYMBOL | NUMBER | STRING
+ *
+ * -- version 2 (not implemented, not homoiconic, maybe too precise) --
+ * expr:       LPAREN sub-expr RPAREN | patom
+ * sub-expr:   SYMBOL(lambda) lambda-def | SYMBOL(let) let-def | apply-def
+ * lambda-def: LPAREN atom* RPAREN expr
+ * let-def:    LPAREN atom expr RPAREN
+ * apply-def:  expr expr*
+ * patom:      SYMBOL | NUMBER | STRING
+ *
+ * -- version 3 (not implemented, too hard to write programs with it) --
+ * expr:       LPAREN pair RPAREN | patom
+ * pair:       expr expr       
+ * patom:      SYMBOL | NUMBER | STRING
+ *
+ * -- version 4 (implemented, express lists) --
+ * expr:       LPAREN list | patom
+ * list:       expr list | RPAREN 
  * patom:      SYMBOL | NUMBER | STRING
  */
 
+atom* patom(atom* lex);
+atom* list(atom* lex);
+atom* expr(atom* lex);
+
 atom* patom(atom* lex) {
-  printf("patom\n");
   atom* out_res;
   if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   atom* local_candidate = car(lex);
@@ -638,16 +716,47 @@ atom* patom(atom* lex) {
   return out_res;
 }
 
-atom* sub_expr(atom* lex) {
+// returns cons(AST . TOKENS)
+atom* list(atom* lex) {
+  atom* out_res;
   if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  // @TODO
-  return NULL;
+  atom* local_candidate = car(lex);
+  atom* local_next = cdr(lex);
+  atom* local_kind = car(local_candidate);
+  atom* local_rparen = csymbol("rparen");
+  
+  if (boolc(eq(local_rparen, local_kind))) {
+    out_res = cons(nil(), local_next);
+  } else {
+    atom* expr_res = expr(lex);
+    atom* expr_ast = car(expr_res);
+    atom* expr_next = cdr(expr_res);
+
+    atom* rec_res = list(expr_next);
+    atom* rec_ast = car(rec_res);
+    atom* rec_next = cdr(rec_res);
+
+    atom* new_ast = cons(expr_ast, rec_ast);
+    out_res = cons(new_ast, rec_next);
+    
+    atom_rc_decr(new_ast);
+    atom_rc_decr(rec_next);
+    atom_rc_decr(rec_ast);
+    atom_rc_decr(rec_res);
+    atom_rc_decr(expr_next);
+    atom_rc_decr(expr_ast);
+    atom_rc_decr(expr_res);
+  }
+  atom_rc_decr(local_rparen);
+  atom_rc_decr(local_kind);
+  atom_rc_decr(local_next);
+  atom_rc_decr(local_candidate);
+  return out_res;
 }
 
 // returns cons(AST . TOKENS)
 atom* expr(atom* lex) {
   atom* out_res;
-  printf("expr\n");
   if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (!boolc(lex)) return cons(nil(), nil());
   atom* local_candidate = car(lex);
@@ -656,26 +765,7 @@ atom* expr(atom* lex) {
   atom* local_lparen = csymbol("lparen");
   if (boolc(eq(local_kind, local_lparen))) {
     // Get references
-    atom* branch_inner = sub_expr(local_next);
-    atom* branch_ast = car(branch_inner); 
-    atom* branch_lex = cdr(branch_inner); 
-    atom* branch_rparen = csymbol("rparen");
-    atom* branch_candidate = car(branch_lex);
-    atom* branch_kind = car(branch_candidate);
-    atom* branch_next = cdr(branch_lex); 
-
-    // Some logic
-    if (!boolc(eq(branch_rparen, branch_kind))) error(ERR_PARSER_ERROR_CODE, ERR_PARSER_ERROR_MSG);
-    out_res = cons(branch_ast, branch_next);
-
-    // Release references
-    atom_rc_decr(branch_next);
-    atom_rc_decr(branch_kind);
-    atom_rc_decr(branch_candidate);
-    atom_rc_decr(branch_rparen);
-    atom_rc_decr(branch_lex);
-    atom_rc_decr(branch_ast);
-    atom_rc_decr(branch_inner);
+    out_res = list(local_next);
   } else {
     out_res = patom(lex);
   }
