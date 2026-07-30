@@ -433,18 +433,33 @@ atom* sexpr(atom* a) {
     return final;
   }
   if (a->kind == PAIR) {
-    const char fmt[] = "(%s %s)";
-    atom* left = sexpr(a->val.as_pair.head);
-    atom* right = sexpr(a->val.as_pair.tail);
-    int sz = snprintf(NULL, 0, fmt, left->val.as_string->val, right->val.as_string->val)+1;
-    char* tmp = malloc(sz);
-    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
-    memset(tmp, 0, sz);
-    snprintf(tmp, sz, fmt, left->val.as_string->val, right->val.as_string->val);
-    atom* final = cstring(tmp, strlen(tmp));
-    free(tmp);
-    atom_rc_decr(left);
-    atom_rc_decr(right);
+    size_t allocated = 3; // left paren + right paren + \0
+    size_t cursor = 0;
+    char* acc = malloc(allocated);
+    if (acc == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    memset(acc, 0, allocated);
+    snprintf(acc+cursor, allocated, "(");
+    cursor += 1;
+
+    atom* iter = a;
+    const char fmt[] = "%s ";
+    while (iter->kind == PAIR) {
+      atom* head = sexpr(iter->val.as_pair.head);
+      size_t add_sz = snprintf(NULL, 0, fmt, head->val.as_string->val);
+      allocated += add_sz;
+      acc = realloc(acc, allocated);
+      if (acc == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+      memset(acc+cursor, 0, allocated-cursor);
+      snprintf(acc+cursor, allocated-cursor, fmt, head->val.as_string->val);
+      cursor += add_sz;
+      atom_rc_decr(head);
+      iter = iter->val.as_pair.tail;
+    }
+    //@FIXME: We must handle the case where tail is not NIL
+    snprintf(acc+cursor, allocated-cursor, ")");
+
+    atom* final = cstring(acc, strlen(acc));
+    free(acc);
     return final;
   }
 
@@ -488,8 +503,8 @@ atom* debug_sexpr(atom* a) {
   }
   if (a->kind == PAIR) {
     const char fmt[] = "{%d}(%s %s) ";
-    atom* left = sexpr(a->val.as_pair.head);
-    atom* right = sexpr(a->val.as_pair.tail);
+    atom* left = debug_sexpr(a->val.as_pair.head);
+    atom* right = debug_sexpr(a->val.as_pair.tail);
     int sz = snprintf(NULL, 0, fmt, a->rc, left->val.as_string->val, right->val.as_string->val)+1;
     char* tmp = malloc(sz);
     if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
