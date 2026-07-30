@@ -85,12 +85,23 @@ atom* string_concatenate(atom* a1, atom* a2); // concatenate 2 strings
 atom* symbol(atom* a); // build an atom from a string
 atom* sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 
+size_t allocated_objects = 0;
+atom* tracker[4096] = {0};
+int enable_tracker = 1;
 atom* atom_alloc() {
   atom* ptr = malloc(sizeof(atom));
   if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
   memset(ptr, 0, sizeof(atom));
   atom_rc_incr(ptr);
   ptr->kind = NIL;
+  allocated_objects++;
+  if (enable_tracker) {
+    for (int i = 0; i < 4096; i++) {
+      if (tracker[i] != NULL) continue;
+      tracker[i] = ptr;
+      break;
+    }
+  }
   return ptr;
 }
 
@@ -115,6 +126,14 @@ atom* atom_rc_decr(atom* a) {
       // as they always registered in the global symbol index...
       free(a->val.as_string);
       a->val.as_string = NULL;
+    }
+    if (allocated_objects <= 0) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+    allocated_objects--;
+    for (int i = 0; i < 4096; i++) {
+      if (tracker[i] == a) {
+        tracker[i] = NULL;
+	break;
+      }
     }
     free(a);
     return NULL;
@@ -333,44 +352,62 @@ atom* symbol(atom* a) {
   // Symbol not found, creating it (and trigger an allocation)
   atom* new_symbol = cstring(inner->val, inner->len);
   new_symbol->kind = SYMBOL;
+  atom* old_global_symbols = global_symbols;
   global_symbols = cons(new_symbol, global_symbols);
+  atom_rc_decr(old_global_symbols);
   return new_symbol;
 }
 atom* csymbol(char* s) {
-  return symbol(cstring(s, strlen(s)));
+  atom* inter = cstring(s, strlen(s));
+  atom* final = symbol(inter);
+  atom_rc_decr(inter);
+  return final;
 }
 
 atom* sexpr(atom* a) {
   if (a->kind == NIL) return cstring("NIL", 3);
-  if (a->kind == SYMBOL) return cstring(a->val.as_string->val, a->val.as_string->len);
-  if (a->kind == STRING) {
-    atom* dquote = cstring("\"", 1);
-    atom* part2 = string_concatenate(dquote, a);
-    atom* final = string_concatenate(part2, dquote);
-    atom_rc_decr(dquote);
-    atom_rc_decr(part2);
-    return final;
-  }
-  if (a->kind == NUMBER) {
-    const char fmt[] = "%d";
-    int sz = snprintf(NULL, 0, fmt, a->val.as_number);
+  if (a->kind == SYMBOL) {
+    const char fmt[] = "{%d}%s";
+    int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_string->val)+1;
     char* tmp = malloc(sz);
     if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
     memset(tmp, 0, sz);
-    snprintf(tmp, sz, fmt, a->val.as_number);
+    snprintf(tmp, sz, fmt, a->rc, a->val.as_string->val);
+    atom* final = cstring(tmp, strlen(tmp));
+    free(tmp);
+    return final;
+  }
+  if (a->kind == STRING) {
+    const char fmt[] = "{%d}\"%s\"";
+    int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_string->val)+1;
+    char* tmp = malloc(sz);
+    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    memset(tmp, 0, sz);
+    snprintf(tmp, sz, fmt, a->rc, a->val.as_string->val);
+    atom* final = cstring(tmp, strlen(tmp));
+    free(tmp);
+    return final;
+  }
+  if (a->kind == NUMBER) {
+    const char fmt[] = "{%d}%d";
+    int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_number)+1;
+    char* tmp = malloc(sz);
+    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    memset(tmp, 0, sz);
+    snprintf(tmp, sz, fmt, a->rc, a->val.as_number);
     atom* final = cstring(tmp, strlen(tmp));
     free(tmp);
     return final;
   }
   if (a->kind == PAIR) {
-    const char fmt[] = "(%s %s) ";
+    const char fmt[] = "{%d}(%s %s) ";
     atom* left = sexpr(a->val.as_pair.head);
     atom* right = sexpr(a->val.as_pair.tail);
-    int sz = snprintf(NULL, 0, fmt, left->val.as_string->val, right->val.as_string->val);
+    int sz = snprintf(NULL, 0, fmt, a->rc, left->val.as_string->val, right->val.as_string->val)+1;
     char* tmp = malloc(sz);
     if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
     memset(tmp, 0, sz);
-    snprintf(tmp, sz, fmt, left->val.as_string->val, right->val.as_string->val);
+    snprintf(tmp, sz, fmt, a->rc, left->val.as_string->val, right->val.as_string->val);
     atom* final = cstring(tmp, strlen(tmp));
     free(tmp);
     atom_rc_decr(left);
@@ -525,9 +562,9 @@ int main(void) {
   if (boolc(eq(s1,s2))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
   if (boolc(not(eq(s1, s3)))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
   if (boolc(eq(s2, s3))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
-  atom_rc_decr(s1);
   atom_rc_decr(s2);
   atom_rc_decr(s3);
+  atom_rc_decr(s1);
 
   atom* c1 = cstring("hello", 5);
   atom* c2 = cstring(" world\n", 7);
@@ -547,11 +584,22 @@ int main(void) {
   atom_rc_decr(_sexpr);
 
   atom* v = lex_token(stdin);
-  print(sexpr(v));
+  _sexpr = sexpr(v);
+  print(_sexpr);
+  atom_rc_decr(_sexpr);
+  atom_rc_decr(v);
 
   global_symbols = atom_rc_decr(global_symbols);
   if (global_symbols != NULL) exit(513);
 
-  printf("all good\n");
+  printf("all good. Remaining objects: %ld\n", allocated_objects);
+ 
+  enable_tracker = 0;
+  for (int i = 0; i < 4096; i++) {
+    if (tracker[i] == NULL) continue;
+    atom* a = tracker[i];
+    print(sexpr(a));
+  }
+
   return 0;
 }
