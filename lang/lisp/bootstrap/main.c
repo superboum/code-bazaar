@@ -22,6 +22,14 @@ void error(int code, char* msg) {
 }
 
 /*
+ * SHARED REFS
+ */
+#define ASCII_CODE_ZERO 48
+#define ASCII_CODE_NINE 57
+#define ASCII_CODE_EXCLAMATION 33
+#define ASCII_CODE_TILDE 126
+
+/*
  * DATATYPES
  */
 
@@ -258,10 +266,19 @@ atom* cnumber(int v) {
 }
 
 atom* number(atom* charlist) {
-  // @FIXME: numbers as a list of char. Reverse then 10*(converted)+acc
+  if (charlist == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   atom* a = atom_alloc();
   a->kind = NUMBER;
   a->val.as_number = 0;
+  int base10shift = 1;
+  while (boolc(charlist)) {
+    atom* charcode = atom_rc_decr(car(charlist));
+    if (charcode->val.as_number < ASCII_CODE_ZERO || charcode->val.as_number > ASCII_CODE_NINE) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+    int val = charcode->val.as_number - ASCII_CODE_ZERO;
+    a->val.as_number += val * base10shift;
+    base10shift = base10shift*10;
+    charlist = atom_rc_decr(cdr(charlist));
+  }
   return a;
 }
 
@@ -429,14 +446,10 @@ void print(atom* a) {
  *
  * We handwrite the lexer but in the spirit we use a Deterministic Finite Automation
  */
-#define ASCII_CODE_ZERO 48
-#define ASCII_CODE_NINE 57
 int is_digit(char c) {
   return (c >= ASCII_CODE_ZERO && c <= ASCII_CODE_NINE);
 }
 
-#define ASCII_CODE_EXCLAMATION 33
-#define ASCII_CODE_TILDE 126
 int is_symbol(char c) {
   return (
     c >= ASCII_CODE_EXCLAMATION 
