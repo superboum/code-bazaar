@@ -433,7 +433,7 @@ atom* sexpr(atom* a) {
     return final;
   }
   if (a->kind == PAIR) {
-    const char fmt[] = "(%s %s) ";
+    const char fmt[] = "(%s %s)";
     atom* left = sexpr(a->val.as_pair.head);
     atom* right = sexpr(a->val.as_pair.tail);
     int sz = snprintf(NULL, 0, fmt, left->val.as_string->val, right->val.as_string->val)+1;
@@ -596,12 +596,10 @@ atom* lex_number(FILE* f) {
     acc = new_acc;
   }
   atom* anum = number(acc);
-  atom* part2 = cons(anum, nil());
   atom* type = csymbol("number");
-  atom* final = cons(type, part2);
+  atom* final = cons(type, anum);
   atom_rc_decr(acc);
   atom_rc_decr(anum);
-  atom_rc_decr(part2);
   atom_rc_decr(type);
   return final;
 }
@@ -780,40 +778,15 @@ atom* expr(atom* lex) {
  * MAIN
  */
 int main(void) {
-  atom* s1 = csymbol("hello");
-  atom* s2 = csymbol("world");
-  atom* s3 = csymbol("hello");
-  if (boolc(eq(s1,s2))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
-  if (boolc(not(eq(s1, s3)))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
-  if (boolc(eq(s2, s3))) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
-  atom_rc_decr(s2);
-  atom_rc_decr(s3);
-  atom_rc_decr(s1);
-
-  atom* c1 = cstring("hello", 5);
-  atom* c2 = cstring(" world\n", 7);
-  atom* c3 = string_concatenate(c1, c2);
-  printf("concatenated: %s", c3->val.as_string->val);
-  c1 = atom_rc_decr(c1);
-  c2 = atom_rc_decr(c2);
-  c3 = atom_rc_decr(c3);
-  if (c1 != NULL || c2 != NULL || c3 != NULL) exit(512);
-
-  atom* p1 = cons(s2, nil());
-  atom* p2 = cons(s1, p1);
-  atom* _sexpr = sexpr(p2);
-  print(_sexpr);
-  atom_rc_decr(p1);
-  atom_rc_decr(p2);
-  atom_rc_decr(_sexpr);
-
-  atom* v = lex(stdin);
-  atom* w = expr(v);
-  atom* x = sexpr(w);
-  print(x);
-  atom_rc_decr(x);
-  atom_rc_decr(w);
-  atom_rc_decr(v);
+  atom* my_tokens = lex(stdin);
+  atom* my_parsing = expr(my_tokens);
+  atom* my_ast = car(my_parsing);
+  atom* my_sexpr = sexpr(my_ast);
+  print(my_sexpr);
+  atom_rc_decr(my_sexpr);
+  atom_rc_decr(my_ast);
+  atom_rc_decr(my_parsing);
+  atom_rc_decr(my_tokens);
 
   global_symbols = atom_rc_decr(global_symbols);
   if (global_symbols != NULL) exit(513);
