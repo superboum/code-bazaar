@@ -673,28 +673,6 @@ atom* lex(FILE* f) {
 /*
  * PARSER
  *
- * -- version 1 (not implemented, not homoiconic, maybe too precise) --
- * expr:       LPAREN sub-expr RPAREN | patom
- * sub-expr:   SYMBOL(lambda) lambda-def | SYMBOL(let) let-def | apply-def
- * lambda-def: atom expr
- * let-def:    atom expr expr
- * apply-def:  expr expr
- * patom:      SYMBOL | NUMBER | STRING
- *
- * -- version 2 (not implemented, not homoiconic, maybe too precise) --
- * expr:       LPAREN sub-expr RPAREN | patom
- * sub-expr:   SYMBOL(lambda) lambda-def | SYMBOL(let) let-def | apply-def
- * lambda-def: LPAREN atom* RPAREN expr
- * let-def:    LPAREN atom expr RPAREN
- * apply-def:  expr expr*
- * patom:      SYMBOL | NUMBER | STRING
- *
- * -- version 3 (not implemented, too hard to write programs with it) --
- * expr:       LPAREN pair RPAREN | patom
- * pair:       expr expr       
- * patom:      SYMBOL | NUMBER | STRING
- *
- * -- version 4 (implemented, express lists) --
  * expr:       LPAREN list | patom
  * list:       expr list | RPAREN 
  * patom:      SYMBOL | NUMBER | STRING
