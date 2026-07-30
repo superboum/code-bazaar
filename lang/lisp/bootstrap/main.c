@@ -568,6 +568,21 @@ atom* lex_token(FILE* f) {
   }
 }
 
+atom* lex(FILE* f) {
+  atom* acc = nil();
+  while (true) {
+    atom* tmp = lex_token(f);
+    if (!boolc(tmp)) break;
+    atom* new_acc = cons(tmp, acc);
+    atom_rc_decr(tmp);
+    atom_rc_decr(acc);
+    acc = new_acc;
+  }
+  atom* res = reverse(acc);
+  atom_rc_decr(acc);
+  return res;
+}
+
 int main(void) {
   atom* s1 = csymbol("hello");
   atom* s2 = csymbol("world");
@@ -596,7 +611,7 @@ int main(void) {
   atom_rc_decr(p2);
   atom_rc_decr(_sexpr);
 
-  atom* v = lex_token(stdin);
+  atom* v = lex(stdin);
   _sexpr = sexpr(v);
   print(_sexpr);
   atom_rc_decr(_sexpr);
