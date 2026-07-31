@@ -19,6 +19,8 @@
 #define ERR_PARSER_ERROR_MSG "Parser failed. You probably have a syntax error in your code"
 #define ERR_INTERPRETER_CODE 106
 #define ERR_INTERPRETER_MSG "Interpreter failed. Check your syntax."
+#define ERR_LEAK_CODE 107
+#define ERR_LEAK_MSG "Memory leak detected: some allocated objects were not deallocated."
 
 void error(int code, char* msg) {
   fprintf(stderr, "Fatal Error. %s\n", msg);
@@ -126,7 +128,7 @@ atom* debug_sexpr(atom* a); // build a string atom representing any atom (includ
 
 size_t allocated_objects = 0;
 atom* tracker[4096] = {0};
-int enable_tracker = 1;
+int enable_tracker = 0;
 atom* atom_alloc() {
   atom* ptr = malloc(sizeof(atom));
   if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
@@ -1134,14 +1136,9 @@ int main(void) {
   global_symbols = atom_rc_decr(global_symbols);
   if (global_symbols != NULL) exit(513);
 
-  printf("all good. Remaining objects: %ld\n", allocated_objects);
- 
-  enable_tracker = 0;
-  for (int i = 0; i < 4096; i++) {
-    if (tracker[i] == NULL) continue;
-    atom* a = tracker[i];
-    print(sexpr(a));
+  if (allocated_objects > 2) {
+    error(ERR_LEAK_CODE, ERR_LEAK_MSG);
   }
-
+ 
   return 0;
 }
