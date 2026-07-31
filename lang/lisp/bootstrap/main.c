@@ -110,6 +110,10 @@ atom* length(atom* list); // length of a list
 atom* reverse(atom* list); // reverse a list
 atom* eq(atom* a1, atom* a2); // test 2 atoms for equality
 atom* number(atom* charlist); // build a number from a list of char
+atom* plus(atom* a1, atom* a2);
+atom* minus(atom* a1, atom* a2);
+atom* mult(atom* a1, atom* a2);
+atom* divi(atom* a1, atom* a2);
 atom* string(atom* charlist); // build a string from a list of char
 atom* string_concatenate(atom* a1, atom* a2); // concatenate 2 strings
 atom* symbol(atom* a); // build an atom from a string
@@ -381,6 +385,42 @@ atom* number(atom* charlist) {
   return a;
 }
 
+atom* plus(atom* a1, atom* a2) {
+  if (a1 == NULL || a2 == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  atom* out_res = atom_alloc();
+  out_res->kind = NUMBER;
+  out_res->val.as_number = a1->val.as_number + a2->val.as_number;
+  return out_res;
+}
+
+atom* minus(atom* a1, atom* a2) {
+  if (a1 == NULL || a2 == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  atom* out_res = atom_alloc();
+  out_res->kind = NUMBER;
+  out_res->val.as_number = a1->val.as_number - a2->val.as_number;
+  return out_res;
+}
+
+atom* mult(atom* a1, atom* a2) {
+  if (a1 == NULL || a2 == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  atom* out_res = atom_alloc();
+  out_res->kind = NUMBER;
+  out_res->val.as_number = a1->val.as_number * a2->val.as_number;
+  return out_res;
+}
+
+atom* divi(atom* a1, atom* a2) {
+  if (a1 == NULL || a2 == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  atom* out_res = atom_alloc();
+  out_res->kind = NUMBER;
+  out_res->val.as_number = a1->val.as_number / a2->val.as_number;
+  return out_res;
+}
+
 atom* cstring(char* s, size_t len) {
   size_t memsz = sizeof(string_t)+sizeof(char)*(len+1);
   string_t* ptr = malloc(memsz);
@@ -549,8 +589,15 @@ atom* sexpr(atom* a) {
     free(acc);
     return final;
   }
+  if (a->kind == FX1 || a->kind == FX2) {
+    return cstring("C FUNCTION", 10);
+  }
+  if (a->kind == CLOSU) {
+    return cstring("CLOSURE", 7);
+  }
 
-  return a;
+  error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
+  return NULL; // unreachable
 }
 
 atom* debug_sexpr(atom* a) {
@@ -1007,9 +1054,56 @@ atom* afx1(char* name, fx1 f) {
   return out_res;
 }
 
+atom* afx2(char* name, fx2 f) {
+  atom* out_res;
+
+  atom* local_fx2 = atom_alloc();
+  local_fx2->kind = FX2;
+  local_fx2->val.as_fx2 = f;
+  atom* local_name = csymbol(name);
+
+  out_res = cons(local_name, local_fx2);
+
+  atom_rc_decr(local_fx2);
+  atom_rc_decr(local_name);
+  return out_res;
+}
+
 atom* full_env() {
   atom* out_res = nil();
-  out_res = cons(afx1("reverse", reverse), out_res);
+  atom* tmp;
+  atom* head;
+
+  head = afx1("reverse", reverse);
+  tmp = cons(head, out_res);
+  atom_rc_decr(head);
+  atom_rc_decr(out_res);
+  out_res=tmp;
+
+  head = afx2("+", plus);
+  tmp = cons(head, out_res);
+  atom_rc_decr(head);
+  atom_rc_decr(out_res);
+  out_res=tmp;
+
+  head = afx2("-", minus);
+  tmp = cons(head, out_res);
+  atom_rc_decr(head);
+  atom_rc_decr(out_res);
+  out_res=tmp;
+
+  head = afx2("*", mult);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx2("/", divi);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
   return out_res;
 }
 
