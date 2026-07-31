@@ -43,9 +43,10 @@ void error(int code, char* msg) {
 #define STRING 2
 #define SYMBOL 3
 #define PAIR   4
-#define FX1    5
-#define FX2    6
-#define CLOSU  7
+#define CLOSU  5
+#define FX1    6
+#define FX2    7
+#define FX3    8
 #define NIL    127
 
 typedef struct string {
@@ -57,6 +58,7 @@ struct atom;
 
 typedef struct atom* (*fx1)(struct atom*);
 typedef struct atom* (*fx2)(struct atom*, struct atom*);
+typedef struct atom* (*fx3)(struct atom*, struct atom*, struct atom*);
 
 typedef struct pair {
   struct atom* head;
@@ -78,6 +80,7 @@ typedef struct atom {
     struct closu as_closu;
     fx1 as_fx1;
     fx2 as_fx2;
+    fx3 as_fx3;
   } val;
 } atom;
 
@@ -116,6 +119,7 @@ atom* plus(atom* a1, atom* a2);
 atom* minus(atom* a1, atom* a2);
 atom* mult(atom* a1, atom* a2);
 atom* divi(atom* a1, atom* a2);
+atom* _if(atom* a1, atom* a2, atom* a3);
 atom* string(atom* charlist); // build a string from a list of char
 atom* string_concatenate(atom* a1, atom* a2); // concatenate 2 strings
 atom* symbol(atom* a); // build an atom from a string
@@ -217,6 +221,11 @@ atom* and(atom* left, atom* right) {
 atom* or(atom* left, atom* right) {
   if (boolc(left)) return _true();
   return right;
+}
+
+atom* _if(atom* cond, atom* ok, atom* nok) {
+  if (boolc(cond)) return ok;
+  return nok;
 }
 
 atom* cbool(int b) {
@@ -764,7 +773,7 @@ atom* lex_token(FILE* f) {
   // the loop eats spaces & new lines
   while (true) {
     int c = fgetc(f);
-    if (c > 255 || c < 0 || c == EOF) return nil();
+    if (c > 255 || c < 0 || c == '\n' || c == EOF) return nil();
     if (c == '(') {
 	atom* type = csymbol("lparen");
 	atom* final = cons(type, nil());
@@ -956,6 +965,14 @@ atom* apply(atom* rator, atom* rands) {
     out_res = rator->val.as_fx2(branch_rand1, branch_rand2);
     atom_rc_decr(branch_rand2);
     atom_rc_decr(branch_rand1);
+  } else if (rator->kind == FX3) {
+    atom* branch_rand1 = car(rands);
+    atom* branch_rand2 = cadr(rands);
+    atom* branch_rand3 = caddr(rands);
+    out_res = rator->val.as_fx3(branch_rand1, branch_rand2, branch_rand3);
+    atom_rc_decr(branch_rand3);
+    atom_rc_decr(branch_rand2);
+    atom_rc_decr(branch_rand1);
   } else {
     error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
   }
@@ -1077,10 +1094,39 @@ atom* afx2(char* name, fx2 f) {
   return out_res;
 }
 
+atom* afx3(char* name, fx3 f) {
+  atom* out_res;
+
+  atom* local_fx3 = atom_alloc();
+  local_fx3->kind = FX3;
+  local_fx3->val.as_fx3 = f;
+  atom* local_name = csymbol(name);
+
+  out_res = cons(local_name, local_fx3);
+
+  atom_rc_decr(local_fx3);
+  atom_rc_decr(local_name);
+  return out_res;
+}
+
 atom* full_env() {
   atom* out_res = nil();
   atom* tmp;
   atom* head;
+
+  head = cons(_true(), _true());
+  tmp = cons(head, out_res);
+  atom_rc_decr(head);
+  atom_rc_decr(out_res);
+  out_res=tmp;
+
+  atom* name = csymbol("nil");
+  head = cons(name, nil());
+  tmp = cons(head, out_res);
+  atom_rc_decr(head);
+  atom_rc_decr(out_res);
+  atom_rc_decr(name);
+  out_res=tmp;
 
   head = afx1("reverse", reverse);
   tmp = cons(head, out_res);
@@ -1112,6 +1158,12 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
+  head = afx3("if", _if);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
   return out_res;
 }
 
@@ -1119,19 +1171,22 @@ atom* full_env() {
  * MAIN
  */
 int main(void) {
-  atom* my_tokens = lex(stdin);
-  atom* my_parsing = expr(my_tokens);
-  atom* my_ast = car(my_parsing);
-  atom* my_env = full_env();
-  atom* my_eval = eval(my_ast, my_env);
-  atom* my_sexpr = sexpr(my_eval);
-  print(my_sexpr);
-  atom_rc_decr(my_sexpr);
-  atom_rc_decr(my_eval);
-  atom_rc_decr(my_env);
-  atom_rc_decr(my_ast);
-  atom_rc_decr(my_parsing);
-  atom_rc_decr(my_tokens);
+  while (true) {
+    printf("> ");
+    atom* my_tokens = lex(stdin);
+    atom* my_parsing = expr(my_tokens);
+    atom* my_ast = car(my_parsing);
+    atom* my_env = full_env();
+    atom* my_eval = eval(my_ast, my_env);
+    atom* my_sexpr = sexpr(my_eval);
+    print(my_sexpr);
+    atom_rc_decr(my_sexpr);
+    atom_rc_decr(my_eval);
+    atom_rc_decr(my_env);
+    atom_rc_decr(my_ast);
+    atom_rc_decr(my_parsing);
+    atom_rc_decr(my_tokens);
+  }
 
   global_symbols = atom_rc_decr(global_symbols);
   if (global_symbols != NULL) exit(513);
