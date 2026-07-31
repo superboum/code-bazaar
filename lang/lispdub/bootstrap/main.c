@@ -160,6 +160,10 @@ atom* atom_rc_decr(atom* a) {
       a->val.as_pair.head = atom_rc_decr(a->val.as_pair.head);
       a->val.as_pair.tail = atom_rc_decr(a->val.as_pair.tail);
     }
+    if (a->kind == CLOSU) {
+      a->val.as_closu.expr = atom_rc_decr(a->val.as_closu.expr);
+      a->val.as_closu.env  = atom_rc_decr(a->val.as_closu.env);
+    }
     if (a->kind == STRING || a->kind == SYMBOL) {
       // theoretically, symbols are never freed as their rc never reach zero
       // as they always registered in the global symbol index...
