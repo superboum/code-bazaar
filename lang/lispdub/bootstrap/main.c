@@ -940,6 +940,8 @@ atom* apply(atom* rator, atom* rands) {
 
     out_res = eval(branch_body, branch_env);
 
+    atom_rc_decr(branch_body);
+    atom_rc_decr(branch_var_names);
     atom_rc_decr(branch_expr);
     atom_rc_decr(branch_env);
   } else if (rator->kind == FX1) {
