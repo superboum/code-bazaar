@@ -17,6 +17,8 @@
 #define ERR_RC_ERROR_MSG "reference counting logic error; object is freed."
 #define ERR_PARSER_ERROR_CODE 105
 #define ERR_PARSER_ERROR_MSG "Parser failed. You probably have a syntax error in your code"
+#define ERR_INTERPRETER_CODE 106
+#define ERR_INTERPRETER_MSG "Interpreter failed. Check your syntax."
 
 void error(int code, char* msg) {
   fprintf(stderr, "Fatal Error. %s\n", msg);
@@ -39,7 +41,10 @@ void error(int code, char* msg) {
 #define STRING 2
 #define SYMBOL 3
 #define PAIR   4
-#define NIL    5
+#define FX1    5
+#define FX2    6
+#define CLOSU  7
+#define NIL    127
 
 typedef struct string {
   size_t len;
@@ -47,10 +52,19 @@ typedef struct string {
 } string_t;
 
 struct atom;
+
+typedef struct atom* (*fx1)(struct atom*);
+typedef struct atom* (*fx2)(struct atom*, struct atom*);
+
 typedef struct pair {
   struct atom* head;
   struct atom* tail;
 } pair;
+
+typedef struct closu {
+  struct atom* expr;
+  struct atom* env;
+} closu; // same as pair...
 
 typedef struct atom {
   char kind;
@@ -59,9 +73,11 @@ typedef struct atom {
     int as_number;
     string_t* as_string;
     struct pair as_pair;
+    struct closu as_closu;
+    fx1 as_fx1;
+    fx2 as_fx2;
   } val;
 } atom;
-
 
 
 
@@ -86,6 +102,8 @@ atom* or(atom* left, atom* right);
 atom* cons(atom* left, atom* right); // build a pair (or extend a list)
 atom* car(atom* list); // 1st element of a pair (or head of list)
 atom* cdr(atom* list); // 2nd element of a pair (or rest of list)
+atom* cadr(atom* list); // 2nd element of a list
+atom* caddr(atom* list); // 3rd element of a list
 atom* empty(atom* a); // if list is empty
 atom* not(atom* a); // not. nil becomes t; anything else becomes nil.
 atom* length(atom* list); // length of a list
@@ -95,6 +113,10 @@ atom* number(atom* charlist); // build a number from a list of char
 atom* string(atom* charlist); // build a string from a list of char
 atom* string_concatenate(atom* a1, atom* a2); // concatenate 2 strings
 atom* symbol(atom* a); // build an atom from a string
+atom* is_symbol(atom *a); 
+atom* is_number(atom *a);
+atom* is_string(atom *a);
+atom* is_list(atom *a);
 atom* sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 atom* debug_sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 
@@ -217,6 +239,28 @@ atom* cdr(atom* list) {
   
   return atom_rc_incr(list->val.as_pair.tail);
 }
+atom* cadr(atom* list) {
+  if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
+  list = list->val.as_pair.tail;
+  if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
+
+  return atom_rc_incr(list->val.as_pair.head);
+}
+
+atom* caddr(atom* list) {
+  for (int i = 0; i < 2; i++) {
+    if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+    if (list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
+    list = list->val.as_pair.tail;
+  }
+  if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
+
+  return atom_rc_incr(list->val.as_pair.head);
+}
+
 atom* empty(atom* a) {
   // NO RC with bools
   if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
@@ -255,9 +299,29 @@ atom* reverse(atom* list) {
 }
 
 int cstring_eq(string_t* s1, string_t* s2) {
-    if (s1->len != s2->len) return 0;
-    if (strncmp(s1->val, s2->val, s1->len) != 0) return 0;
-    return 1;
+  if (s1->len != s2->len) return 0;
+  if (strncmp(s1->val, s2->val, s1->len) != 0) return 0;
+  return 1;
+}
+
+atom* is_symbol(atom *a) {
+  if (a->kind == SYMBOL) return _true();
+  return _false();
+}
+
+atom* is_number(atom *a) {
+  if (a->kind == NUMBER) return _true();
+  return _false();
+}
+
+atom* is_string(atom *a) {
+  if (a->kind == STRING) return _true();
+  return _false();
+}
+
+atom* is_list(atom *a) {
+  if (a->kind == PAIR) return _true();
+  return _false();
 }
 
 atom* eq(atom* a1, atom* a2) {
@@ -272,6 +336,25 @@ atom* eq(atom* a1, atom* a2) {
   else if (a1->kind == STRING) res = cbool(cstring_eq(a1->val.as_string, a2->val.as_string)); // compare with strcnmp
   else if (a1->kind == NIL) res = _true(); // nil is always equal to nil
   return res;
+}
+
+atom* assoc(atom* key, atom* list) {
+  atom* out_res;
+  if (list->kind == NIL) return nil();
+  if (list->kind != PAIR) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  atom* local_head = car(list);
+  if (local_head->kind != PAIR) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  atom* local_cand_key = car(local_head);
+  if (boolc(eq(local_cand_key, key))) {
+    out_res = atom_rc_incr(local_head);
+  } else {
+    atom* branch_rest = cdr(list);
+    out_res = assoc(key, branch_rest);
+    atom_rc_decr(branch_rest);
+  }
+  atom_rc_decr(local_cand_key);
+  atom_rc_decr(local_head);
+  return out_res;
 }
 
 atom* cnumber(int v) {
@@ -539,7 +622,7 @@ int is_digit(char c) {
   return (c >= ASCII_CODE_ZERO && c <= ASCII_CODE_NINE);
 }
 
-int is_symbol(char c) {
+int is_symbol_char(char c) {
   return (
     c >= ASCII_CODE_EXCLAMATION 
       && c <= ASCII_CODE_TILDE
@@ -576,7 +659,7 @@ atom* lex_symbol(FILE* f) {
   atom* acc = nil();
   while (true) {
     int c = fgetc(f);
-    if (c > 255 || c < 0 || c == EOF || !(is_symbol(c))) {
+    if (c > 255 || c < 0 || c == EOF || !(is_symbol_char(c))) {
       ungetc(c, f);
       break;
     }
@@ -648,7 +731,7 @@ atom* lex_token(FILE* f) {
       ungetc(c, f);
       return lex_number(f);
     }
-    if (is_symbol(c)) {
+    if (is_symbol_char(c)) {
       ungetc(c, f);
       return lex_symbol(f);
     }
@@ -772,15 +855,178 @@ atom* expr(atom* lex) {
 }
 
 /*
+ * INTERPRETER
+ */
+atom* eval(atom* ast, atom* env);
+atom* apply(atom* rator, atom* rands) {
+  atom* out_res;
+  if (rator == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (rator->kind == CLOSU) {
+    atom* branch_expr = atom_rc_incr(rator->val.as_closu.expr);
+    atom* branch_env = atom_rc_incr(rator->val.as_closu.env);
+    atom* branch_var_names = car(branch_expr);
+    atom* branch_body = cadr(branch_expr);
+
+    while (branch_var_names->kind == PAIR && rands->kind == PAIR) {
+      atom* loop_branch_env = branch_env;
+      atom* loop_var_names = branch_var_names;
+      atom* loop_rands = rands;
+      atom* loop_cur_name = car(branch_var_names);
+      atom* loop_cur_val = car(rands);
+      atom* loop_env_entry = cons(loop_cur_name, loop_cur_val);
+
+      branch_env = cons(loop_env_entry, loop_branch_env);
+      rands = cdr(loop_rands);
+      branch_var_names = cdr(loop_var_names);
+
+      atom_rc_decr(loop_env_entry);
+      atom_rc_decr(loop_cur_val);
+      atom_rc_decr(loop_cur_name);
+      atom_rc_decr(loop_rands);
+      atom_rc_decr(loop_var_names);
+      atom_rc_decr(loop_branch_env);
+    }
+
+    out_res = eval(branch_body, branch_env);
+
+    atom_rc_decr(branch_expr);
+    atom_rc_decr(branch_env);
+  } else if (rator->kind == FX1) {
+    atom* branch_rand1 = car(rands);
+    out_res = rator->val.as_fx1(branch_rand1);
+    atom_rc_decr(branch_rand1);
+  } else if (rator->kind == FX2) {
+    atom* branch_rand1 = car(rands);
+    atom* branch_rand2 = cadr(rands);
+    out_res = rator->val.as_fx2(branch_rand1, branch_rand2);
+    atom_rc_decr(branch_rand2);
+    atom_rc_decr(branch_rand1);
+  } else {
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  }
+  return out_res;
+}
+
+atom* eval(atom* ast, atom* env) {
+  atom* out_res = NULL;
+
+  // handle symbol
+  if (ast->kind == SYMBOL) {
+    // find symbol in env
+    atom* branch_res = assoc(ast, env);
+    out_res = cdr(branch_res);
+    atom_rc_decr(branch_res);
+  } else if (ast->kind == NUMBER) {
+    out_res = atom_rc_incr(ast);
+  } else if (ast->kind == STRING) {
+    out_res = atom_rc_incr(ast);
+  } else if (ast->kind == PAIR) {
+    atom* local_head = car(ast);
+    atom* local_lambda = csymbol("lambda");
+    atom* local_quote = csymbol("quote");
+    atom* local_let = csymbol("let");
+
+    if (boolc(eq(local_head, local_lambda))) {
+      // (lambda var-list body) -> (closure var-list body env)
+      // build a closure
+      atom* closu = atom_alloc();
+      closu->kind = CLOSU;
+      closu->val.as_closu.expr = cdr(ast);
+      closu->val.as_closu.env = atom_rc_incr(env);
+      out_res = closu;
+    } else if (boolc(eq(local_head, local_quote))) {
+      out_res = cadr(ast);
+    } else if (boolc(eq(local_head, local_let))) {
+      // (let (symbol expr) expr)
+      atom* local_binding = cadr(ast);
+      atom* local_body = caddr(ast);
+      atom* local_binding_name = car(local_binding);
+      atom* local_binding_expr = cadr(local_binding);
+      atom* local_binding_evalued = eval(local_binding_expr, env); // eval let binding
+      atom* local_new_env_entry = cons(local_binding_name, local_binding_evalued);
+      atom* local_new_env = cons(local_new_env_entry, env);
+      out_res = eval(local_body, local_new_env); // eval let body
+      atom_rc_decr(local_new_env);
+      atom_rc_decr(local_new_env_entry);
+      atom_rc_decr(local_binding_evalued);
+      atom_rc_decr(local_binding_expr);
+      atom_rc_decr(local_binding_name);
+      atom_rc_decr(local_body);
+      atom_rc_decr(local_binding);
+    } else {
+      // operator operand*
+      atom* local_evaled_rator = eval(local_head, env);
+      // must be a atom(list(symb(closure))) or a atom(fx1) or a atom(fx2)
+      atom* local_evaled_rands = nil();
+      atom* local_rands = cdr(ast);
+      while (local_rands->kind == PAIR) {
+	atom* loop_local_rands = local_rands;
+	atom* loop_cur = car(loop_local_rands);
+        atom* loop_evaled_cur = eval(loop_cur, env);
+	atom* loop_prev_evaled_rands = local_evaled_rands;
+
+	local_evaled_rands = cons(loop_evaled_cur, loop_prev_evaled_rands);
+        local_rands = cdr(loop_local_rands);
+
+	atom_rc_decr(loop_prev_evaled_rands);
+	atom_rc_decr(loop_evaled_cur);
+        atom_rc_decr(loop_cur);
+	atom_rc_decr(loop_local_rands);
+      }
+
+      atom* local_rev_evaled_rands = reverse(local_evaled_rands);
+      out_res = apply(local_evaled_rator, local_rev_evaled_rands);
+
+      atom_rc_decr(local_rev_evaled_rands);
+      atom_rc_decr(local_rands);
+      atom_rc_decr(local_evaled_rands);
+      atom_rc_decr(local_evaled_rator);
+    }
+
+    atom_rc_decr(local_let);
+    atom_rc_decr(local_quote);
+    atom_rc_decr(local_lambda);
+    atom_rc_decr(local_head);
+  }
+
+  return out_res;
+}
+
+atom* afx1(char* name, fx1 f) {
+  atom* out_res;
+
+  atom* local_fx1 = atom_alloc();
+  local_fx1->kind = FX1;
+  local_fx1->val.as_fx1 = f;
+  atom* local_name = csymbol(name);
+
+  out_res = cons(local_name, local_fx1);
+
+  atom_rc_decr(local_fx1);
+  atom_rc_decr(local_name);
+  return out_res;
+}
+
+atom* full_env() {
+  atom* out_res = nil();
+  out_res = cons(afx1("reverse", reverse), out_res);
+  return out_res;
+}
+
+/*
  * MAIN
  */
 int main(void) {
   atom* my_tokens = lex(stdin);
   atom* my_parsing = expr(my_tokens);
   atom* my_ast = car(my_parsing);
-  atom* my_sexpr = sexpr(my_ast);
+  atom* my_env = full_env();
+  atom* my_eval = eval(my_ast, my_env);
+  atom* my_sexpr = sexpr(my_eval);
   print(my_sexpr);
   atom_rc_decr(my_sexpr);
+  atom_rc_decr(my_eval);
+  atom_rc_decr(my_env);
   atom_rc_decr(my_ast);
   atom_rc_decr(my_parsing);
   atom_rc_decr(my_tokens);
