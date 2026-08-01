@@ -141,12 +141,13 @@ label x:
 label anon1:
   PUSH_NIL
   PUSH_SYMB &label_x
-  ENV
+  FETCH_ENV
   PUSH_SYMB &label_x
-  ENV
+  FETCH_ENV
   PUSH_SYMB &label_plus
-  ENV
+  FETCH_ENV
   APPLY
+  RETURN
 label main:
   PUSH_NIL
   PUSH_INT 1
