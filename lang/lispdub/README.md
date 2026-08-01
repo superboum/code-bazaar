@@ -2,12 +2,21 @@
 
 A lisp as cringe as your favorite 2010 lip dub clip.
 
+## Quickstart
+
+```bash
+gcc -Wall ./main.c
+./a.out
+```
+
 ## Features
 
 ### Memory Management
 
 - [X] Reference Counting
 - [ ] Arena allocation (eg. 512 atoms for ~12KiB arenas)
+  - [ ] Free empty arenas
+  - [ ] Compact arenas
 - [ ] Copy object when RC reaches MAX_INT
 - [ ] (maybe) Weak pointers
 
@@ -28,7 +37,7 @@ It is designed to fit on 24 bytes.
 
 ### S-expr serialization / deserialization
 
- - [X] s-expr lexer
+ - [x] s-expr lexer
    - [ ] handle dot syntax `(foo . bar)`
  - [x] s-expr parser
    - [ ] handle dot syntax `(foo . bar)`
@@ -36,33 +45,111 @@ It is designed to fit on 24 bytes.
    - [ ] handle cases where `cdr(a)` is not NIL or a PAIR
 
 ### Control flow
+
  - [X] let
- - [ ] letrec
  - [x] lambda
+ - [x] quote
  - [ ] define
+ - [ ] letrec
+ - [ ] macro
+ - [ ] quasiquote + unquote
+
+ *Note: for now, conditionals are implemented as a function*
 
 ### Standard Library
+
  - [x] C functions
    - [x] boolean logic (`if`)
    - [x] arithmetic (`+`, `-`, `*`, `/`)
+   - [ ] list processing
+     - [x] `reverse`
+     - [ ] basic utilities like `car`, `cdr`, `cons`, etc.
+   - [ ] string processing
+ - [ ] Lisp functions (don't know yet how I will handle that)
 
 
 ### Tree-Walk Interpreter
 
-### Bytecode compiler
+ - [x] basic functionalities
+ - [ ] proper REPL
+
+### Bytecode Interpreter
 
  - [ ] Bytecode definition
  - [ ] Bytecode emission
- - [ ] Optimizations
-   - [ ] RC incr/decr peephole optimizer
+ - [ ] VM
 
-### VM
+*Note: In the long run I would like to optimize the reference counting
+logic by integrating it to the VM bytecode. BUT maybe not for a first pass.*
 
-*TODO*
-
-## Other limitations
+## Other limitations...
 
 ...that come to my mind
 
+ - No error management (program just crash)
  - No TCO
  - No static type
+
+## Some thinking
+
+First, I think to a stack-based VM/bytecode.
+Here are some ideas.
+
+### Research/examples
+
+Lisp expression:
+
+```lisp
+(+ 2 3)
+```
+
+Possible bytecode:
+
+```bytecode
+--- DATA ---
+label plus: 
+ +
+
+--- CODE ---
+label main:
+  PUSH_NIL
+  PUSH_INT 2
+  PUSH_INT 3
+  PUSH_SYMBOL &label_plus
+  FETCH_ENV
+  APPLY
+```
+
+---
+
+Lisp expression:
+
+```lisp
+((lambda (x) (+ x x)) 1)
+```
+
+Possible bytecode:
+
+```bytecode
+--- DATA ---
+label plus:
+ +
+label x:
+ x
+
+-- CODE --
+label anon1:
+  PUSH_NIL
+  PUSH_SYMB &label_x
+  ENV
+  PUSH_SYMB &label_x
+  ENV
+  PUSH_SYMB &label_plus
+  ENV
+  APPLY
+label main:
+  PUSH_NIL
+  PUSH_INT 1
+  PUSH_CLO &anon1
+  APPLY
+```
