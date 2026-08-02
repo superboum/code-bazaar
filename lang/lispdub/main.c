@@ -810,6 +810,7 @@ atom* lex(FILE* f) {
     atom_rc_decr(acc);
     acc = new_acc;
   }
+  if (acc->kind == NIL) return nil();
   atom* res = reverse(acc);
   atom_rc_decr(acc);
   return res;
@@ -1208,7 +1209,7 @@ int main(void) {
     atom_rc_decr(my_tokens);
   }
 
-  global_symbols = atom_rc_decr(global_symbols);
+  if (global_symbols != NULL) global_symbols = atom_rc_decr(global_symbols);
   if (global_symbols != NULL) exit(513);
 
   if (allocated_objects > 2) {
