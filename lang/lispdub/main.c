@@ -21,6 +21,8 @@
 #define ERR_INTERPRETER_MSG "Interpreter failed. Check your syntax."
 #define ERR_LEAK_CODE 107
 #define ERR_LEAK_MSG "Memory leak detected: some allocated objects were not deallocated."
+#define ERR_UNDEFINED_CODE 108
+#define ERR_UNDEFINED_MSG "Tried to resolve a variable that does not exist."
 
 void error(int code, char* msg) {
   fprintf(stderr, "Fatal Error. %s\n", msg);
@@ -990,7 +992,8 @@ atom* eval(atom* ast, atom* env) {
   // handle symbol
   if (ast->kind == SYMBOL) {
     // find symbol in env
-    atom* branch_res = assoc(ast, env);
+    atom* branch_res = assoc(ast, env); 
+    if (branch_res->kind != PAIR) error(ERR_UNDEFINED_CODE,ERR_UNDEFINED_MSG);
     out_res = cdr(branch_res);
     atom_rc_decr(branch_res);
   } else if (ast->kind == NUMBER) {
