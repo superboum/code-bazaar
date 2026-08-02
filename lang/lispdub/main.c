@@ -1177,6 +1177,12 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
+  head = afx2("eq", eq);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
   return out_res;
 }
 
