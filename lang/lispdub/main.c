@@ -930,6 +930,10 @@ atom* apply(atom* rator, atom* rands) {
     atom* branch_var_names = car(branch_expr);
     atom* branch_body = cadr(branch_expr);
 
+    if (branch_var_names->kind == PAIR && rands->kind == PAIR) {
+      atom_rc_incr(branch_var_names);
+      atom_rc_incr(rands);
+    }
     while (branch_var_names->kind == PAIR && rands->kind == PAIR) {
       atom* loop_branch_env = branch_env;
       atom* loop_var_names = branch_var_names;
