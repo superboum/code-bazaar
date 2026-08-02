@@ -1016,25 +1016,16 @@ atom* eval(atom* ast, atom* env) {
       atom* local_binding_name = car(local_binding);
       atom* local_binding_expr = cadr(local_binding);
 
-      // wrap expr in a closu to delay its execution
-      atom* local_binding_delayed_expr = atom_alloc();
-      local_binding_delayed_expr->kind = CLOSU;
-      local_binding_delayed_expr->val.as_closu.expr = atom_rc_incr(local_binding_expr);
-      local_binding_delayed_expr->val.as_closu.env = NULL;
-
-      // build env
-      atom* local_new_env_entry = cons(local_binding_name, local_binding_delayed_expr);
+      atom* local_evaled_expr = eval(local_binding_expr, env);
+      atom* local_new_env_entry = cons(local_binding_name, local_evaled_expr);
       atom* local_new_env = cons(local_new_env_entry, env);
-
-      // do the circular dependency thingy
-      local_binding_delayed_expr->val.as_closu.env = atom_rc_incr(local_new_env);
 
       // eval final body
       out_res = eval(local_body, local_new_env); // eval let body
 
       atom_rc_decr(local_new_env);
       atom_rc_decr(local_new_env_entry);
-      atom_rc_decr(local_binding_delayed_expr);
+      atom_rc_decr(local_evaled_expr);
       atom_rc_decr(local_binding_expr);
       atom_rc_decr(local_binding_name);
       atom_rc_decr(local_body);
