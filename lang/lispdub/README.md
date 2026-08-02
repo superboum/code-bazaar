@@ -18,7 +18,7 @@ gcc -Wall ./main.c
   - [ ] Free empty arenas
   - [ ] Compact arenas
 - [ ] Copy object when RC reaches MAX_INT
-- [ ] (maybe) Weak pointers
+- [ ] Weak references for recursivity
 
 ### Datatype
 
@@ -67,6 +67,9 @@ It is designed to fit on 24 bytes.
    - [ ] string processing
  - [ ] Lisp functions (don't know yet how I will handle that)
 
+
+### Optimizations
+ - [ ] Lexical Addressing (or Static Scope Resolution)
 
 ### Tree-Walk Interpreter
 
@@ -141,16 +144,22 @@ label x:
 label anon1:
   PUSH_NIL
   PUSH_SYMB &label_x
-  FETCH_ENV
+  RESOLVE_ENV
   PUSH_SYMB &label_x
-  FETCH_ENV
+  RESOLVE_ENV
   PUSH_SYMB &label_plus
-  FETCH_ENV
-  APPLY
-  RETURN
+  RESOLVE_ENV
+  CALL   // pop +, x, x ; push res
+  RETURN // pop res, pop ip, goto ip, push res
 label main:
   PUSH_NIL
   PUSH_INT 1
-  PUSH_CLO &anon1
-  APPLY
+  CLOSURE &anon1
+  CALL
+  // stack should be: [2]
 ```
+
+
+## Resources
+ - Crafting Interpreters by Robert Nystrom
+ - SICP 
