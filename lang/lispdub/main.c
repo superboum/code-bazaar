@@ -224,8 +224,8 @@ atom* or(atom* left, atom* right) {
 }
 
 atom* _if(atom* cond, atom* ok, atom* nok) {
-  if (boolc(cond)) return ok;
-  return nok;
+  if (boolc(cond)) return atom_rc_incr(ok);
+  return atom_rc_incr(nok);
 }
 
 atom* cbool(int b) {
@@ -896,7 +896,7 @@ atom* list(atom* lex) {
 
 // returns cons(AST . TOKENS)
 atom* expr(atom* lex) {
-  atom* out_res;
+  atom* out_res = nil();
   if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (!boolc(lex)) return cons(nil(), nil());
   atom* local_candidate = car(lex);
@@ -921,7 +921,7 @@ atom* expr(atom* lex) {
  */
 atom* eval(atom* ast, atom* env);
 atom* apply(atom* rator, atom* rands) {
-  atom* out_res;
+  atom* out_res = nil();
   if (rator == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (rator->kind == CLOSU) {
     atom* branch_expr = atom_rc_incr(rator->val.as_closu.expr);
@@ -980,7 +980,7 @@ atom* apply(atom* rator, atom* rands) {
 }
 
 atom* eval(atom* ast, atom* env) {
-  atom* out_res = NULL;
+  atom* out_res = nil();
 
   // handle symbol
   if (ast->kind == SYMBOL) {
@@ -1193,6 +1193,7 @@ int main(void) {
   while (true) {
     printf("> ");
     atom* my_tokens = lex(stdin);
+    if (my_tokens->kind == NIL) break;
     atom* my_parsing = expr(my_tokens);
     atom* my_ast = car(my_parsing);
     atom* my_env = full_env();
