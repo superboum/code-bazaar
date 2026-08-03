@@ -927,6 +927,16 @@ atom* expr(atom* lex) {
  * INTERPRETER
  */
 atom* eval(atom* ast, atom* env);
+atom* apply(atom* rator, atom* rands);
+
+atom* force_it(atom* maybe_thunk) {
+  if (maybe_thunk->kind != THUNK) return atom_rc_incr(maybe_thunk);
+  atom* partial = eval(maybe_thunk->val.as_capture.expr, maybe_thunk->val.as_capture.env);
+  atom* finale = force_it(partial);
+  atom_rc_decr(partial);
+  return finale;
+}
+
 atom* apply(atom* rator, atom* rands) {
   atom* out_res = nil();
   if (rator == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
@@ -967,23 +977,35 @@ atom* apply(atom* rator, atom* rands) {
     atom_rc_decr(branch_expr);
     atom_rc_decr(branch_env);
   } else if (rator->kind == FX1) {
-    atom* branch_rand1 = car(rands);
+    atom* branch_rand1_with_thunk = car(rands);
+    atom* branch_rand1 = force_it(branch_rand1_with_thunk);
     out_res = rator->val.as_fx1(branch_rand1);
     atom_rc_decr(branch_rand1);
+    atom_rc_decr(branch_rand1_with_thunk);
   } else if (rator->kind == FX2) {
-    atom* branch_rand1 = car(rands);
-    atom* branch_rand2 = cadr(rands);
+    atom* branch_rand1_with_thunk = car(rands);
+    atom* branch_rand2_with_thunk = cadr(rands);
+    atom* branch_rand1 = force_it(branch_rand1_with_thunk);
+    atom* branch_rand2 = force_it(branch_rand2_with_thunk);
     out_res = rator->val.as_fx2(branch_rand1, branch_rand2);
     atom_rc_decr(branch_rand2);
     atom_rc_decr(branch_rand1);
+    atom_rc_decr(branch_rand2_with_thunk);
+    atom_rc_decr(branch_rand1_with_thunk);
   } else if (rator->kind == FX3) {
-    atom* branch_rand1 = car(rands);
-    atom* branch_rand2 = cadr(rands);
-    atom* branch_rand3 = caddr(rands);
+    atom* branch_rand1_with_thunk = car(rands);
+    atom* branch_rand2_with_thunk = cadr(rands);
+    atom* branch_rand3_with_thunk = caddr(rands);
+    atom* branch_rand1 = force_it(branch_rand1_with_thunk);
+    atom* branch_rand2 = force_it(branch_rand2_with_thunk);
+    atom* branch_rand3 = force_it(branch_rand3_with_thunk);
     out_res = rator->val.as_fx3(branch_rand1, branch_rand2, branch_rand3);
     atom_rc_decr(branch_rand3);
     atom_rc_decr(branch_rand2);
     atom_rc_decr(branch_rand1);
+    atom_rc_decr(branch_rand3_with_thunk);
+    atom_rc_decr(branch_rand2_with_thunk);
+    atom_rc_decr(branch_rand1_with_thunk);
   } else {
     error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
   }
@@ -1022,7 +1044,7 @@ atom* eval(atom* ast, atom* env) {
     } else if (boolc(eq(local_head, local_thunk))) {
       atom* thunk = atom_alloc();
       thunk->kind = THUNK;
-      thunk->val.as_capture.expr = cdr(ast);
+      thunk->val.as_capture.expr = cadr(ast);
       thunk->val.as_capture.env = atom_rc_incr(env);
       out_res = thunk;
     } else if (boolc(eq(local_head, local_quote))) {
@@ -1050,7 +1072,9 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(local_binding);
     } else {
       // operator operand*
-      atom* local_evaled_rator = eval(local_head, env);
+      atom* local_evaled_rator_with_thunk = eval(local_head, env);
+      atom* local_evaled_rator = force_it(local_evaled_rator_with_thunk);
+
       // must be a atom(list(symb(closure))) or a atom(fx1) or a atom(fx2)
       atom* local_evaled_rands = nil();
       atom* local_rands = cdr(ast);
@@ -1076,6 +1100,7 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(local_rands);
       atom_rc_decr(local_evaled_rands);
       atom_rc_decr(local_evaled_rator);
+      atom_rc_decr(local_evaled_rator_with_thunk);
     }
 
     atom_rc_decr(local_let);
