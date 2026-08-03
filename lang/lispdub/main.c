@@ -929,6 +929,14 @@ atom* expr(atom* lex) {
 atom* eval(atom* ast, atom* env);
 atom* apply(atom* rator, atom* rands);
 
+atom* thunk(atom* expr, atom* env) {
+  atom* out = atom_alloc();
+  out->kind = THUNK;
+  out->val.as_capture.expr = atom_rc_incr(expr);
+  out->val.as_capture.env = atom_rc_incr(env);
+  return out;
+}
+
 atom* force_it(atom* maybe_thunk) {
   if (maybe_thunk->kind != THUNK) return atom_rc_incr(maybe_thunk);
   atom* partial = eval(maybe_thunk->val.as_capture.expr, maybe_thunk->val.as_capture.env);
@@ -1042,11 +1050,9 @@ atom* eval(atom* ast, atom* env) {
       closu->val.as_capture.env = atom_rc_incr(env);
       out_res = closu;
     } else if (boolc(eq(local_head, local_thunk))) {
-      atom* thunk = atom_alloc();
-      thunk->kind = THUNK;
-      thunk->val.as_capture.expr = cadr(ast);
-      thunk->val.as_capture.env = atom_rc_incr(env);
-      out_res = thunk;
+      atom* branch_thunk_body = cadr(ast);
+      out_res = thunk(branch_thunk_body, env);
+      atom_rc_decr(branch_thunk_body);
     } else if (boolc(eq(local_head, local_quote))) {
       out_res = cadr(ast);
     } else if (boolc(eq(local_head, local_let))) {
