@@ -80,7 +80,7 @@ typedef struct atom {
     int as_number;
     string_t* as_string;
     struct pair as_pair;
-    struct closu as_closu;
+    struct closu as_capture;
     fx1 as_fx1;
     fx2 as_fx2;
     fx3 as_fx3;
@@ -169,9 +169,9 @@ atom* atom_rc_decr(atom* a) {
       a->val.as_pair.head = atom_rc_decr(a->val.as_pair.head);
       a->val.as_pair.tail = atom_rc_decr(a->val.as_pair.tail);
     }
-    if (a->kind == CLOSU) {
-      a->val.as_closu.expr = atom_rc_decr(a->val.as_closu.expr);
-      a->val.as_closu.env  = atom_rc_decr(a->val.as_closu.env);
+    if (a->kind == CLOSU || a->kind == THUNK) {
+      a->val.as_capture.expr = atom_rc_decr(a->val.as_capture.expr);
+      a->val.as_capture.env  = atom_rc_decr(a->val.as_capture.env);
     }
     if (a->kind == STRING || a->kind == SYMBOL) {
       // theoretically, symbols are never freed as their rc never reach zero
@@ -613,6 +613,9 @@ atom* sexpr(atom* a) {
   if (a->kind == CLOSU) {
     return cstring("CLOSURE", 7);
   }
+  if (a->kind == THUNK) {
+    return cstring("THUNK", 5);
+  }
 
   error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
   return NULL; // unreachable
@@ -928,8 +931,8 @@ atom* apply(atom* rator, atom* rands) {
   atom* out_res = nil();
   if (rator == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (rator->kind == CLOSU) {
-    atom* branch_expr = atom_rc_incr(rator->val.as_closu.expr);
-    atom* branch_env = atom_rc_incr(rator->val.as_closu.env);
+    atom* branch_expr = atom_rc_incr(rator->val.as_capture.expr);
+    atom* branch_env = atom_rc_incr(rator->val.as_capture.env);
     atom* branch_var_names = car(branch_expr);
     atom* branch_body = cadr(branch_expr);
 
@@ -1013,9 +1016,15 @@ atom* eval(atom* ast, atom* env) {
       // build a closure
       atom* closu = atom_alloc();
       closu->kind = CLOSU;
-      closu->val.as_closu.expr = cdr(ast);
-      closu->val.as_closu.env = atom_rc_incr(env);
+      closu->val.as_capture.expr = cdr(ast);
+      closu->val.as_capture.env = atom_rc_incr(env);
       out_res = closu;
+    } else if (boolc(eq(local_head, local_thunk))) {
+      atom* thunk = atom_alloc();
+      thunk->kind = THUNK;
+      thunk->val.as_capture.expr = cdr(ast);
+      thunk->val.as_capture.env = atom_rc_incr(env);
+      out_res = thunk;
     } else if (boolc(eq(local_head, local_quote))) {
       out_res = cadr(ast);
     } else if (boolc(eq(local_head, local_let))) {
