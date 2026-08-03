@@ -44,13 +44,14 @@ It is designed to fit on 24 bytes.
  - [x] s-expr serializer
    - [ ] handle cases where `cdr(a)` is not NIL or a PAIR
 
-### Control flow
+### Special forms
 
  - [X] let
  - [x] lambda
  - [x] quote
+ - [ ] thunk (delayed execution / normal order)
+   - [ ] Memoized thunks
  - [ ] define
- - [ ] letrec
  - [ ] macro
  - [ ] quasiquote + unquote
 

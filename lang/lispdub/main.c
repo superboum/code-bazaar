@@ -46,9 +46,10 @@ void error(int code, char* msg) {
 #define SYMBOL 3
 #define PAIR   4
 #define CLOSU  5
-#define FX1    6
-#define FX2    7
-#define FX3    8
+#define THUNK  6
+#define FX1    7
+#define FX2    8
+#define FX3    9
 #define NIL    127
 
 typedef struct string {
@@ -1005,6 +1006,7 @@ atom* eval(atom* ast, atom* env) {
     atom* local_lambda = csymbol("lambda");
     atom* local_quote = csymbol("quote");
     atom* local_let = csymbol("let");
+    atom* local_thunk = csymbol("thunk");
 
     if (boolc(eq(local_head, local_lambda))) {
       // (lambda var-list body) -> (closure var-list body env)
@@ -1068,6 +1070,7 @@ atom* eval(atom* ast, atom* env) {
     }
 
     atom_rc_decr(local_let);
+    atom_rc_decr(local_thunk);
     atom_rc_decr(local_quote);
     atom_rc_decr(local_lambda);
     atom_rc_decr(local_head);
