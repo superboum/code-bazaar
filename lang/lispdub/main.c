@@ -133,6 +133,7 @@ atom* is_string(atom *a);
 atom* is_list(atom *a);
 atom* sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 atom* debug_sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
+void print(atom* a);
 
 // Interpreter
 atom* force_it(atom* a);
@@ -355,8 +356,11 @@ atom* is_list(atom *a) {
   return _false();
 }
 
-atom* eq(atom* a1, atom* a2) {
-  if (a1 == NULL || a2 == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+atom* eq(atom* a1t, atom* a2t) {
+  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+
+  atom* a1 = force_it(a1t);
+  atom* a2 = force_it(a2t);
 
   // by default it's false
   atom* res = _false();
@@ -366,6 +370,9 @@ atom* eq(atom* a1, atom* a2) {
   else if (a1->kind == PAIR) res = cbool(a1 == a2); // compare mem addr
   else if (a1->kind == STRING) res = cbool(cstring_eq(a1->val.as_string, a2->val.as_string)); // compare with strcnmp
   else if (a1->kind == NIL) res = _true(); // nil is always equal to nil
+
+  atom_rc_decr(a1);
+  atom_rc_decr(a2);
   return res;
 }
 
@@ -425,12 +432,16 @@ atom* plus(atom* a1t, atom* a2t) {
   return out_res;
 }
 
-atom* minus(atom* a1, atom* a2) {
-  if (a1 == NULL || a2 == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+atom* minus(atom* a1t, atom* a2t) {
+  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  atom* a1 = force_it(a1t);
+  atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
   atom* out_res = atom_alloc();
   out_res->kind = NUMBER;
   out_res->val.as_number = a1->val.as_number - a2->val.as_number;
+  atom_rc_decr(a1);
+  atom_rc_decr(a2);
   return out_res;
 }
 
@@ -1057,8 +1068,9 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(branch_thunk_body);
     } else if (boolc(eq(local_head, local_if))) {
       atom* branch_cond = cadr(ast);
-      atom* branch_cond_evaled = force_it(branch_cond);
-      if (boolc(branch_cond_evaled)) {
+      atom* branch_cond_evaled = eval(branch_cond, env);
+      atom* branch_cond_resolved = force_it(branch_cond_evaled);
+      if (boolc(branch_cond_resolved)) {
         atom* branch_ok = caddr(ast);
 	out_res = eval(branch_ok, env);
 	atom_rc_decr(branch_ok);
@@ -1067,6 +1079,7 @@ atom* eval(atom* ast, atom* env) {
 	out_res = eval(branch_nok, env);
 	atom_rc_decr(branch_nok);
       }
+      atom_rc_decr(branch_cond_resolved);
       atom_rc_decr(branch_cond_evaled);
       atom_rc_decr(branch_cond);
     } else if (boolc(eq(local_head, local_quote))) {
@@ -1078,9 +1091,10 @@ atom* eval(atom* ast, atom* env) {
       atom* local_binding_name = car(local_binding);
       atom* local_binding_expr = cadr(local_binding);
 
-      atom* local_evaled_expr = eval(local_binding_expr, env);
+      atom* local_evaled_expr = thunk(local_binding_expr, env);
       atom* local_new_env_entry = cons(local_binding_name, local_evaled_expr);
       atom* local_new_env = cons(local_new_env_entry, env);
+      local_evaled_expr->val.as_capture.env = local_new_env;
 
       // eval final body
       out_res = eval(local_body, local_new_env); // eval let body
