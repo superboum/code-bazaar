@@ -264,7 +264,9 @@ atom* nth(atom* list, int pos) {
   for (int i = 0; i < pos; i++) {
     if (local_list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
     if (local_list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
-    local_list = local_list->val.as_pair.tail;
+    atom* next_local_list = force_it(local_list->val.as_pair.tail);
+    atom_rc_decr(local_list);
+    local_list = next_local_list;
   }
   if (local_list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (local_list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
@@ -1058,7 +1060,6 @@ atom* eval(atom* ast, atom* env) {
       atom* branch_cond_evaled = force_it(branch_cond);
       if (boolc(branch_cond_evaled)) {
         atom* branch_ok = caddr(ast);
-	print(sexpr(branch_ok));
 	out_res = eval(branch_ok, env);
 	atom_rc_decr(branch_ok);
       } else {
