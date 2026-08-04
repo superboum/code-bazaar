@@ -241,6 +241,7 @@ int boolc(atom* a) {
 }
 
 atom* cons(atom* left, atom* right) {
+  // lazy
   // left & right are now owned by the result; so we decrement as we consume, and increment as we bind to the new struct
   if (left == NULL || right == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   atom* a = atom_alloc();
@@ -445,21 +446,29 @@ atom* minus(atom* a1t, atom* a2t) {
   return out_res;
 }
 
-atom* mult(atom* a1, atom* a2) {
-  if (a1 == NULL || a2 == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+atom* mult(atom* a1t, atom* a2t) {
+  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  atom* a1 = force_it(a1t);
+  atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
   atom* out_res = atom_alloc();
   out_res->kind = NUMBER;
   out_res->val.as_number = a1->val.as_number * a2->val.as_number;
+  atom_rc_decr(a1);
+  atom_rc_decr(a2);
   return out_res;
 }
 
-atom* divi(atom* a1, atom* a2) {
-  if (a1 == NULL || a2 == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+atom* divi(atom* a1t, atom* a2t) {
+  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  atom* a1 = force_it(a1t);
+  atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
   atom* out_res = atom_alloc();
   out_res->kind = NUMBER;
   out_res->val.as_number = a1->val.as_number / a2->val.as_number;
+  atom_rc_decr(a1);
+  atom_rc_decr(a2);
   return out_res;
 }
 
