@@ -46,10 +46,10 @@ It is designed to fit on 24 bytes.
 
 ### Special forms
 
- - [X] let
+ - [X] let (with recursivity)
  - [x] lambda
  - [x] quote
- - [ ] thunk (delayed execution / normal order)
+ - [x] thunk (delayed execution / normal order)
    - [ ] Memoized thunks
  - [ ] define
  - [ ] macro
@@ -71,6 +71,7 @@ It is designed to fit on 24 bytes.
 
 ### Optimizations
  - [ ] Lexical Addressing (or Static Scope Resolution)
+ - [ ] Tail Call Optimization
 
 ### Tree-Walk Interpreter
 
@@ -91,7 +92,6 @@ logic by integrating it to the VM bytecode. BUT maybe not for a first pass.*
 ...that come to my mind
 
  - No error management (program just crash)
- - No TCO
  - No static type
 
 ## Some thinking
@@ -162,5 +162,10 @@ label main:
 
 
 ## Resources
+
+I've read (at least partially):
  - Crafting Interpreters by Robert Nystrom
- - SICP 
+ - SICP by H. Abelson, G. J. Sussman and J. Sussman
+
+On my reading list:
+ - Lisp In Small Pieces by C. Queinnec
