@@ -127,10 +127,6 @@ atom* divi(atom* a1, atom* a2);
 atom* string(atom* charlist); // build a string from a list of char
 atom* string_concatenate(atom* a1, atom* a2); // concatenate 2 strings
 atom* symbol(atom* a); // build an atom from a string
-atom* is_symbol(atom *a); 
-atom* is_number(atom *a);
-atom* is_string(atom *a);
-atom* is_list(atom *a);
 atom* sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 atom* debug_sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 void print(atom* a);
@@ -294,12 +290,13 @@ atom* cadddr(atom* list) {
   return nth(list, 3);
 }
 
-atom* empty(atom* a) {
+atom* empty(atom* at) {
   // NO RC with bools
-  if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (at == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   atom* r = _false();
-  if (a->kind == NIL) r = _true();
-
+  atom* local_a = force_it(at);
+  if (local_a->kind == NIL) r = _true();
+  atom_rc_decr(local_a);
   return r;
 }
 atom* not(atom* a) {
@@ -321,13 +318,26 @@ atom* length(atom* list) {
 atom* reverse(atom* list) {
   if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   atom* acc = nil();
-  while (boolc(list)) {
-    atom* head = atom_rc_decr(car(list)); // protected by list root
-    atom* new_acc = cons(head, acc);
+  atom* local_list = force_it(list);
+  while (boolc(local_list)) {
+    // fetch 1st element
+    atom* local_head = car(local_list);
+
+    // update acc
+    atom* new_acc = cons(local_head, acc);
     atom_rc_decr(acc); // old accumulator is not required anymore
     acc = new_acc;
-    list = atom_rc_decr(cdr(list)); // protected by list root
+
+    // resolve next with force_it
+    atom* local_next = cdr(local_list);
+    atom* new_list = force_it(local_next);
+    atom_rc_decr(local_list);
+
+    // iter
+    local_list = new_list;
+    atom_rc_decr(local_next);
   }
+  atom_rc_decr(local_list);
   return acc;
 }
 
@@ -335,26 +345,6 @@ int cstring_eq(string_t* s1, string_t* s2) {
   if (s1->len != s2->len) return 0;
   if (strncmp(s1->val, s2->val, s1->len) != 0) return 0;
   return 1;
-}
-
-atom* is_symbol(atom *a) {
-  if (a->kind == SYMBOL) return _true();
-  return _false();
-}
-
-atom* is_number(atom *a) {
-  if (a->kind == NUMBER) return _true();
-  return _false();
-}
-
-atom* is_string(atom *a) {
-  if (a->kind == STRING) return _true();
-  return _false();
-}
-
-atom* is_list(atom *a) {
-  if (a->kind == PAIR) return _true();
-  return _false();
 }
 
 atom* eq(atom* a1t, atom* a2t) {
