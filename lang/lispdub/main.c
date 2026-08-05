@@ -225,15 +225,15 @@ int boolc(atom* a) {
   return 1;
 }
 
-atom* cons(atom* leftt, atom* rightt) {
+atom* cons(atom* left, atom* right) {
   // left & right are now owned by the result; so we decrement as we consume, and increment as we bind to the new struct
-  if (leftt == NULL || rightt == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  atom* left = force_it(leftt);
-  atom* right = force_it(rightt);
+  if (left == NULL || right == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  //atom* left = force_it(leftt);
+  //atom* right = force_it(rightt);
   atom* a = atom_alloc();
   a->kind = PAIR;
-  a->val.as_pair.head = left;
-  a->val.as_pair.tail = right;
+  a->val.as_pair.head = atom_rc_incr(left);
+  a->val.as_pair.tail = atom_rc_incr(right);
   return a;
 }
 
@@ -1333,7 +1333,6 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
- 
   return out_res;
 }
 
