@@ -805,7 +805,7 @@ atom* lex_token(FILE* f) {
   // the loop eats spaces & new lines
   while (true) {
     int c = fgetc(f);
-    if (c > 255 || c < 0 || c == '\n' || c == EOF) return nil();
+    if (c > 255 || c < 0 || c == EOF) return nil();
     if (c == '(') {
 	atom* type = csymbol("lparen");
 	atom* final = cons(type, nil());
@@ -834,17 +834,31 @@ atom* lex_token(FILE* f) {
 
 atom* lex(FILE* f) {
   atom* acc = nil();
+  int dangling_paren = 0;
+  atom* lparen = csymbol("lparen");
+  atom* rparen = csymbol("rparen");
   while (true) {
     atom* tmp = lex_token(f);
     if (!boolc(tmp)) break;
+    atom* loop_kind = car(tmp);
+    if (boolc(eq(loop_kind, lparen))) {
+      dangling_paren++;
+    }
+    if (boolc(eq(loop_kind, rparen))) {
+      dangling_paren--;
+    }
     atom* new_acc = cons(tmp, acc);
     atom_rc_decr(tmp);
     atom_rc_decr(acc);
+    atom_rc_decr(loop_kind);
     acc = new_acc;
+    if (dangling_paren == 0) break;
   }
   if (acc->kind == NIL) return nil();
   atom* res = reverse(acc);
   atom_rc_decr(acc);
+  atom_rc_decr(lparen);
+  atom_rc_decr(rparen);
   return res;
 }
 
