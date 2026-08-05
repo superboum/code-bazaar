@@ -1215,12 +1215,6 @@ atom* full_env() {
   atom* tmp;
   atom* head;
 
-  head = cons(_true(), _true());
-  tmp = cons(head, out_res);
-  atom_rc_decr(head);
-  atom_rc_decr(out_res);
-  out_res=tmp;
-
   atom* name = csymbol("nil");
   head = cons(name, nil());
   tmp = cons(head, out_res);
@@ -1296,6 +1290,12 @@ atom* full_env() {
   out_res=tmp;
 
   head = afx1("cadddr", cadddr);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = lisp_proc("t", "(quote t)");
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);
