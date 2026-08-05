@@ -122,6 +122,7 @@ atom* plus(atom* a1, atom* a2);
 atom* minus(atom* a1, atom* a2);
 atom* mult(atom* a1, atom* a2);
 atom* divi(atom* a1, atom* a2);
+atom* mod(atom* a1, atom* a2);
 atom* string(atom* charlist); // build a string from a list of char
 atom* string_concatenate(atom* a1, atom* a2); // concatenate 2 strings
 atom* symbol(atom* a); // build an atom from a string
@@ -446,6 +447,19 @@ atom* divi(atom* a1t, atom* a2t) {
   atom* out_res = atom_alloc();
   out_res->kind = NUMBER;
   out_res->val.as_number = a1->val.as_number / a2->val.as_number;
+  atom_rc_decr(a1);
+  atom_rc_decr(a2);
+  return out_res;
+}
+
+atom* mod(atom* a1t, atom* a2t) {
+  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  atom* a1 = force_it(a1t);
+  atom* a2 = force_it(a2t);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  atom* out_res = atom_alloc();
+  out_res->kind = NUMBER;
+  out_res->val.as_number = a1->val.as_number % a2->val.as_number;
   atom_rc_decr(a1);
   atom_rc_decr(a2);
   return out_res;
@@ -1254,6 +1268,12 @@ atom* full_env() {
   out_res=tmp;
 
   head = afx2("/", divi);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx2("mod", mod);
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);
