@@ -224,14 +224,15 @@ int boolc(atom* a) {
   return 1;
 }
 
-atom* cons(atom* left, atom* right) {
-  // lazy
+atom* cons(atom* leftt, atom* rightt) {
   // left & right are now owned by the result; so we decrement as we consume, and increment as we bind to the new struct
-  if (left == NULL || right == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (leftt == NULL || rightt == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  atom* left = force_it(leftt);
+  atom* right = force_it(rightt);
   atom* a = atom_alloc();
   a->kind = PAIR;
-  a->val.as_pair.head = atom_rc_incr(left);
-  a->val.as_pair.tail = atom_rc_incr(right);
+  a->val.as_pair.head = left;
+  a->val.as_pair.tail = right;
   return a;
 }
 
@@ -1027,12 +1028,10 @@ atom* eval(atom* ast, atom* env) {
     // find symbol in env
     atom* branch_res = assoc(ast, env); 
     if (branch_res->kind != PAIR) error(ERR_UNDEFINED_CODE,ERR_UNDEFINED_MSG);
-    out_res = cdr(branch_res);
+    atom* branch_expr = cdr(branch_res);
+    out_res = eval(branch_expr, env);
+    atom_rc_decr(branch_expr);
     atom_rc_decr(branch_res);
-  } else if (ast->kind == NUMBER) {
-    out_res = atom_rc_incr(ast);
-  } else if (ast->kind == STRING) {
-    out_res = atom_rc_incr(ast);
   } else if (ast->kind == PAIR) {
     atom* local_head = car(ast);
     atom* local_lambda = csymbol("lambda");
@@ -1132,6 +1131,8 @@ atom* eval(atom* ast, atom* env) {
     atom_rc_decr(local_quote);
     atom_rc_decr(local_lambda);
     atom_rc_decr(local_head);
+  } else {
+    out_res = atom_rc_incr(ast);
   }
 
   return out_res;
@@ -1182,6 +1183,33 @@ atom* afx3(char* name, fx3 f) {
   return out_res;
 }
 
+atom* lisp_proc(char* name, char* proc) {
+  atom* out_res;
+
+  // build the temporary file
+  FILE * f = tmpfile();
+  if (!f) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+  fprintf(f, "%s", proc);
+  rewind(f);
+
+  atom* local_tokens = lex(f);
+  if (local_tokens->kind == NIL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
+  atom* local_parsing = expr(local_tokens);
+  atom* local_ast = car(local_parsing);
+
+  atom* local_name = csymbol(name);
+
+  out_res = cons(local_name, local_ast);
+
+  atom_rc_decr(local_name);
+  atom_rc_decr(local_ast);
+  atom_rc_decr(local_parsing);
+  atom_rc_decr(local_tokens);
+  fclose(f);
+
+  return out_res;
+}
+
 atom* full_env() {
   atom* out_res = nil();
   atom* tmp;
@@ -1199,6 +1227,12 @@ atom* full_env() {
   atom_rc_decr(head);
   atom_rc_decr(out_res);
   atom_rc_decr(name);
+  out_res=tmp;
+
+  head = afx2("cons", cons);
+  tmp = cons(head, out_res);
+  atom_rc_decr(head);
+  atom_rc_decr(out_res);
   out_res=tmp;
 
   head = afx1("reverse", reverse);
@@ -1267,6 +1301,19 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
+  head = lisp_proc("and", "(lambda (x y) (if x y nil))");
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = lisp_proc("or", "(lambda (x y) (if x t y))");
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+ 
   return out_res;
 }
 
@@ -1282,9 +1329,11 @@ int main(void) {
     atom* my_ast = car(my_parsing);
     atom* my_env = full_env();
     atom* my_eval = eval(my_ast, my_env);
-    atom* my_sexpr = sexpr(my_eval);
+    atom* my_eval_forced = force_it(my_eval);
+    atom* my_sexpr = sexpr(my_eval_forced);
     print(my_sexpr);
     atom_rc_decr(my_sexpr);
+    atom_rc_decr(my_eval_forced);
     atom_rc_decr(my_eval);
     atom_rc_decr(my_env);
     atom_rc_decr(my_ast);
