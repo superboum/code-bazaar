@@ -228,8 +228,6 @@ int boolc(atom* a) {
 atom* cons(atom* left, atom* right) {
   // left & right are now owned by the result; so we decrement as we consume, and increment as we bind to the new struct
   if (left == NULL || right == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  //atom* left = force_it(leftt);
-  //atom* right = force_it(rightt);
   atom* a = atom_alloc();
   a->kind = PAIR;
   a->val.as_pair.head = atom_rc_incr(left);
@@ -973,7 +971,7 @@ atom* thunk(atom* expr, atom* env) {
   atom* out = atom_alloc();
   out->kind = THUNK;
   out->val.as_capture.expr = atom_rc_incr(expr);
-  out->val.as_capture.env = atom_rc_incr(env);
+  out->val.as_capture.env = env;
   return out;
 }
 
@@ -995,7 +993,6 @@ atom* apply(atom* rator, atom* rands) {
     atom* branch_body = cadr(branch_expr);
 
     if (branch_var_names->kind == PAIR && rands->kind == PAIR) {
-      atom_rc_incr(branch_var_names);
       atom_rc_incr(rands);
     }
     while (branch_var_names->kind == PAIR && rands->kind == PAIR) {
@@ -1105,10 +1102,11 @@ atom* eval(atom* ast, atom* env) {
       atom* local_binding_name = car(local_binding);
       atom* local_binding_expr = cadr(local_binding);
 
-      atom* local_evaled_expr = thunk(local_binding_expr, env);
+      atom* local_evaled_expr = thunk(local_binding_expr, nil());
       atom* local_new_env_entry = cons(local_binding_name, local_evaled_expr);
       atom* local_new_env = cons(local_new_env_entry, env);
-      local_evaled_expr->val.as_capture.env = local_new_env;
+      local_evaled_expr->val.as_capture.env = atom_rc_incr(local_new_env);
+      local_evaled_expr->rc--; // break the circular reference.
 
       // eval final body
       out_res = eval(local_body, local_new_env); // eval let body
@@ -1362,6 +1360,8 @@ int main(void) {
     atom* my_ast = car(my_parsing);
     atom* my_env = full_env();
     atom* my_eval = eval(my_ast, my_env);
+    printf("thunk rc: %d\n", my_eval->rc);
+    printf("thunk env rc: %d\n", my_eval->val.as_capture.env->rc);
     //atom* my_eval_forced = force_it(my_eval);
     //atom* my_sexpr = sexpr(my_eval_forced);
     //print(my_sexpr);
