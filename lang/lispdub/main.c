@@ -105,8 +105,6 @@ atom* csymbol(char* s);
 atom* nil();
 atom* _false(); // false is nil
 atom* _true(); // true is symbol t
-atom* and(atom* left, atom* right);
-atom* or(atom* left, atom* right);
 atom* cons(atom* left, atom* right); // build a pair (or extend a list)
 atom* cdr(atom* list); // 2nd element of a pair (or rest of list)
 atom* nth(atom* list, int pos);
@@ -215,16 +213,6 @@ atom* _true() {
     __true->rc = -128; // disable rc
   }
   return __true;
-}
-
-atom* and(atom* left, atom* right) {
-  if (boolc(left)) return right;
-  return _false();
-}
-
-atom* or(atom* left, atom* right) {
-  if (boolc(left)) return _true();
-  return right;
 }
 
 atom* cbool(int b) {
@@ -868,7 +856,7 @@ atom* patom(atom* lex) {
   atom* local_number = csymbol("number");
   atom* local_string = csymbol("string");
 
-  if (!boolc(or(or(eq(local_kind, local_symbol), eq(local_kind, local_number)), eq(local_kind, local_string)))) {
+  if (!boolc(eq(local_kind, local_symbol)) && !boolc(eq(local_kind, local_number)) && !boolc(eq(local_kind, local_string))) {
      error(ERR_PARSER_ERROR_CODE, ERR_PARSER_ERROR_MSG);
   }
 
