@@ -135,7 +135,7 @@ atom* force_it(atom* a);
 
 size_t allocated_objects = 0;
 atom* tracker[4096] = {0};
-int enable_tracker = 0;
+int enable_tracker = 1;
 atom* atom_alloc() {
   atom* ptr = malloc(sizeof(atom));
   if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
@@ -181,7 +181,7 @@ atom* atom_rc_decr(atom* a) {
     }
     if (allocated_objects <= 0) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
     allocated_objects--;
-    for (int i = 0; i < 4096; i++) {
+    for (int i = 0; i < 4096 && enable_tracker; i++) {
       if (tracker[i] == a) {
         tracker[i] = NULL;
 	break;
@@ -315,6 +315,7 @@ atom* reverse(atom* list) {
 
     // update acc
     atom* new_acc = cons(local_head, acc);
+    atom_rc_decr(local_head);
     atom_rc_decr(acc); // old accumulator is not required anymore
     acc = new_acc;
 
@@ -854,7 +855,6 @@ atom* lex(FILE* f) {
     acc = new_acc;
     if (dangling_paren == 0) break;
   }
-  if (acc->kind == NIL) return nil();
   atom* res = reverse(acc);
   atom_rc_decr(acc);
   atom_rc_decr(lparen);
@@ -1362,11 +1362,11 @@ int main(void) {
     atom* my_ast = car(my_parsing);
     atom* my_env = full_env();
     atom* my_eval = eval(my_ast, my_env);
-    atom* my_eval_forced = force_it(my_eval);
-    atom* my_sexpr = sexpr(my_eval_forced);
-    print(my_sexpr);
-    atom_rc_decr(my_sexpr);
-    atom_rc_decr(my_eval_forced);
+    //atom* my_eval_forced = force_it(my_eval);
+    //atom* my_sexpr = sexpr(my_eval_forced);
+    //print(my_sexpr);
+    //atom_rc_decr(my_sexpr);
+    //atom_rc_decr(my_eval_forced);
     atom_rc_decr(my_eval);
     atom_rc_decr(my_env);
     atom_rc_decr(my_ast);
@@ -1375,9 +1375,18 @@ int main(void) {
   }
 
   if (global_symbols != NULL) global_symbols = atom_rc_decr(global_symbols);
+
+  enable_tracker = 0;
+  for (int i = 0; i < 4096; i++) {
+    if (tracker[i] != NULL) {
+      print(sexpr(tracker[i]));
+    }
+  }
+
   if (global_symbols != NULL) exit(513);
 
   if (allocated_objects > 2) {
+    fprintf(stderr, "Tracked allocated objects: %ld\n", allocated_objects);
     error(ERR_LEAK_CODE, ERR_LEAK_MSG);
   }
  
