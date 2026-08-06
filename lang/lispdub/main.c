@@ -165,6 +165,8 @@ atom* atom_rc_decr(atom* a) {
   if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (a->rc > 0) a->rc--;
   if (a->rc == 0) {
+    /*printf("will free: ");
+    print(sexpr(a));*/
     if (a->kind == PAIR) {
       a->val.as_pair.head = atom_rc_decr(a->val.as_pair.head);
       a->val.as_pair.tail = atom_rc_decr(a->val.as_pair.tail);
@@ -1106,7 +1108,6 @@ atom* eval(atom* ast, atom* env) {
       atom* local_new_env_entry = cons(local_binding_name, local_evaled_expr);
       atom* local_new_env = cons(local_new_env_entry, env);
       local_evaled_expr->val.as_capture.env = atom_rc_incr(local_new_env);
-      local_evaled_expr->rc--; // break the circular reference.
 
       // eval final body
       out_res = eval(local_body, local_new_env); // eval let body
@@ -1360,13 +1361,13 @@ int main(void) {
     atom* my_ast = car(my_parsing);
     atom* my_env = full_env();
     atom* my_eval = eval(my_ast, my_env);
-    printf("thunk rc: %d\n", my_eval->rc);
-    printf("thunk env rc: %d\n", my_eval->val.as_capture.env->rc);
-    //atom* my_eval_forced = force_it(my_eval);
-    //atom* my_sexpr = sexpr(my_eval_forced);
-    //print(my_sexpr);
-    //atom_rc_decr(my_sexpr);
-    //atom_rc_decr(my_eval_forced);
+    //printf("thunk rc: %d\n", my_eval->rc);
+    //printf("thunk env rc: %d\n", my_eval->val.as_capture.env->rc);
+    atom* my_eval_forced = force_it(my_eval);
+    atom* my_sexpr = sexpr(my_eval_forced);
+    print(my_sexpr);
+    atom_rc_decr(my_sexpr);
+    atom_rc_decr(my_eval_forced);
     atom_rc_decr(my_eval);
     atom_rc_decr(my_env);
     atom_rc_decr(my_ast);
