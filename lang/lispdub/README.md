@@ -24,10 +24,7 @@ make bin/repl
 ### Memory Management
 
 - [X] Reference Counting
-- [ ] Arena allocation (eg. 512 atoms for ~12KiB arenas)
-  - [ ] Free empty arenas
-  - [ ] Compact arenas
-- [ ] Copy object when RC reaches MAX_INT
+- [ ] Slab allocator
 - [x] Weak references for recursivity
 
 ### Datatype

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <stdalign.h>
 
 /*
  * ERROR MANAGEMENT
@@ -27,6 +28,8 @@
 #define ERR_LEAK_MSG "Memory leak detected: some allocated objects were not deallocated."
 #define ERR_UNDEFINED_CODE 108
 #define ERR_UNDEFINED_MSG "Tried to resolve a variable that does not exist."
+#define ERR_SLAB_CODE 109
+#define ERR_SLAB_MSG "An internal error occured in the slab memory allocator"
 
 void error(int code, char* msg);
 
@@ -42,7 +45,7 @@ void error(int code, char* msg);
 /*
  * DATATYPES DEFINITION
  */
-#define ERROR  0
+#define FREED  0
 #define NUMBER 1
 #define STRING 2
 #define SYMBOL 3
@@ -88,8 +91,11 @@ typedef struct atom {
     fx1 as_fx1;
     fx2 as_fx2;
     fx3 as_fx3;
+
+    // For memory management when freed
+    struct atom* as_slab_prev;
   } val;
-} atom;
+} __attribute__((aligned(32))) atom;
 
 /*
  * MEMORY MANAGEMENT
