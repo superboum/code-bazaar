@@ -10,24 +10,26 @@ all: $(BIN_DIR)/repl
 clean:
 	@rm -rf $(BIN_DIR)
 
-$(BIN_DIR):
-	@mkdir -p $(BIN_DIR)
-
 # -- COMPILE --
-$(BIN_DIR)/runtime.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/runtime.c $(BIN_DIR)
+$(BIN_DIR)/runtime.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/runtime.c
+	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/runtime.c -o $(BIN_DIR)/runtime.o
 
-$(BIN_DIR)/repl.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/repl.c $(BIN_DIR)
+$(BIN_DIR)/repl.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/repl.c
+	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/repl.c -o $(BIN_DIR)/repl.o
 
-$(BIN_DIR)/test.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/test.c $(BIN_DIR)
+$(BIN_DIR)/test.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/test.c
+	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/test.c -o $(BIN_DIR)/test.o
 
 # -- LINK --
 $(BIN_DIR)/repl: $(BIN_DIR)/runtime.o $(BIN_DIR)/repl.o
+	@mkdir -p $(BIN_DIR)
 	$(CC) $(LDFLAGS) $(BIN_DIR)/runtime.o $(BIN_DIR)/repl.o -o $(BIN_DIR)/repl
 
 $(BIN_DIR)/test: $(BIN_DIR)/runtime.o $(BIN_DIR)/test.o
+	@mkdir -p $(BIN_DIR)
 	$(CC) $(LDFLAGS) $(BIN_DIR)/runtime.o $(BIN_DIR)/test.o -o $(BIN_DIR)/test
 
 
