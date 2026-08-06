@@ -138,7 +138,7 @@ atom* force_it(atom* a);
 
 size_t allocated_objects = 0;
 atom* tracker[4096] = {0};
-int enable_tracker = 1;
+int enable_tracker = 0;
 atom* atom_alloc() {
   atom* ptr = malloc(sizeof(atom));
   if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
@@ -186,10 +186,12 @@ atom* atom_rc_decr(atom* a) {
     }
     if (allocated_objects <= 0) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
     allocated_objects--;
-    for (int i = 0; i < 4096 && enable_tracker; i++) {
-      if (tracker[i] == a) {
-        tracker[i] = NULL;
-	break;
+    if (enable_tracker) {
+      for (int i = 0; i < 4096; i++) {
+        if (tracker[i] == a) {
+          tracker[i] = NULL;
+	  break;
+        }
       }
     }
     free(a);
@@ -1396,14 +1398,14 @@ int main(void) {
 
   if (global_symbols != NULL) global_symbols = atom_rc_decr(global_symbols);
 
-  enable_tracker = 0;
+  /*enable_tracker = 0;
   for (int i = 0; i < 4096; i++) {
     if (tracker[i] != NULL) {
       atom* render = sexpr(tracker[i]);
       print(render);
       atom_rc_decr(render);
     }
-  }
+  }*/
 
   if (global_symbols != NULL) exit(513);
 
