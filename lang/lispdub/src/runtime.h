@@ -92,6 +92,7 @@ typedef struct atom {
  * MEMORY MANAGEMENT
  */
 
+#define RC_DISABLED_DUE_TO_STATIC_ALLOC -1
 atom* atom_alloc();
 atom* atom_rc_incr(atom* a);
 atom* atom_rc_decr(atom* a);
@@ -111,7 +112,6 @@ atom* csymbol(char* s);
 void symbols_free();
 
 //   lisp-compatible
-atom* nil();
 atom* _false(); // false is nil
 atom* _true(); // true is symbol t
 atom* weak(atom* orig); // build a weak pointer to break circular references

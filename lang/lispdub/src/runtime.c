@@ -101,18 +101,14 @@ void rc_memleak_check() {
  * DATATYPES PRIMITIVES
  */
 
-atom* _nil = NULL;
-atom* nil() {
-  if (_nil == NULL) {
-    _nil = atom_alloc();
-    _nil->kind = NIL;
-    _nil->rc = SHRT_MIN; // disable rc
-  }
-  return _nil;
-}
+atom _static_nil = (struct atom) { 
+  .kind = NIL, 
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC 
+};
+atom* nil = &_static_nil;
 
 atom* _false() {
-  return nil();
+  return nil;
 }
 
 atom* __true = NULL;
@@ -220,7 +216,7 @@ atom* length(atom* list) {
 
 atom* reverse(atom* list) {
   if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  atom* acc = nil();
+  atom* acc = nil;
   atom* local_list = force_it(list);
   while (boolc(local_list)) {
     // fetch 1st element
@@ -273,7 +269,7 @@ atom* eq(atom* a1t, atom* a2t) {
 
 atom* assoc(atom* key, atom* list) {
   atom* out_res;
-  if (list->kind == NIL) return nil();
+  if (list->kind == NIL) return nil;
   if (list->kind != PAIR) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
   atom* local_head = car(list);
   if (local_head->kind != PAIR) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
@@ -499,7 +495,7 @@ atom* symbol(atom* a) {
   // NOTE: do not use Lisp boolean heres as true is defined as a symbol
   if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (a->kind == SYMBOL) return a;
-  if (global_symbols == NULL) global_symbols = nil();
+  if (global_symbols == NULL) global_symbols = nil;
   if (a->kind != STRING) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
   string_t* inner = a->val.as_string;
 
@@ -552,8 +548,6 @@ void symbols_free() {
   if (global_symbols != NULL) global_symbols = atom_rc_decr(global_symbols);
   __true->rc = 1;
   __true = atom_rc_decr(__true);
-  _nil->rc = 1;
-  _nil = atom_rc_decr(_nil);
 
   /*enable_tracker = 0;
   for (int i = 0; i < 4096; i++) {
@@ -733,7 +727,7 @@ int is_symbol_char(char c) {
 
 // Returns a (string "foobar")
 atom* lex_string(FILE* f) {
-  atom* acc = nil();
+  atom* acc = nil;
   while (true) {
     int c = fgetc(f);
     if (c > 255 || c < 0 || c == EOF || c == '"') break;
@@ -756,7 +750,7 @@ atom* lex_string(FILE* f) {
 
 // Returns a (symbol foo)
 atom* lex_symbol(FILE* f) {
-  atom* acc = nil();
+  atom* acc = nil;
   while (true) {
     int c = fgetc(f);
     if (c > 255 || c < 0 || c == EOF || !(is_symbol_char(c))) {
@@ -784,7 +778,7 @@ atom* lex_symbol(FILE* f) {
 
 // Returns a (number 67)
 atom* lex_number(FILE* f) {
-  atom* acc = nil();
+  atom* acc = nil;
   while (true) {
     int c = fgetc(f);
     if (c > 255 || c < 0 || c == EOF || !(is_digit(c))) {
@@ -811,16 +805,16 @@ atom* lex_token(FILE* f) {
   // the loop eats spaces & new lines
   while (true) {
     int c = fgetc(f);
-    if (c > 255 || c < 0 || c == EOF) return nil();
+    if (c > 255 || c < 0 || c == EOF) return nil;
     if (c == '(') {
 	atom* type = csymbol("lparen");
-	atom* final = cons(type, nil());
+	atom* final = cons(type, nil);
 	atom_rc_decr(type);
 	return final;
     }
     if (c == ')') {
 	atom* type = csymbol("rparen");
-	atom* final = cons(type, nil());
+	atom* final = cons(type, nil);
 	atom_rc_decr(type);
 	return final;
     }
@@ -839,7 +833,7 @@ atom* lex_token(FILE* f) {
 }
 
 atom* lex(FILE* f) {
-  atom* acc = nil();
+  atom* acc = nil;
   int dangling_paren = 0;
   atom* lparen = csymbol("lparen");
   atom* rparen = csymbol("rparen");
@@ -918,7 +912,7 @@ atom* list(atom* lex) {
   atom* local_rparen = csymbol("rparen");
   
   if (boolc(eq(local_rparen, local_kind))) {
-    out_res = cons(nil(), local_next);
+    out_res = cons(nil, local_next);
   } else {
     atom* expr_res = expr(lex);
     atom* expr_ast = car(expr_res);
@@ -948,9 +942,9 @@ atom* list(atom* lex) {
 
 // returns cons(AST . TOKENS)
 atom* expr(atom* lex) {
-  atom* out_res = nil();
+  atom* out_res = nil;
   if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  if (!boolc(lex)) return cons(nil(), nil());
+  if (!boolc(lex)) return cons(nil, nil);
   atom* local_candidate = car(lex);
   atom* local_next = cdr(lex);
   atom* local_kind = car(local_candidate);
@@ -990,7 +984,7 @@ atom* force_it(atom* maybe_thunk) {
 }
 
 atom* apply(atom* rator, atom* rands) {
-  atom* out_res = nil();
+  atom* out_res = nil;
   if (rator == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (rator->kind == CLOSU) {
     atom* branch_expr = atom_rc_incr(rator->val.as_capture.expr);
@@ -1052,7 +1046,7 @@ atom* apply(atom* rator, atom* rands) {
 }
 
 atom* eval(atom* ast, atom* env) {
-  atom* out_res = nil();
+  atom* out_res = nil;
 
   // handle symbol
   if (ast->kind == SYMBOL) {
@@ -1138,7 +1132,7 @@ atom* eval(atom* ast, atom* env) {
       atom* local_evaled_rator = force_it(local_evaled_rator_with_thunk);
 
       // must be a atom(list(symb(closure))) or a atom(fx1) or a atom(fx2)
-      atom* local_evaled_rands = nil();
+      atom* local_evaled_rands = nil;
       atom* local_rands = cdr(ast);
       while (local_rands->kind == PAIR) {
 	atom* loop_local_rands = local_rands;
@@ -1251,12 +1245,12 @@ atom* lisp_proc(char* name, char* proc) {
 }
 
 atom* full_env() {
-  atom* out_res = nil();
+  atom* out_res = nil;
   atom* tmp;
   atom* head;
 
   atom* name = csymbol("nil");
-  head = cons(name, nil());
+  head = cons(name, nil);
   tmp = cons(head, out_res);
   atom_rc_decr(head);
   atom_rc_decr(out_res);
