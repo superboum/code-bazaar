@@ -50,6 +50,7 @@ void error(int code, char* msg) {
 #define FX1    7
 #define FX2    8
 #define FX3    9
+#define WEAK   10
 #define NIL    127
 
 typedef struct string {
@@ -81,6 +82,7 @@ typedef struct atom {
     string_t* as_string;
     struct pair as_pair;
     struct closu as_capture;
+    struct atom* as_weak;
     fx1 as_fx1;
     fx2 as_fx2;
     fx3 as_fx3;
@@ -105,6 +107,7 @@ atom* csymbol(char* s);
 atom* nil();
 atom* _false(); // false is nil
 atom* _true(); // true is symbol t
+atom* weak(atom* orig); // build a weak pointer to break circular references
 atom* cons(atom* left, atom* right); // build a pair (or extend a list)
 atom* cdr(atom* list); // 2nd element of a pair (or rest of list)
 atom* nth(atom* list, int pos);
@@ -225,6 +228,13 @@ atom* cbool(int b) {
 int boolc(atom* a) {
   if (a->kind == NIL) return 0;
   return 1;
+}
+
+atom* weak(atom* orig) {
+  atom* out_res = atom_alloc();
+  out_res->kind = WEAK;
+  out_res->val.as_weak = orig;
+  return out_res;
 }
 
 atom* cons(atom* left, atom* right) {
@@ -1104,17 +1114,20 @@ atom* eval(atom* ast, atom* env) {
       atom* local_binding_name = car(local_binding);
       atom* local_binding_expr = cadr(local_binding);
 
-      atom* local_evaled_expr = thunk(local_binding_expr, nil());
-      atom* local_new_env_entry = cons(local_binding_name, local_evaled_expr);
+      atom* local_evaled_expr_weak = atom_alloc();
+      local_evaled_expr_weak->kind = WEAK;
+      local_evaled_expr_weak->val.as_weak = NULL;
+      atom* local_new_env_entry = cons(local_binding_name, local_evaled_expr_weak);
       atom* local_new_env = cons(local_new_env_entry, env);
-      local_evaled_expr->val.as_capture.env = atom_rc_incr(local_new_env);
+      atom* local_evaled_expr = thunk(local_binding_expr, local_new_env);
+      local_evaled_expr_weak->val.as_weak = local_evaled_expr;
 
       // eval final body
       out_res = eval(local_body, local_new_env); // eval let body
 
+      atom_rc_decr(local_evaled_expr);
       atom_rc_decr(local_new_env);
       atom_rc_decr(local_new_env_entry);
-      atom_rc_decr(local_evaled_expr);
       atom_rc_decr(local_binding_expr);
       atom_rc_decr(local_binding_name);
       atom_rc_decr(local_body);
