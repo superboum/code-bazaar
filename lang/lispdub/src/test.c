@@ -10,6 +10,8 @@ int main(void) {
   exit_code += ensure("./examples/bool_true.lisp", _true());
   exit_code += ensure("./examples/bool_false.lisp", _false());
   exit_code += ensure("./examples/lazy_if.lisp", _true());
+  exit_code += ensure("./examples/list.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 4001 });
+  exit_code += ensure("./examples/apply.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 5 });
   exit_code += ensure("./examples/number.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 5 });
   exit_code += ensure("./examples/math.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 10 });
   exit_code += ensure("./examples/fact.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 120 });
