@@ -112,6 +112,7 @@ atom* csymbol(char* s);
 void symbols_free();
 
 //   lisp-compatible
+atom* nil();
 atom* _false(); // false is nil
 atom* _true(); // true is symbol t
 atom* weak(atom* orig); // build a weak pointer to break circular references
