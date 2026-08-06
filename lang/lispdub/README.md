@@ -67,7 +67,7 @@ It is designed to fit on 24 bytes.
      - [x] basic utilities like `car`, `cdr`, `cons`, etc.
    - [ ] string processing
  - [x] Lisp functions
-   -[x] and /or
+   - [x] and /or
 
 
 ### Optimizations
