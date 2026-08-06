@@ -983,7 +983,7 @@ atom* thunk(atom* expr, atom* env) {
   atom* out = atom_alloc();
   out->kind = THUNK;
   out->val.as_capture.expr = atom_rc_incr(expr);
-  out->val.as_capture.env = env;
+  out->val.as_capture.env = atom_rc_incr(env);
   return out;
 }
 
