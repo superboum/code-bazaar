@@ -2,11 +2,21 @@
 
 A lisp as cringe as your favorite 2010 lip dub clip.
 
+Example of computing 5! with recursion:
+
+```lisp
+(let (fact (lambda (x) 
+  (if 
+    (eq x 1) 1 
+    (* x (fact (- x 1)))))) 
+  (fact 5))
+```
+
 ## Quickstart
 
 ```bash
-gcc -Wall ./main.c
-./a.out
+make bin/repl
+./bin/repl
 ```
 
 ## Features
@@ -25,49 +35,51 @@ gcc -Wall ./main.c
 Our language has a single datastructure: atoms.
 It is designed to fit on 24 bytes.
  - [X] public atoms
-   - [x] nil
+   - [x] nil (nil means `false`, everything else `true`)
    - [x] symbols
    - [X] int64
    - [x] strings
    - [ ] short strings (encoded on 16 bytes; 15 characters)
    - [x] pairs
+   - [ ] floats
  - [x] runtime atoms
    - [x] closure (lambda + env)
+   - [x] weak pointers
    - [x] fx1, fx2, fx3 for C function bindings
 
 ### S-expr serialization / deserialization
 
  - [x] s-expr lexer
-   - [ ] handle dot syntax `(foo . bar)`
  - [x] s-expr parser
-   - [ ] handle dot syntax `(foo . bar)`
  - [x] s-expr serializer
-   - [ ] handle cases where `cdr(a)` is not NIL or a PAIR
+ - [ ] handle dot syntax `(a . b)`; ie. the case where `cdr(a)` is not NIL or a PAIR
 
 ### Special forms
 
  - [X] let (with recursivity)
  - [x] lambda
  - [x] quote
+ - [x] if
  - [x] thunk (delayed execution / normal order)
    - [ ] Memoized thunks
  - [ ] define
  - [ ] macro
  - [ ] quasiquote + unquote
 
- *Note: for now, conditionals are implemented as a function*
 
 ### Standard Library
 
  - [x] C functions
    - [x] boolean logic (`if`)
-   - [x] arithmetic (`+`, `-`, `*`, `/`)
+   - [x] arithmetic (`+`, `-`, `*`, `/`, `<`, `>`, `<=`, `>=`)
    - [x] list processing
      - [x] `reverse`
      - [x] basic utilities like `car`, `cdr`, `cons`, etc.
    - [ ] string processing
- - [x] Lisp functions
-   - [x] and /or
+ - [x] Lisp functions / macros
+   - [x] and / or
+   - [ ] cond
+   - [ ] map / fold
 
 
 ### Optimizations
