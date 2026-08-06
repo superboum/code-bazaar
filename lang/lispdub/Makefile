@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g 
-LDFLAGS =
+CFLAGS = -Wall -Wextra  -fsanitize=address -g 
+LDFLAGS = -fsanitize=address
 
 BIN_DIR = bin
 SRC_DIR = src
@@ -20,8 +20,14 @@ $(BIN_DIR)/runtime.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/runtime.c $(BIN_DIR)
 $(BIN_DIR)/repl.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/repl.c $(BIN_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/repl.c -o $(BIN_DIR)/repl.o
 
+$(BIN_DIR)/test.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/test.c $(BIN_DIR)
+	$(CC) $(CFLAGS) -c $(SRC_DIR)/test.c -o $(BIN_DIR)/test.o
+
 # -- LINK --
 $(BIN_DIR)/repl: $(BIN_DIR)/runtime.o $(BIN_DIR)/repl.o
 	$(CC) $(LDFLAGS) $(BIN_DIR)/runtime.o $(BIN_DIR)/repl.o -o $(BIN_DIR)/repl
+
+$(BIN_DIR)/test: $(BIN_DIR)/runtime.o $(BIN_DIR)/test.o
+	$(CC) $(LDFLAGS) $(BIN_DIR)/runtime.o $(BIN_DIR)/test.o -o $(BIN_DIR)/test
 
 

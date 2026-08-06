@@ -1223,7 +1223,7 @@ atom* lisp_proc(char* name, char* proc) {
   atom* out_res;
 
   // build the temporary file
-  FILE * f = tmpfile();
+  FILE* f = tmpfile();
   if (!f) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
   fprintf(f, "%s", proc);
   rewind(f);
