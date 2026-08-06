@@ -62,11 +62,12 @@ It is designed to fit on 24 bytes.
  - [x] C functions
    - [x] boolean logic (`if`)
    - [x] arithmetic (`+`, `-`, `*`, `/`)
-   - [ ] list processing
+   - [x] list processing
      - [x] `reverse`
-     - [ ] basic utilities like `car`, `cdr`, `cons`, etc.
+     - [x] basic utilities like `car`, `cdr`, `cons`, etc.
    - [ ] string processing
- - [ ] Lisp functions (don't know yet how I will handle that)
+ - [x] Lisp functions
+   -[x] and /or
 
 
 ### Optimizations
@@ -93,6 +94,8 @@ logic by integrating it to the VM bytecode. BUT maybe not for a first pass.*
 
  - No error management (program just crash)
  - No static type
+ - No proper check of compound argument number leading to weird bug.
+   - eg. `((lambda (a b) (+ a b)) 3)` (missing `b` binding) leads to a weird error.
 
 ## Some thinking
 
