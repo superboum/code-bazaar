@@ -20,6 +20,8 @@ int main(void) {
   exit_code += ensure("./examples/euler_01.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 233168 });
   exit_code += ensure("./examples/euler_02.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 3382 });
 
+  rc_stats();
+
   if (exit_code > 0) fprintf(stderr, "ERROR. %d failed tests\n", exit_code);
   return exit_code;
 }

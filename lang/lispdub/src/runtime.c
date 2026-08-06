@@ -14,13 +14,32 @@ void error(int code, char* msg) {
 size_t allocated_objects = 0;
 atom* tracker[4096] = {0};
 int enable_tracker = 0;
-atom* atom_alloc() {
+size_t alloc_count_per_kind[32] = {0};
+
+const int atom_kind_count = 12;
+const char* atom_kind_names[12] = {
+  "ERROR",
+  "NUMBER",
+  "STRING",
+  "SYMBOL",
+  "PAIR",
+  "CLOSU",
+  "THUNK",
+  "FX1",
+  "FX2",
+  "FX3",
+  "WEAK",
+  "NIL",
+};
+
+atom* atom_alloc(char kind) {
   atom* ptr = malloc(sizeof(atom));
   if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
   memset(ptr, 0, sizeof(atom));
   atom_rc_incr(ptr);
-  ptr->kind = NIL;
+  ptr->kind = kind;
   allocated_objects++;
+  alloc_count_per_kind[(int)kind]++;
   if (enable_tracker) {
     for (int i = 0; i < 4096; i++) {
       if (tracker[i] != NULL) continue;
@@ -90,7 +109,14 @@ atom* atom_rc_decr(atom* a) {
   return a;
 }
 
-void rc_memleak_check() {
+void rc_stats(void) {
+  printf("-- alloc count per kind --\n");
+  for (int i = 0; i < atom_kind_count; i++) {
+    printf("  %s [%ld]\n", atom_kind_names[i], alloc_count_per_kind[i]);
+  }
+}
+
+void rc_memleak_check(void) {
   if (allocated_objects > 0) {
     fprintf(stderr, "Tracked allocated objects: %ld\n", allocated_objects);
     error(ERR_LEAK_CODE, ERR_LEAK_MSG);
@@ -137,8 +163,7 @@ int boolc(atom* a) {
 }
 
 atom* weak(atom* orig) {
-  atom* out_res = atom_alloc();
-  out_res->kind = WEAK;
+  atom* out_res = atom_alloc(WEAK);
   out_res->val.as_weak = orig;
   return out_res;
 }
@@ -146,8 +171,7 @@ atom* weak(atom* orig) {
 atom* cons(atom* left, atom* right) {
   // left & right are now owned by the result; so we decrement as we consume, and increment as we bind to the new struct
   if (left == NULL || right == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  atom* a = atom_alloc();
-  a->kind = PAIR;
+  atom* a = atom_alloc(PAIR);
   a->val.as_pair.head = atom_rc_incr(left);
   a->val.as_pair.tail = atom_rc_incr(right);
   return a;
@@ -294,16 +318,14 @@ atom* assoc(atom* key, atom* list) {
 }
 
 atom* cnumber(int v) {
-  atom* a = atom_alloc();
-  a->kind = NUMBER;
+  atom* a = atom_alloc(NUMBER);
   a->val.as_number = v;
   return a;
 }
 
 atom* number(atom* charlist) {
   if (charlist == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  atom* a = atom_alloc();
-  a->kind = NUMBER;
+  atom* a = atom_alloc(NUMBER);
   a->val.as_number = 0;
   int base10shift = 1;
   while (boolc(charlist)) {
@@ -322,8 +344,7 @@ atom* plus(atom* a1t, atom* a2t) {
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  atom* out_res = atom_alloc();
-  out_res->kind = NUMBER;
+  atom* out_res = atom_alloc(NUMBER);
   out_res->val.as_number = a1->val.as_number + a2->val.as_number;
   atom_rc_decr(a1);
   atom_rc_decr(a2);
@@ -335,8 +356,7 @@ atom* minus(atom* a1t, atom* a2t) {
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  atom* out_res = atom_alloc();
-  out_res->kind = NUMBER;
+  atom* out_res = atom_alloc(NUMBER);
   out_res->val.as_number = a1->val.as_number - a2->val.as_number;
   atom_rc_decr(a1);
   atom_rc_decr(a2);
@@ -348,8 +368,7 @@ atom* mult(atom* a1t, atom* a2t) {
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  atom* out_res = atom_alloc();
-  out_res->kind = NUMBER;
+  atom* out_res = atom_alloc(NUMBER);
   out_res->val.as_number = a1->val.as_number * a2->val.as_number;
   atom_rc_decr(a1);
   atom_rc_decr(a2);
@@ -361,8 +380,7 @@ atom* divi(atom* a1t, atom* a2t) {
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  atom* out_res = atom_alloc();
-  out_res->kind = NUMBER;
+  atom* out_res = atom_alloc(NUMBER);
   out_res->val.as_number = a1->val.as_number / a2->val.as_number;
   atom_rc_decr(a1);
   atom_rc_decr(a2);
@@ -374,8 +392,7 @@ atom* mod(atom* a1t, atom* a2t) {
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  atom* out_res = atom_alloc();
-  out_res->kind = NUMBER;
+  atom* out_res = atom_alloc(NUMBER);
   out_res->val.as_number = a1->val.as_number % a2->val.as_number;
   atom_rc_decr(a1);
   atom_rc_decr(a2);
@@ -442,8 +459,7 @@ atom* cstring(char* s, size_t len) {
   ptr->len = len;
   strncpy(ptr->val, s, len);
 
-  atom* a = atom_alloc();
-  a->kind = STRING;
+  atom* a = atom_alloc(STRING);
   a->val.as_string = ptr;
   return a;
 }
@@ -469,8 +485,7 @@ atom* string(atom* charlist) {
     charlist = atom_rc_decr(cdr(charlist)); // protected by list root
   }
 
-  atom* res = atom_alloc();
-  res->kind = STRING;
+  atom* res = atom_alloc(STRING);
   res->val.as_string = ptr;
   return res;
 }
@@ -490,8 +505,7 @@ atom* string_concatenate(atom* a1, atom* a2) {
   strncpy(ptr->val+a1->val.as_string->len, a2->val.as_string->val, a2->val.as_string->len);
 
   // build new atom
-  atom* a = atom_alloc();
-  a->kind = STRING;
+  atom* a = atom_alloc(STRING);
   a->val.as_string = ptr;
   return a;
 }
@@ -542,6 +556,9 @@ atom* symbol(atom* a) {
   if (out_res == NULL) {
     atom* new_symbol = cstring(inner->val, inner->len);
     new_symbol->kind = SYMBOL;
+    // @FIXME: fix stats
+    alloc_count_per_kind[STRING]--;
+    alloc_count_per_kind[SYMBOL]++;
     atom* old_global_symbols = global_symbols;
     global_symbols = cons(new_symbol, global_symbols);
     atom_rc_decr(old_global_symbols);
@@ -980,8 +997,7 @@ atom* expr(atom* lex) {
 atom* apply(atom* rator, atom* rands);
 
 atom* thunk(atom* expr, atom* env) {
-  atom* out = atom_alloc();
-  out->kind = THUNK;
+  atom* out = atom_alloc(THUNK);
   out->val.as_capture.expr = atom_rc_incr(expr);
   out->val.as_capture.env = atom_rc_incr(env);
   return out;
@@ -1085,8 +1101,7 @@ atom* eval(atom* ast, atom* env) {
     if (boolc(eq(local_head, local_lambda))) {
       // (lambda var-list body) -> (closure var-list body env)
       // build a closure
-      atom* closu = atom_alloc();
-      closu->kind = CLOSU;
+      atom* closu = atom_alloc(CLOSU);
       closu->val.as_capture.expr = cdr(ast);
       closu->val.as_capture.env = atom_rc_incr(env);
       out_res = closu;
@@ -1119,8 +1134,7 @@ atom* eval(atom* ast, atom* env) {
       atom* local_binding_name = car(local_binding);
       atom* local_binding_expr = cadr(local_binding);
 
-      atom* local_evaled_expr_weak = atom_alloc();
-      local_evaled_expr_weak->kind = WEAK;
+      atom* local_evaled_expr_weak = atom_alloc(WEAK);
       local_evaled_expr_weak->val.as_weak = NULL;
       atom* local_new_env_entry = cons(local_binding_name, local_evaled_expr_weak);
       atom* local_new_env = cons(local_new_env_entry, env);
@@ -1187,8 +1201,7 @@ atom* eval(atom* ast, atom* env) {
 atom* afx1(char* name, fx1 f) {
   atom* out_res;
 
-  atom* local_fx1 = atom_alloc();
-  local_fx1->kind = FX1;
+  atom* local_fx1 = atom_alloc(FX1);
   local_fx1->val.as_fx1 = f;
   atom* local_name = csymbol(name);
 
@@ -1202,8 +1215,7 @@ atom* afx1(char* name, fx1 f) {
 atom* afx2(char* name, fx2 f) {
   atom* out_res;
 
-  atom* local_fx2 = atom_alloc();
-  local_fx2->kind = FX2;
+  atom* local_fx2 = atom_alloc(FX2);
   local_fx2->val.as_fx2 = f;
   atom* local_name = csymbol(name);
 
@@ -1217,8 +1229,7 @@ atom* afx2(char* name, fx2 f) {
 atom* afx3(char* name, fx3 f) {
   atom* out_res;
 
-  atom* local_fx3 = atom_alloc();
-  local_fx3->kind = FX3;
+  atom* local_fx3 = atom_alloc(FX3);
   local_fx3->val.as_fx3 = f;
   atom* local_name = csymbol(name);
 

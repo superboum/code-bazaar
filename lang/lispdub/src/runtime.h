@@ -1,3 +1,6 @@
+#ifndef RUNTIME_H
+#define RUNTIME_H
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -39,7 +42,7 @@ void error(int code, char* msg);
 /*
  * DATATYPES DEFINITION
  */
-
+#define ERROR  0
 #define NUMBER 1
 #define STRING 2
 #define SYMBOL 3
@@ -50,7 +53,7 @@ void error(int code, char* msg);
 #define FX2    8
 #define FX3    9
 #define WEAK   10
-#define NIL    127
+#define NIL    11
 
 typedef struct string {
   size_t len;
@@ -93,10 +96,11 @@ typedef struct atom {
  */
 
 #define RC_DISABLED_DUE_TO_STATIC_ALLOC -1
-atom* atom_alloc();
+atom* atom_alloc(char kind);
 atom* atom_rc_incr(atom* a);
 atom* atom_rc_decr(atom* a);
-void  rc_memleak_check();
+void  rc_stats(void);
+void  rc_memleak_check(void);
 
 /*
  * DATATYPES PRIMITIVES
@@ -168,4 +172,4 @@ atom* eval(atom* ast, atom* env);
 atom* full_env();
 
 
-
+#endif
