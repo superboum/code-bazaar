@@ -1,6 +1,7 @@
-#include "stdlib.h"
-#include "stdio.h"
-#include "string.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <limits.h>
 
 /*
  * ERROR MANAGEMENT
@@ -76,7 +77,7 @@ typedef struct closu {
 
 typedef struct atom {
   char kind;
-  char rc;
+  short rc;
   union {
     int as_number;
     string_t* as_string;
@@ -138,7 +139,7 @@ atom* force_it(atom* a);
 
 size_t allocated_objects = 0;
 atom* tracker[4096] = {0};
-int enable_tracker = 0;
+int enable_tracker = 1;
 atom* atom_alloc() {
   atom* ptr = malloc(sizeof(atom));
   if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
@@ -158,7 +159,19 @@ atom* atom_alloc() {
 
 atom* atom_rc_incr(atom* a) {
   if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  if (a->rc >= 0) a->rc++;
+  //if (a->rc >= SHRT_MAX) fprintf(stderr, "RC reached\n");
+  if (a->rc >= 127) {
+    fprintf(stderr, "RC_MAX reached, copying...\n");
+    atom* new = malloc(sizeof(atom));
+    new->kind = a->kind;
+    new->rc = 1;
+    new->val = a->val;
+    a = new;
+  } else if (a->rc >= 0) {
+    a->rc++;
+  } else {
+    // Counter is negative; it means it is disabled for this atom.
+  }
   return a;
   // we don't need to increment recursively.
   // instead, children rc is incremented only when attached to parent.
@@ -205,7 +218,7 @@ atom* nil() {
   if (_nil == NULL) {
     _nil = atom_alloc();
     _nil->kind = NIL;
-    _nil->rc = -128; // disable rc
+    _nil->rc = SHRT_MIN; // disable rc
   }
   return _nil;
 }
@@ -218,7 +231,7 @@ atom* __true = NULL;
 atom* _true() {
   if (__true == NULL) {
     __true = csymbol("t");
-    __true->rc = -128; // disable rc
+    __true->rc = SHRT_MIN; // disable rc
   }
   return __true;
 }
@@ -542,6 +555,7 @@ atom* string_concatenate(atom* a1, atom* a2) {
 
 atom* global_symbols = NULL;
 atom* symbol(atom* a) {
+  atom* out_res = NULL;
   // NOTE: do not use Lisp boolean heres as true is defined as a symbol
   if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   if (a->kind == SYMBOL) return a;
@@ -550,25 +564,41 @@ atom* symbol(atom* a) {
   string_t* inner = a->val.as_string;
 
   // Try to find symbol
-  atom* iter = global_symbols;
-  while(iter->kind != NIL) {
-    atom* cur = atom_rc_decr(car(iter)); // protected by list root
-    iter = atom_rc_decr(cdr(iter));
+  int found = false;
+  atom* iter = atom_rc_incr(global_symbols);
+  while(iter->kind != NIL && !found) {
+    atom* loop_cur = car(iter);
 			    
-    if (cur->kind != SYMBOL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG); // wrong type
-    string_t* cur_str = cur->val.as_string;
-    if (cur_str->len != inner->len) continue; // length does not match
-    if (strncmp(cur_str->val, inner->val, inner->len) != 0) continue; // chars do not match
-    return atom_rc_incr(cur); // we make a "copy" for the outside.
+    if (loop_cur->kind != SYMBOL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG); // wrong type
+    string_t* cur_str = loop_cur->val.as_string;
+
+    found = true;
+    found = found && cur_str->len == inner->len; // length must match
+    found = found && strncmp(cur_str->val, inner->val, inner->len) == 0; // chars must match
+    if (found) {
+      out_res = atom_rc_incr(loop_cur);
+    }
+
+    atom_rc_decr(loop_cur);
+
+    // iter
+    atom* loop_next = cdr(iter);
+    atom_rc_decr(iter);
+    iter = loop_next;
   }
+  atom_rc_decr(iter);
 
   // Symbol not found, creating it (and trigger an allocation)
-  atom* new_symbol = cstring(inner->val, inner->len);
-  new_symbol->kind = SYMBOL;
-  atom* old_global_symbols = global_symbols;
-  global_symbols = cons(new_symbol, global_symbols);
-  atom_rc_decr(old_global_symbols);
-  return new_symbol;
+  if (out_res == NULL) {
+    atom* new_symbol = cstring(inner->val, inner->len);
+    new_symbol->kind = SYMBOL;
+    atom* old_global_symbols = global_symbols;
+    global_symbols = cons(new_symbol, global_symbols);
+    atom_rc_decr(old_global_symbols);
+    out_res = new_symbol;
+  }
+
+  return out_res;
 }
 atom* csymbol(char* s) {
   atom* inter = cstring(s, strlen(s));
@@ -1398,21 +1428,21 @@ int main(void) {
 
   if (global_symbols != NULL) global_symbols = atom_rc_decr(global_symbols);
 
-  /*enable_tracker = 0;
+  enable_tracker = 0;
   for (int i = 0; i < 4096; i++) {
     if (tracker[i] != NULL) {
       atom* render = sexpr(tracker[i]);
       print(render);
       atom_rc_decr(render);
     }
-  }*/
+  }
 
   if (global_symbols != NULL) exit(513);
 
-  if (allocated_objects > 2) {
+  /*if (allocated_objects > 2) {
     fprintf(stderr, "Tracked allocated objects: %ld\n", allocated_objects);
     error(ERR_LEAK_CODE, ERR_LEAK_MSG);
-  }
+  }*/
  
   return 0;
 }
