@@ -18,7 +18,7 @@ gcc -Wall ./main.c
   - [ ] Free empty arenas
   - [ ] Compact arenas
 - [ ] Copy object when RC reaches MAX_INT
-- [ ] Weak references for recursivity
+- [x] Weak references for recursivity
 
 ### Datatype
 
