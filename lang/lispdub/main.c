@@ -139,7 +139,7 @@ atom* force_it(atom* a);
 
 size_t allocated_objects = 0;
 atom* tracker[4096] = {0};
-int enable_tracker = 1;
+int enable_tracker = 0;
 atom* atom_alloc() {
   atom* ptr = malloc(sizeof(atom));
   if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
@@ -160,13 +160,16 @@ atom* atom_alloc() {
 atom* atom_rc_incr(atom* a) {
   if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
   //if (a->rc >= SHRT_MAX) fprintf(stderr, "RC reached\n");
-  if (a->rc >= 127) {
-    fprintf(stderr, "RC_MAX reached, copying...\n");
-    atom* new = malloc(sizeof(atom));
+  if (a->rc >= SHRT_MAX) {
+    fprintf(stderr, "RC_MAX reached. Leaking memory now.\n");
+    //@FIXME: symbols do not work well with memory copy. Here are the known problems:
+    // 1. Equality is computed based on pointer address. But now that we copy, it's no longer working.
+    // 2. For a reason I don't understand yet, the if symbol is freed twice in the eval function when the copy code is called.
+    /*atom* new = malloc(sizeof(atom));
     new->kind = a->kind;
     new->rc = 1;
     new->val = a->val;
-    a = new;
+    a = new;*/
   } else if (a->rc >= 0) {
     a->rc++;
   } else {
@@ -1195,7 +1198,7 @@ atom* eval(atom* ast, atom* env) {
 
       atom* local_rev_evaled_rands = reverse(local_evaled_rands);
       out_res = apply(local_evaled_rator, local_rev_evaled_rands);
-
+      
       atom_rc_decr(local_rev_evaled_rands);
       atom_rc_decr(local_rands);
       atom_rc_decr(local_evaled_rands);
@@ -1428,21 +1431,21 @@ int main(void) {
 
   if (global_symbols != NULL) global_symbols = atom_rc_decr(global_symbols);
 
-  enable_tracker = 0;
+  /*enable_tracker = 0;
   for (int i = 0; i < 4096; i++) {
     if (tracker[i] != NULL) {
       atom* render = sexpr(tracker[i]);
       print(render);
       atom_rc_decr(render);
     }
-  }
+  }*/
 
   if (global_symbols != NULL) exit(513);
 
-  /*if (allocated_objects > 2) {
+  if (allocated_objects > 2) {
     fprintf(stderr, "Tracked allocated objects: %ld\n", allocated_objects);
     error(ERR_LEAK_CODE, ERR_LEAK_MSG);
-  }*/
+  }
  
   return 0;
 }
