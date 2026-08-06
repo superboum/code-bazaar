@@ -4,8 +4,6 @@
  * MEMORY MANAGEMENT
  */
 size_t allocated_objects = 0;
-atom* tracker[4096] = {0};
-int enable_tracker = 0;
 size_t alloc_count_per_kind[32] = {0};
 
 const int atom_kind_count = 12;
@@ -32,13 +30,6 @@ atom* atom_alloc(char kind) {
   ptr->kind = kind;
   allocated_objects++;
   alloc_count_per_kind[(int)kind]++;
-  if (enable_tracker) {
-    for (int i = 0; i < 4096; i++) {
-      if (tracker[i] != NULL) continue;
-      tracker[i] = ptr;
-      break;
-    }
-  }
   return ptr;
 }
 
@@ -87,14 +78,6 @@ atom* atom_rc_decr(atom* a) {
     }
     if (allocated_objects <= 0) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
     allocated_objects--;
-    if (enable_tracker) {
-      for (int i = 0; i < 4096; i++) {
-        if (tracker[i] == a) {
-          tracker[i] = NULL;
-	  break;
-        }
-      }
-    }
     free(a);
     return NULL;
   }
@@ -106,6 +89,9 @@ void rc_stats(void) {
   for (int i = 0; i < atom_kind_count; i++) {
     printf("  %s [%ld]\n", atom_kind_names[i], alloc_count_per_kind[i]);
   }
+
+  printf("-- aggregated stats --\n");
+  printf("  live objects: %ld\n", allocated_objects);
 }
 
 void rc_memleak_check(void) {

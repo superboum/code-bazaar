@@ -31,11 +31,11 @@ $(BIN_DIR)/test.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/test.c
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/test.c -o $(BIN_DIR)/test.o
 
 # -- LINK --
-$(BIN_DIR)/repl: $(BIN_DIR)/runtime.o $(BIN_DIR)/repl.o
+$(BIN_DIR)/repl: $(OBJECTS) $(BIN_DIR)/repl.o
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(BIN_DIR)/repl.o -o $(BIN_DIR)/repl
 
-$(BIN_DIR)/test: $(BIN_DIR)/runtime.o $(BIN_DIR)/test.o
+$(BIN_DIR)/test: $(OBJECTS) $(BIN_DIR)/test.o
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(BIN_DIR)/test.o -o $(BIN_DIR)/test
 
