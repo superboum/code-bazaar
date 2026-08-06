@@ -317,26 +317,37 @@ atom* assoc(atom* key, atom* list) {
   return out_res;
 }
 
+static const int small_num_cache_size = 128;
+atom small_num_cache[128] = {0};
 atom* cnumber(int v) {
-  atom* a = atom_alloc(NUMBER);
-  a->val.as_number = v;
+  atom* a;
+  if (v < small_num_cache_size) {
+    a = &small_num_cache[v];
+    if (a->kind != NUMBER) {
+      a->kind = NUMBER;
+      a->rc = RC_DISABLED_DUE_TO_STATIC_ALLOC;
+      a->val.as_number = v;
+    }
+  } else {
+    a = atom_alloc(NUMBER);
+    a->val.as_number = v;
+  }
   return a;
 }
 
 atom* number(atom* charlist) {
   if (charlist == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  atom* a = atom_alloc(NUMBER);
-  a->val.as_number = 0;
+  int acc = 0;
   int base10shift = 1;
   while (boolc(charlist)) {
     atom* charcode = atom_rc_decr(car(charlist));
     if (charcode->val.as_number < ASCII_CODE_ZERO || charcode->val.as_number > ASCII_CODE_NINE) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
     int val = charcode->val.as_number - ASCII_CODE_ZERO;
-    a->val.as_number += val * base10shift;
+    acc += val * base10shift;
     base10shift = base10shift*10;
     charlist = atom_rc_decr(cdr(charlist));
   }
-  return a;
+  return cnumber(acc);
 }
 
 atom* plus(atom* a1t, atom* a2t) {
@@ -344,8 +355,7 @@ atom* plus(atom* a1t, atom* a2t) {
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  atom* out_res = atom_alloc(NUMBER);
-  out_res->val.as_number = a1->val.as_number + a2->val.as_number;
+  atom* out_res = cnumber(a1->val.as_number + a2->val.as_number);
   atom_rc_decr(a1);
   atom_rc_decr(a2);
   return out_res;
@@ -356,8 +366,7 @@ atom* minus(atom* a1t, atom* a2t) {
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  atom* out_res = atom_alloc(NUMBER);
-  out_res->val.as_number = a1->val.as_number - a2->val.as_number;
+  atom* out_res = cnumber(a1->val.as_number - a2->val.as_number);
   atom_rc_decr(a1);
   atom_rc_decr(a2);
   return out_res;
@@ -368,8 +377,7 @@ atom* mult(atom* a1t, atom* a2t) {
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  atom* out_res = atom_alloc(NUMBER);
-  out_res->val.as_number = a1->val.as_number * a2->val.as_number;
+  atom* out_res = cnumber(a1->val.as_number * a2->val.as_number);
   atom_rc_decr(a1);
   atom_rc_decr(a2);
   return out_res;
@@ -380,8 +388,7 @@ atom* divi(atom* a1t, atom* a2t) {
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  atom* out_res = atom_alloc(NUMBER);
-  out_res->val.as_number = a1->val.as_number / a2->val.as_number;
+  atom* out_res = cnumber(a1->val.as_number / a2->val.as_number);
   atom_rc_decr(a1);
   atom_rc_decr(a2);
   return out_res;
@@ -392,8 +399,7 @@ atom* mod(atom* a1t, atom* a2t) {
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
   if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
-  atom* out_res = atom_alloc(NUMBER);
-  out_res->val.as_number = a1->val.as_number % a2->val.as_number;
+  atom* out_res = cnumber(a1->val.as_number % a2->val.as_number);
   atom_rc_decr(a1);
   atom_rc_decr(a2);
   return out_res;
