@@ -510,14 +510,95 @@ atom* string_concatenate(atom* a1, atom* a2) {
   return a;
 }
 
+string_t _static_str_lambda = (struct string) {
+  .len = 6,
+  .val = "lambda",
+};
+atom _static_sym_lambda = (struct atom) {
+  .kind = SYMBOL,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_string = &_static_str_lambda
+};
+
+string_t _static_str_quote = (struct string) {
+  .len = 5,
+  .val = "quote",
+};
+atom _static_sym_quote = (struct atom) {
+  .kind = SYMBOL,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_string = &_static_str_quote
+};
+
+string_t _static_str_let = (struct string) {
+  .len = 3,
+  .val = "let",
+};
+atom _static_sym_let = (struct atom) {
+  .kind = SYMBOL,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_string = &_static_str_let
+};
+
+string_t _static_str_thunk = (struct string) {
+  .len = 5,
+  .val = "thunk",
+};
+atom _static_sym_thunk = (struct atom) {
+  .kind = SYMBOL,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_string = &_static_str_thunk
+};
+
+string_t _static_str_if = (struct string) {
+  .len = 2,
+  .val = "if",
+};
+atom _static_sym_if = (struct atom) {
+  .kind = SYMBOL,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_string = &_static_str_if
+};
+
+
 atom global_symbols_p0 = (struct atom) {
   .kind = PAIR,
   .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
   .val.as_pair.head = &_static_true,
   .val.as_pair.tail = &_static_nil,
 };
-atom* initial_global_symbols = &global_symbols_p0;
-atom* global_symbols = &global_symbols_p0;
+atom global_symbols_p1 = (struct atom) {
+  .kind = PAIR,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_pair.head = &_static_sym_lambda,
+  .val.as_pair.tail = &global_symbols_p0,
+};
+atom global_symbols_p2 = (struct atom) {
+  .kind = PAIR,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_pair.head = &_static_sym_quote,
+  .val.as_pair.tail = &global_symbols_p1,
+};
+atom global_symbols_p3 = (struct atom) {
+  .kind = PAIR,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_pair.head = &_static_sym_let,
+  .val.as_pair.tail = &global_symbols_p2,
+};
+atom global_symbols_p4 = (struct atom) {
+  .kind = PAIR,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_pair.head = &_static_sym_thunk,
+  .val.as_pair.tail = &global_symbols_p3,
+};
+atom global_symbols_p5 = (struct atom) {
+  .kind = PAIR,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_pair.head = &_static_sym_if,
+  .val.as_pair.tail = &global_symbols_p4,
+};
+atom* initial_global_symbols = &global_symbols_p5;
+atom* global_symbols = &global_symbols_p5;
 
 atom* symbol(atom* a) {
   atom* out_res = NULL;
@@ -1092,24 +1173,19 @@ atom* eval(atom* ast, atom* env) {
     out_res = atom_rc_incr(ast->val.as_weak);
   } else if (ast->kind == PAIR) {
     atom* local_head = car(ast);
-    atom* local_lambda = csymbol("lambda");
-    atom* local_quote = csymbol("quote");
-    atom* local_let = csymbol("let");
-    atom* local_thunk = csymbol("thunk");
-    atom* local_if = csymbol("if");
 
-    if (boolc(eq(local_head, local_lambda))) {
+    if (boolc(eq(local_head, &_static_sym_lambda))) {
       // (lambda var-list body) -> (closure var-list body env)
       // build a closure
       atom* closu = atom_alloc(CLOSU);
       closu->val.as_capture.expr = cdr(ast);
       closu->val.as_capture.env = atom_rc_incr(env);
       out_res = closu;
-    } else if (boolc(eq(local_head, local_thunk))) {
+    } else if (boolc(eq(local_head, &_static_sym_thunk))) {
       atom* branch_thunk_body = cadr(ast);
       out_res = thunk(branch_thunk_body, env);
       atom_rc_decr(branch_thunk_body);
-    } else if (boolc(eq(local_head, local_if))) {
+    } else if (boolc(eq(local_head, &_static_sym_if))) {
       atom* branch_cond = cadr(ast);
       atom* branch_cond_evaled = eval(branch_cond, env);
       atom* branch_cond_resolved = force_it(branch_cond_evaled);
@@ -1125,9 +1201,9 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(branch_cond_resolved);
       atom_rc_decr(branch_cond_evaled);
       atom_rc_decr(branch_cond);
-    } else if (boolc(eq(local_head, local_quote))) {
+    } else if (boolc(eq(local_head, &_static_sym_quote))) {
       out_res = cadr(ast);
-    } else if (boolc(eq(local_head, local_let))) {
+    } else if (boolc(eq(local_head, &_static_sym_let))) {
       // (let (symbol expr) expr)
       atom* local_binding = cadr(ast);
       atom* local_body = caddr(ast);
@@ -1185,11 +1261,6 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(local_evaled_rator_with_thunk);
     }
 
-    atom_rc_decr(local_if);
-    atom_rc_decr(local_let);
-    atom_rc_decr(local_thunk);
-    atom_rc_decr(local_quote);
-    atom_rc_decr(local_lambda);
     atom_rc_decr(local_head);
   } else {
     out_res = atom_rc_incr(ast);
