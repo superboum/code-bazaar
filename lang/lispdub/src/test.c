@@ -2,12 +2,18 @@
 #include <stdio.h>
 #include "runtime.h"
 
+char* hello_world = "hello world";
 int ensure(char* candidate, atom* expected);
 int main(void) {
   int exit_code = 0;
 
+  exit_code += ensure("./examples/number.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 5 });
   exit_code += ensure("./examples/math.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 10 });
   exit_code += ensure("./examples/fact.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 120 });
+  exit_code += ensure("./examples/fib.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 377 });
+  exit_code += ensure("./examples/collatz.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 111 });
+  exit_code += ensure("./examples/euler_01.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 233168 });
+  exit_code += ensure("./examples/euler_02.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 3382 });
 
   if (exit_code > 0) fprintf(stderr, "ERROR. %d failed tests\n", exit_code);
   return exit_code;
