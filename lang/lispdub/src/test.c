@@ -9,6 +9,7 @@ int main(void) {
 
   exit_code += ensure("./examples/bool_true.lisp", _true());
   exit_code += ensure("./examples/bool_false.lisp", _false());
+  exit_code += ensure("./examples/lazy_if.lisp", _true());
   exit_code += ensure("./examples/number.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 5 });
   exit_code += ensure("./examples/math.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 10 });
   exit_code += ensure("./examples/fact.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 120 });
@@ -41,8 +42,8 @@ int ensure(char* candidate, atom* expected) {
     fprintf(stderr, "FAILED %s\n", candidate);
     atom* branch_expected = sexpr(expected);
     atom* branch_got = sexpr(local_forced);
-    printf("  Expected: %s\n", branch_expected->val.as_string->val);
-    printf("  Got: %s\n", branch_got->val.as_string->val);
+    printf("  Expected: (kind: %d) %s\n", expected->kind, branch_expected->val.as_string->val);
+    printf("  Got: (kind: %d) %s\n", local_forced->kind, branch_got->val.as_string->val);
     atom_rc_decr(branch_got);
     atom_rc_decr(branch_expected);
   }

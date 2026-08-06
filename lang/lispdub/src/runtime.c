@@ -261,7 +261,7 @@ atom* eq(atom* a1t, atom* a2t) {
   atom* res = _false();
   if (a1->kind != a2->kind) res = _false(); // we don't cast transparently, so trap all type differences here...
   else if (a1->kind == NUMBER) res = cbool(a1->val.as_number == a2->val.as_number); // compare values
-  else if (a1->kind == SYMBOL) res = cbool(a1->val.as_string == a2->val.as_string); // compare mem addr as symbols deduplicate strings
+  else if (a1->kind == SYMBOL) res = cbool(a1 == a2); // compare mem addr as symbols are deduplicated
   else if (a1->kind == PAIR) res = cbool(a1 == a2); // compare mem addr
   else if (a1->kind == STRING) res = cbool(cstring_eq(a1->val.as_string, a2->val.as_string)); // compare with strcnmp
   else if (a1->kind == NIL) res = _true(); // nil is always equal to nil
