@@ -1069,6 +1069,8 @@ atom* eval(atom* ast, atom* env) {
     out_res = eval(branch_expr, env);
     atom_rc_decr(branch_expr);
     atom_rc_decr(branch_res);
+  } else if (ast->kind == WEAK) {
+    out_res = atom_rc_incr(ast->val.as_weak);
   } else if (ast->kind == PAIR) {
     atom* local_head = car(ast);
     atom* local_lambda = csymbol("lambda");
@@ -1390,12 +1392,12 @@ int main(void) {
 
   if (global_symbols != NULL) global_symbols = atom_rc_decr(global_symbols);
 
-  enable_tracker = 0;
+  /*enable_tracker = 0;
   for (int i = 0; i < 4096; i++) {
     if (tracker[i] != NULL) {
       print(sexpr(tracker[i]));
     }
-  }
+  }*/
 
   if (global_symbols != NULL) exit(513);
 
