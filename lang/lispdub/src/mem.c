@@ -29,7 +29,8 @@ typedef struct allocator {
 void allocator_grow(allocator_t* alloc) {
   // malloc a slab
   slab_t* new_slab = aligned_alloc(32, sizeof(slab_t));
-  if (new_slab == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+  if (new_slab == NULL) 
+    error(ERR_MALLOC_CODE, ERR_MALLOC_MSG,__func__, __FILE__, __LINE__);
 
   // update the linked list
   new_slab->prev = alloc->head;
@@ -49,7 +50,8 @@ void allocator_grow(allocator_t* alloc) {
 
 atom* allocator_new(allocator_t* alloc) {
   if (alloc->free_list == NULL) allocator_grow(alloc);
-  if (alloc->free_list == NULL) error(ERR_SLAB_CODE, ERR_SLAB_MSG);
+  if (alloc->free_list == NULL) 
+    error(ERR_SLAB_CODE, ERR_SLAB_MSG, __func__, __FILE__, __LINE__);
 
   atom* ptr = alloc->free_list;
   alloc->free_list = ptr->val.as_slab_prev;
@@ -113,7 +115,8 @@ atom* atom_alloc(char kind) {
 }
 
 atom* atom_rc_incr(atom* a) {
-  if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   if (a->rc >= SHRT_MAX) {
     fprintf(stderr, "RC_MAX reached. Leaking memory for now.\n");
   } else if (a->rc >= 0) {
@@ -127,7 +130,8 @@ atom* atom_rc_incr(atom* a) {
 }
 
 atom* atom_rc_decr(atom* a) {
-  if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   if (a->rc > 0) a->rc--;
   if (a->rc == 0) {
     if (a->kind == PAIR) {
@@ -166,7 +170,7 @@ void rc_memleak_check(void) {
 
   if (allocated_objects > 0) {
     fprintf(stderr, "Tracked allocated objects: %ld\n", allocated_objects);
-    error(ERR_LEAK_CODE, ERR_LEAK_MSG);
+    error(ERR_LEAK_CODE, ERR_LEAK_MSG, __func__, __FILE__, __LINE__);
   }
 }
 

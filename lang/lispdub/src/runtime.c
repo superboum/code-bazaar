@@ -3,8 +3,8 @@
 /*
  * ERROR MANAGEMENT
  */
-void error(int code, char* msg) {
-  fprintf(stderr, "Fatal Error. %s\n", msg);
+void error(int code, char* msg, const char* fn, const char* file, int line) {
+  fprintf(stderr, "Fatal Error in func %s at %s, line %d. %s\n", fn, file, line, msg);
   exit(code);
 }
 
@@ -55,7 +55,8 @@ atom* weak(atom* orig) {
 
 atom* cons(atom* left, atom* right) {
   // left & right are now owned by the result; so we decrement as we consume, and increment as we bind to the new struct
-  if (left == NULL || right == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (left == NULL || right == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* a = atom_alloc(PAIR);
   a->val.as_pair.head = atom_rc_incr(left);
   a->val.as_pair.tail = atom_rc_incr(right);
@@ -63,9 +64,11 @@ atom* cons(atom* left, atom* right) {
 }
 
 atom* cdr(atom* list) {
-  if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (list == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* local_list = force_it(list);
-  if (local_list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
+  if (local_list->kind != PAIR) 
+    error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG, __func__, __FILE__, __LINE__);
 
   atom* out_res = atom_rc_incr(local_list->val.as_pair.tail);
   atom_rc_decr(local_list);
@@ -75,14 +78,18 @@ atom* cdr(atom* list) {
 atom* nth(atom* list, int pos) {
   atom* local_list = force_it(list);
   for (int i = 0; i < pos; i++) {
-    if (local_list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-    if (local_list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
+    if (local_list == NULL) 
+      error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+    if (local_list->kind != PAIR) 
+      error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG, __func__, __FILE__, __LINE__);
     atom* next_local_list = force_it(local_list->val.as_pair.tail);
     atom_rc_decr(local_list);
     local_list = next_local_list;
   }
-  if (local_list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  if (local_list->kind != PAIR) error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG);
+  if (local_list == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+  if (local_list->kind != PAIR) 
+    error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG, __func__, __FILE__, __LINE__);
 
   atom* out_res = atom_rc_incr(local_list->val.as_pair.head);
   atom_rc_decr(local_list);
@@ -107,7 +114,8 @@ atom* cadddr(atom* list) {
 
 atom* empty(atom* at) {
   // NO RC with bools
-  if (at == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (at == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* r = _false();
   atom* local_a = force_it(at);
   if (local_a->kind == NIL) r = _true();
@@ -120,7 +128,8 @@ atom* not(atom* a) {
 }
 
 atom* length(atom* list) {
-  if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (list == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   int len = 0;
   while (boolc(list)) {
     len++;
@@ -131,7 +140,8 @@ atom* length(atom* list) {
 }
 
 atom* reverse(atom* list) {
-  if (list == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (list == NULL)
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* acc = nil();
   atom* local_list = force_it(list);
   while (boolc(local_list)) {
@@ -160,7 +170,8 @@ atom* reverse(atom* list) {
 string_t* heap_string(char* s, size_t len) {
   size_t memsz = sizeof(string_t)+sizeof(char)*(len+1);
   string_t* ptr = malloc(memsz);
-  if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+  if (ptr == NULL) 
+    error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
   memset(ptr, 0, memsz);
   ptr->len = len;
   strncpy(ptr->val, s, len);
@@ -174,7 +185,8 @@ int cstring_eq(string_t* s1, string_t* s2) {
 }
 
 atom* eq(atom* a1t, atom* a2t) {
-  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1t == NULL || a2t == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
 
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
@@ -196,9 +208,11 @@ atom* eq(atom* a1t, atom* a2t) {
 atom* assoc(atom* key, atom* list) {
   atom* out_res;
   if (list->kind == NIL) return nil();
-  if (list->kind != PAIR) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (list->kind != PAIR)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   atom* local_head = car(list);
-  if (local_head->kind != PAIR) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (local_head->kind != PAIR) 
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   atom* local_cand_key = car(local_head);
   if (boolc(eq(local_cand_key, key))) {
     out_res = atom_rc_incr(local_head);
@@ -231,12 +245,14 @@ atom* cnumber(int v) {
 }
 
 atom* number(atom* charlist) {
-  if (charlist == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (charlist == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   int acc = 0;
   int base10shift = 1;
   while (boolc(charlist)) {
     atom* charcode = atom_rc_decr(car(charlist));
-    if (charcode->val.as_number < ASCII_CODE_ZERO || charcode->val.as_number > ASCII_CODE_NINE) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+    if (charcode->val.as_number < ASCII_CODE_ZERO || charcode->val.as_number > ASCII_CODE_NINE) 
+      error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
     int val = charcode->val.as_number - ASCII_CODE_ZERO;
     acc += val * base10shift;
     base10shift = base10shift*10;
@@ -246,10 +262,12 @@ atom* number(atom* charlist) {
 }
 
 atom* plus(atom* a1t, atom* a2t) {
-  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1t == NULL || a2t == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
-  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) 
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   atom* out_res = cnumber(a1->val.as_number + a2->val.as_number);
   atom_rc_decr(a1);
   atom_rc_decr(a2);
@@ -257,10 +275,12 @@ atom* plus(atom* a1t, atom* a2t) {
 }
 
 atom* minus(atom* a1t, atom* a2t) {
-  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1t == NULL || a2t == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
-  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) 
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   atom* out_res = cnumber(a1->val.as_number - a2->val.as_number);
   atom_rc_decr(a1);
   atom_rc_decr(a2);
@@ -268,10 +288,12 @@ atom* minus(atom* a1t, atom* a2t) {
 }
 
 atom* mult(atom* a1t, atom* a2t) {
-  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1t == NULL || a2t == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
-  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   atom* out_res = cnumber(a1->val.as_number * a2->val.as_number);
   atom_rc_decr(a1);
   atom_rc_decr(a2);
@@ -279,10 +301,12 @@ atom* mult(atom* a1t, atom* a2t) {
 }
 
 atom* divi(atom* a1t, atom* a2t) {
-  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1t == NULL || a2t == NULL)
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
-  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   atom* out_res = cnumber(a1->val.as_number / a2->val.as_number);
   atom_rc_decr(a1);
   atom_rc_decr(a2);
@@ -290,10 +314,12 @@ atom* divi(atom* a1t, atom* a2t) {
 }
 
 atom* mod(atom* a1t, atom* a2t) {
-  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1t == NULL || a2t == NULL)
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
-  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   atom* out_res = cnumber(a1->val.as_number % a2->val.as_number);
   atom_rc_decr(a1);
   atom_rc_decr(a2);
@@ -301,10 +327,12 @@ atom* mod(atom* a1t, atom* a2t) {
 }
 
 atom* gt(atom* a1t, atom* a2t) {
-  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1t == NULL || a2t == NULL)
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
-  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
 
   atom* out_res = cbool(a1->val.as_number > a2->val.as_number);
 
@@ -314,10 +342,12 @@ atom* gt(atom* a1t, atom* a2t) {
 }
 
 atom* lt(atom* a1t, atom* a2t) {
-  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1t == NULL || a2t == NULL)
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
-  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
 
   atom* out_res = cbool(a1->val.as_number < a2->val.as_number);
 
@@ -327,10 +357,12 @@ atom* lt(atom* a1t, atom* a2t) {
 }
 
 atom* ge(atom* a1t, atom* a2t) {
-  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1t == NULL || a2t == NULL)
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
-  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
 
   atom* out_res = cbool(a1->val.as_number >= a2->val.as_number);
 
@@ -340,10 +372,12 @@ atom* ge(atom* a1t, atom* a2t) {
 }
 
 atom* le(atom* a1t, atom* a2t) {
-  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a1t == NULL || a2t == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* a1 = force_it(a1t);
   atom* a2 = force_it(a2t);
-  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1->kind != NUMBER || a2->kind != NUMBER)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
 
   atom* out_res = cbool(a1->val.as_number <= a2->val.as_number);
 
@@ -359,7 +393,8 @@ atom* cstring(char* s, size_t len) {
 }
 
 atom* string(atom* charlist) {
-  if (charlist == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (charlist == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* alen = length(charlist);
   size_t len = alen->val.as_number;
   alen = atom_rc_decr(alen); // we don't need alen past this point
@@ -367,14 +402,17 @@ atom* string(atom* charlist) {
   // build string
   size_t memsz = sizeof(string_t)+sizeof(char)*(len+1);
   string_t* ptr = malloc(memsz);
-  if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+  if (ptr == NULL) 
+    error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
   memset(ptr, 0, memsz); // make sure we initialize with zero
   ptr->len = len;
   for (size_t i = 0; i < len; i++) {
     atom* acharcode = atom_rc_decr(car(charlist)); // protected by list root
-    if (acharcode->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+    if (acharcode->kind != NUMBER) 
+      error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
     int charcode = acharcode->val.as_number;
-    if (charcode < 0 || charcode > 255) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+    if (charcode < 0 || charcode > 255) 
+      error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
     ptr->val[i] = charcode;
     charlist = atom_rc_decr(cdr(charlist)); // protected by list root
   }
@@ -385,14 +423,17 @@ atom* string(atom* charlist) {
 }
 
 atom* string_concatenate(atom* a1, atom* a2) {
-  if (a1 == NULL || a2 == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
-  if (a1->kind != STRING && a2->kind != STRING) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a1 == NULL || a2 == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+  if (a1->kind != STRING && a2->kind != STRING)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
 
   // build new string
   size_t len = a1->val.as_string->len + a2->val.as_string->len;
   size_t memsz = sizeof(string_t)+sizeof(char)*(len+1);
   string_t* ptr = malloc(memsz);
-  if (ptr == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+  if (ptr == NULL) 
+    error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
   memset(ptr, 0, memsz);
   ptr->len = len;
   strncpy(ptr->val, a1->val.as_string->val, a1->val.as_string->len);
@@ -503,7 +544,8 @@ atom* _unsafe_symbol(char* inner_val, size_t inner_len) {
   while(iter->kind != NIL && !found) {
     atom* loop_cur = car(iter);
 			    
-    if (loop_cur->kind != SYMBOL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG); // wrong type
+    if (loop_cur->kind != SYMBOL) 
+      error(ERR_LOGIC_CODE, ERR_LOGIC_MSG, __func__, __FILE__, __LINE__); // wrong type
     string_t* cur_str = loop_cur->val.as_string;
 
     found = true;
@@ -537,9 +579,11 @@ atom* _unsafe_symbol(char* inner_val, size_t inner_len) {
 
 atom* symbol(atom* a) {
   // NOTE: do not use Lisp boolean heres as true is defined as a symbol
-  if (a == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (a == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   if (a->kind == SYMBOL) return a;
-  if (a->kind != STRING) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a->kind != STRING) 
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   string_t* inner = a->val.as_string;
   char* inner_val = inner->val;
   size_t inner_len = inner->len;
@@ -571,7 +615,8 @@ atom* sexpr(atom* a) {
     const char fmt[] = "%s";
     int sz = snprintf(NULL, 0, fmt, a->val.as_string->val)+1;
     char* tmp = malloc(sz);
-    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    if (tmp == NULL) 
+      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
     memset(tmp, 0, sz);
     snprintf(tmp, sz, fmt, a->val.as_string->val);
     atom* final = cstring(tmp, strlen(tmp));
@@ -582,7 +627,8 @@ atom* sexpr(atom* a) {
     const char fmt[] = "\"%s\"";
     int sz = snprintf(NULL, 0, fmt, a->val.as_string->val)+1;
     char* tmp = malloc(sz);
-    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    if (tmp == NULL) 
+      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG,  __func__, __FILE__, __LINE__);
     memset(tmp, 0, sz);
     snprintf(tmp, sz, fmt, a->val.as_string->val);
     atom* final = cstring(tmp, strlen(tmp));
@@ -593,7 +639,8 @@ atom* sexpr(atom* a) {
     const char fmt[] = "%d";
     int sz = snprintf(NULL, 0, fmt, a->val.as_number)+1;
     char* tmp = malloc(sz);
-    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    if (tmp == NULL) 
+      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
     memset(tmp, 0, sz);
     snprintf(tmp, sz, fmt, a->val.as_number);
     atom* final = cstring(tmp, strlen(tmp));
@@ -604,7 +651,8 @@ atom* sexpr(atom* a) {
     size_t allocated = 3; // left paren + right paren + \0
     size_t cursor = 0;
     char* acc = malloc(allocated);
-    if (acc == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    if (acc == NULL) 
+      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
     memset(acc, 0, allocated);
     snprintf(acc+cursor, allocated, "(");
     cursor += 1;
@@ -616,7 +664,8 @@ atom* sexpr(atom* a) {
       size_t add_sz = snprintf(NULL, 0, fmt, head->val.as_string->val);
       allocated += add_sz;
       acc = realloc(acc, allocated);
-      if (acc == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+      if (acc == NULL) 
+        error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
       memset(acc+cursor, 0, allocated-cursor);
       snprintf(acc+cursor, allocated-cursor, fmt, head->val.as_string->val);
       cursor += add_sz;
@@ -647,7 +696,7 @@ atom* sexpr(atom* a) {
     return cstring("WEAK", 4);
   }
 
-  error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
+  error(ERR_LOGIC_CODE, ERR_LOGIC_MSG, __func__, __FILE__, __LINE__);
   return NULL; // unreachable
 }
 
@@ -657,7 +706,8 @@ atom* debug_sexpr(atom* a) {
     const char fmt[] = "{%d}%s";
     int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_string->val)+1;
     char* tmp = malloc(sz);
-    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    if (tmp == NULL) 
+      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
     memset(tmp, 0, sz);
     snprintf(tmp, sz, fmt, a->rc, a->val.as_string->val);
     atom* final = cstring(tmp, strlen(tmp));
@@ -668,7 +718,8 @@ atom* debug_sexpr(atom* a) {
     const char fmt[] = "{%d}\"%s\"";
     int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_string->val)+1;
     char* tmp = malloc(sz);
-    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    if (tmp == NULL) 
+      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
     memset(tmp, 0, sz);
     snprintf(tmp, sz, fmt, a->rc, a->val.as_string->val);
     atom* final = cstring(tmp, strlen(tmp));
@@ -679,7 +730,8 @@ atom* debug_sexpr(atom* a) {
     const char fmt[] = "{%d}%d";
     int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_number)+1;
     char* tmp = malloc(sz);
-    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    if (tmp == NULL) 
+      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
     memset(tmp, 0, sz);
     snprintf(tmp, sz, fmt, a->rc, a->val.as_number);
     atom* final = cstring(tmp, strlen(tmp));
@@ -692,7 +744,8 @@ atom* debug_sexpr(atom* a) {
     atom* right = debug_sexpr(a->val.as_pair.tail);
     int sz = snprintf(NULL, 0, fmt, a->rc, left->val.as_string->val, right->val.as_string->val)+1;
     char* tmp = malloc(sz);
-    if (tmp == NULL) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+    if (tmp == NULL) 
+      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
     memset(tmp, 0, sz);
     snprintf(tmp, sz, fmt, a->rc, left->val.as_string->val, right->val.as_string->val);
     atom* final = cstring(tmp, strlen(tmp));
@@ -706,7 +759,8 @@ atom* debug_sexpr(atom* a) {
 }
 
 void print(atom* a) {
-  if (a->kind != STRING && a->kind != SYMBOL) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+  if (a->kind != STRING && a->kind != SYMBOL) 
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   printf("%s\n", a->val.as_string->val);
 }
 
@@ -879,7 +933,8 @@ atom* expr(atom* lex);
 
 atom* patom(atom* lex) {
   atom* out_res;
-  if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (lex == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* local_candidate = car(lex);
   atom* local_next = cdr(lex);
   atom* local_kind = car(local_candidate);
@@ -889,7 +944,7 @@ atom* patom(atom* lex) {
   atom* local_string = csymbol("string");
 
   if (!boolc(eq(local_kind, local_symbol)) && !boolc(eq(local_kind, local_number)) && !boolc(eq(local_kind, local_string))) {
-     error(ERR_PARSER_ERROR_CODE, ERR_PARSER_ERROR_MSG);
+     error(ERR_PARSER_ERROR_CODE, ERR_PARSER_ERROR_MSG, __func__, __FILE__, __LINE__);
   }
 
   // @FIXME handle NIL() specific case...
@@ -909,7 +964,8 @@ atom* patom(atom* lex) {
 // returns cons(AST . TOKENS)
 atom* list(atom* lex) {
   atom* out_res;
-  if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (lex == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   atom* local_candidate = car(lex);
   atom* local_next = cdr(lex);
   atom* local_kind = car(local_candidate);
@@ -947,7 +1003,8 @@ atom* list(atom* lex) {
 // returns cons(AST . TOKENS)
 atom* expr(atom* lex) {
   atom* out_res = nil();
-  if (lex == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (lex == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   if (!boolc(lex)) return cons(nil(), nil());
   atom* local_candidate = car(lex);
   atom* local_next = cdr(lex);
@@ -979,16 +1036,29 @@ atom* thunk(atom* expr, atom* env) {
 }
 
 atom* force_it(atom* maybe_thunk) {
+  printf("force it\n");
   if (maybe_thunk->kind != THUNK) return atom_rc_incr(maybe_thunk);
+  // memoization lookup
+  // @FIXME: a proper MEMOIZED_THUNK type would be better...
+  if (maybe_thunk->val.as_capture.env == NULL) return atom_rc_incr(maybe_thunk->val.as_capture.expr);
+
+  // resolve
   atom* partial = eval(maybe_thunk->val.as_capture.expr, maybe_thunk->val.as_capture.env);
   atom* finale = force_it(partial);
   atom_rc_decr(partial);
+
+  atom_rc_decr(maybe_thunk->val.as_capture.expr);
+  atom_rc_decr(maybe_thunk->val.as_capture.env);
+  maybe_thunk->val.as_capture.expr = atom_rc_incr(finale);
+  maybe_thunk->val.as_capture.env = NULL;
   return finale;
 }
 
 atom* apply(atom* rator, atom* rands) {
+  printf("apply\n");
   atom* out_res = nil();
-  if (rator == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  if (rator == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   if (rator->kind == CLOSU) {
     atom* branch_expr = atom_rc_incr(rator->val.as_capture.expr);
     atom* branch_env = atom_rc_incr(rator->val.as_capture.env);
@@ -1043,12 +1113,13 @@ atom* apply(atom* rator, atom* rands) {
     atom_rc_decr(branch_rand2);
     atom_rc_decr(branch_rand1);
   } else {
-    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   }
   return out_res;
 }
 
 atom* eval(atom* ast, atom* env) {
+  printf("eval\n");
   atom* out_res = nil();
 
   // handle symbol
@@ -1057,7 +1128,7 @@ atom* eval(atom* ast, atom* env) {
     atom* branch_res = assoc(ast, env); 
     if (branch_res->kind != PAIR) {
 	fprintf(stderr, "'%s' is not defined.\n", ast->val.as_string->val);
-	error(ERR_UNDEFINED_CODE,ERR_UNDEFINED_MSG);
+	error(ERR_UNDEFINED_CODE,ERR_UNDEFINED_MSG, __func__, __FILE__, __LINE__);
     }
     atom* branch_expr = cdr(branch_res);
     out_res = eval(branch_expr, env);
@@ -1124,6 +1195,7 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(local_binding);
     } else {
       // operator operand*
+      printf("operator\n");
       atom* local_evaled_rator_with_thunk = eval(local_head, env);
       atom* local_evaled_rator = force_it(local_evaled_rator_with_thunk);
 
@@ -1210,12 +1282,13 @@ atom* lisp_proc(char* name, char* proc) {
 
   // build the temporary file
   FILE* f = tmpfile();
-  if (!f) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG);
+  if (!f) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
   fprintf(f, "%s", proc);
   rewind(f);
 
   atom* local_tokens = lex(f);
-  if (local_tokens->kind == NIL) error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
+  if (local_tokens->kind == NIL) 
+    error(ERR_LOGIC_CODE, ERR_LOGIC_MSG, __func__, __FILE__, __LINE__);
   atom* local_parsing = expr(local_tokens);
   atom* local_ast = car(local_parsing);
 

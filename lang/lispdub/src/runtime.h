@@ -31,7 +31,7 @@
 #define ERR_SLAB_CODE 109
 #define ERR_SLAB_MSG "An internal error occured in the slab memory allocator"
 
-void error(int code, char* msg);
+void error(int code, char* msg, const char* fn, const char* file, int line);
 
 /*
  * SHARED REFS
