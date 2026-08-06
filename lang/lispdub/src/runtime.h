@@ -110,6 +110,7 @@ void  rc_memleak_check(void);
 atom* cbool(int b);
 int boolc(atom* a);
 atom* cnumber(int v);
+string_t* heap_string(char* s, size_t len);
 atom* cstring(char* s, size_t len);
 int  cstring_eq(string_t* s1, string_t* s2);
 atom* csymbol(char* s);
