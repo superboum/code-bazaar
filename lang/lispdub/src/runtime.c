@@ -91,7 +91,7 @@ atom* atom_rc_decr(atom* a) {
 }
 
 void rc_memleak_check() {
-  if (allocated_objects > 2) {
+  if (allocated_objects > 0) {
     fprintf(stderr, "Tracked allocated objects: %ld\n", allocated_objects);
     error(ERR_LEAK_CODE, ERR_LEAK_MSG);
   }
@@ -550,6 +550,10 @@ atom* csymbol(char* s) {
 
 void symbols_free() {
   if (global_symbols != NULL) global_symbols = atom_rc_decr(global_symbols);
+  __true->rc = 1;
+  __true = atom_rc_decr(__true);
+  _nil->rc = 1;
+  _nil = atom_rc_decr(_nil);
 
   /*enable_tracker = 0;
   for (int i = 0; i < 4096; i++) {

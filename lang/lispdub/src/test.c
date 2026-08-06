@@ -42,8 +42,8 @@ int ensure(char* candidate, atom* expected) {
     fprintf(stderr, "FAILED %s\n", candidate);
     atom* branch_expected = sexpr(expected);
     atom* branch_got = sexpr(local_forced);
-    printf("  Expected: (kind: %d) %s\n", expected->kind, branch_expected->val.as_string->val);
-    printf("  Got: (kind: %d) %s\n", local_forced->kind, branch_got->val.as_string->val);
+    printf("  Expected: (kind: %d, ptr: %p) %s\n", expected->kind, expected, branch_expected->val.as_string->val);
+    printf("  Got: (kind: %d, ptr: %p) %s\n", local_forced->kind, local_forced, branch_got->val.as_string->val);
     atom_rc_decr(branch_got);
     atom_rc_decr(branch_expected);
   }
