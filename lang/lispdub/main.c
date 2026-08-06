@@ -653,6 +653,9 @@ atom* sexpr(atom* a) {
   if (a->kind == THUNK) {
     return cstring("THUNK", 5);
   }
+  if (a->kind == WEAK) {
+    return cstring("WEAK", 4);
+  }
 
   error(ERR_LOGIC_CODE, ERR_LOGIC_MSG);
   return NULL; // unreachable
@@ -1127,6 +1130,7 @@ atom* eval(atom* ast, atom* env) {
       // eval final body
       out_res = eval(local_body, local_new_env); // eval let body
 
+      atom_rc_decr(local_evaled_expr_weak);
       atom_rc_decr(local_evaled_expr);
       atom_rc_decr(local_new_env);
       atom_rc_decr(local_new_env_entry);
@@ -1392,12 +1396,14 @@ int main(void) {
 
   if (global_symbols != NULL) global_symbols = atom_rc_decr(global_symbols);
 
-  /*enable_tracker = 0;
+  enable_tracker = 0;
   for (int i = 0; i < 4096; i++) {
     if (tracker[i] != NULL) {
-      print(sexpr(tracker[i]));
+      atom* render = sexpr(tracker[i]);
+      print(render);
+      atom_rc_decr(render);
     }
-  }*/
+  }
 
   if (global_symbols != NULL) exit(513);
 
