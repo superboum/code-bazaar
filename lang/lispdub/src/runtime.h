@@ -133,6 +133,10 @@ atom* minus(atom* a1, atom* a2);
 atom* mult(atom* a1, atom* a2);
 atom* divi(atom* a1, atom* a2);
 atom* mod(atom* a1, atom* a2);
+atom* gt(atom* a1, atom* a2);
+atom* lt(atom* a1, atom* a2);
+atom* ge(atom* a1, atom* a2);
+atom* le(atom* a1, atom* a2);
 atom* string(atom* charlist); // build a string from a list of char
 atom* string_concatenate(atom* a1, atom* a2); // concatenate 2 strings
 atom* symbol(atom* a); // build an atom from a string

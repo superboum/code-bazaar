@@ -379,6 +379,58 @@ atom* mod(atom* a1t, atom* a2t) {
   return out_res;
 }
 
+atom* gt(atom* a1t, atom* a2t) {
+  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  atom* a1 = force_it(a1t);
+  atom* a2 = force_it(a2t);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+
+  atom* out_res = cbool(a1->val.as_number > a2->val.as_number);
+
+  atom_rc_decr(a1);
+  atom_rc_decr(a2);
+  return out_res;
+}
+
+atom* lt(atom* a1t, atom* a2t) {
+  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  atom* a1 = force_it(a1t);
+  atom* a2 = force_it(a2t);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+
+  atom* out_res = cbool(a1->val.as_number < a2->val.as_number);
+
+  atom_rc_decr(a1);
+  atom_rc_decr(a2);
+  return out_res;
+}
+
+atom* ge(atom* a1t, atom* a2t) {
+  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  atom* a1 = force_it(a1t);
+  atom* a2 = force_it(a2t);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+
+  atom* out_res = cbool(a1->val.as_number >= a2->val.as_number);
+
+  atom_rc_decr(a1);
+  atom_rc_decr(a2);
+  return out_res;
+}
+
+atom* le(atom* a1t, atom* a2t) {
+  if (a1t == NULL || a2t == NULL) error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG);
+  atom* a1 = force_it(a1t);
+  atom* a2 = force_it(a2t);
+  if (a1->kind != NUMBER || a2->kind != NUMBER) error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG);
+
+  atom* out_res = cbool(a1->val.as_number <= a2->val.as_number);
+
+  atom_rc_decr(a1);
+  atom_rc_decr(a2);
+  return out_res;
+}
+
 atom* cstring(char* s, size_t len) {
   size_t memsz = sizeof(string_t)+sizeof(char)*(len+1);
   string_t* ptr = malloc(memsz);
@@ -1002,7 +1054,10 @@ atom* eval(atom* ast, atom* env) {
   if (ast->kind == SYMBOL) {
     // find symbol in env
     atom* branch_res = assoc(ast, env); 
-    if (branch_res->kind != PAIR) error(ERR_UNDEFINED_CODE,ERR_UNDEFINED_MSG);
+    if (branch_res->kind != PAIR) {
+	fprintf(stderr, "'%s' is not defined.\n", ast->val.as_string->val);
+	error(ERR_UNDEFINED_CODE,ERR_UNDEFINED_MSG);
+    }
     atom* branch_expr = cdr(branch_res);
     out_res = eval(branch_expr, env);
     atom_rc_decr(branch_expr);
@@ -1241,6 +1296,30 @@ atom* full_env() {
   out_res=tmp;
 
   head = afx2("mod", mod);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx2(">", gt);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx2(">=", ge);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx2("<", lt);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx2("<=", le);
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);
