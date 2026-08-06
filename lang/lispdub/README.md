@@ -184,3 +184,4 @@ I've read (at least partially):
 
 On my reading list:
  - Lisp In Small Pieces by C. Queinnec
+ - Paradigms of Artificial Intelligence Programming (PAIP) by P. Norvig
