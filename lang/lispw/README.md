@@ -23,8 +23,8 @@ make bin/repl
 
 ### Memory Management
 
-- [X] Reference Counting
-- [ ] Slab allocator
+- [x] Reference Counting
+- [x] Slab allocator
 - [x] Weak references for recursivity
 
 ### Datatype
@@ -58,7 +58,7 @@ It is designed to fit on 24 bytes.
  - [x] quote
  - [x] if
  - [x] thunk (delayed execution / normal order)
-   - [ ] Memoized thunks
+   - [x] memoized thunks
  - [ ] define
  - [ ] macro
  - [ ] quasiquote + unquote
@@ -77,7 +77,12 @@ It is designed to fit on 24 bytes.
    - [x] and / or
    - [ ] cond
    - [ ] map / fold
+   - [ ] streams (lazy lists)
 
+
+### I/O
+
+*Not yet implemented/designed. I'm thinking to something built around linux [io_uring](https://man7.org/linux/man-pages/man7/io_uring.7.html).*
 
 ### Optimizations
  - [ ] Lexical Addressing (or Static Scope Resolution)
