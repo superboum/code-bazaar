@@ -29,6 +29,8 @@ void error(int code, char* msg, const char* fn, const char* file, int line) {
  * DATATYPES PRIMITIVES
  */
 
+typedef struct { size_t len; char val[8]; } string_7_t;
+
 atom _static_nil = (struct atom) { 
   .kind = NIL, 
   .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC 
@@ -42,14 +44,14 @@ atom* _false() {
   return _nil;
 }
 
-string_t _static_true_str = (struct string) {
+static string_7_t _static_true_str = {
   .len = 1,
   .val = "t",
 };
 atom _static_true = (struct atom) {
   .kind = SYMBOL,
   .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = &_static_true_str
+  .val.as_string = (string_t *)&_static_true_str
 };
 atom* _true() {
   return &_static_true;
@@ -247,7 +249,7 @@ static const int small_num_cache_size = 128;
 atom small_num_cache[128] = {0};
 atom* cnumber(int v) {
   atom* a;
-  if (v < small_num_cache_size) {
+  if (v >= 0 && v < small_num_cache_size) {
     a = &small_num_cache[v];
     if (a->kind != NUMBER) {
       a->kind = NUMBER;
@@ -462,54 +464,54 @@ atom* string_concatenate(atom* a1, atom* a2) {
   return a;
 }
 
-string_t _static_str_lambda = (struct string) {
+static string_7_t _static_str_lambda = {
   .len = 6,
   .val = "lambda",
 };
 atom _static_sym_lambda = (struct atom) {
   .kind = SYMBOL,
   .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = &_static_str_lambda
+  .val.as_string = (string_t*)&_static_str_lambda
 };
 
-string_t _static_str_quote = (struct string) {
+static string_7_t _static_str_quote = {
   .len = 5,
   .val = "quote",
 };
 atom _static_sym_quote = (struct atom) {
   .kind = SYMBOL,
   .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = &_static_str_quote
+  .val.as_string = (string_t*)&_static_str_quote
 };
 
-string_t _static_str_let = (struct string) {
+static string_7_t _static_str_let = {
   .len = 3,
   .val = "let",
 };
 atom _static_sym_let = (struct atom) {
   .kind = SYMBOL,
   .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = &_static_str_let
+  .val.as_string = (string_t*)&_static_str_let
 };
 
-string_t _static_str_thunk = (struct string) {
+static string_7_t _static_str_thunk = {
   .len = 5,
   .val = "thunk",
 };
 atom _static_sym_thunk = (struct atom) {
   .kind = SYMBOL,
   .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = &_static_str_thunk
+  .val.as_string = (string_t*)&_static_str_thunk
 };
 
-string_t _static_str_if = (struct string) {
+static string_7_t _static_str_if = {
   .len = 2,
   .val = "if",
 };
 atom _static_sym_if = (struct atom) {
   .kind = SYMBOL,
   .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = &_static_str_if
+  .val.as_string = (string_t*)&_static_str_if
 };
 
 
@@ -565,9 +567,8 @@ atom* _unsafe_symbol(char* inner_val, size_t inner_len) {
       error(ERR_LOGIC_CODE, ERR_LOGIC_MSG, __func__, __FILE__, __LINE__); // wrong type
     string_t* cur_str = loop_cur->val.as_string;
 
-    found = true;
-    found = found && cur_str->len == inner_len; // length must match
-    found = found && strncmp(cur_str->val, inner_val, inner_len) == 0; // chars must match
+    found = cur_str->len == inner_len; // length must match
+    if (found) found = strncmp(cur_str->val, inner_val, inner_len) == 0; // chars must match
     if (found) {
       out_res = atom_rc_incr(loop_cur);
     }
