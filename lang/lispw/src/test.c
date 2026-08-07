@@ -19,6 +19,7 @@ int main(void) {
   exit_code += ensure("./examples/collatz.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 111 });
   exit_code += ensure("./examples/euler_01.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 233168 });
   exit_code += ensure("./examples/euler_02.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 4613732 });
+  exit_code += ensure("./examples/euler_03_factors.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 6857 });
 
   rc_stats();
 

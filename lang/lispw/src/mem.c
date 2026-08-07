@@ -162,7 +162,7 @@ void rc_stats(void) {
 
   printf("-- aggregated stats --\n");
   printf("  live objects: %ld\n", allocator_live_atoms(&global_allocator));
-  printf("  slabs: %ld\n", allocator_live_atoms(&global_allocator));
+  printf("  slabs: %ld\n", allocator_slabs_count(&global_allocator));
 }
 
 void rc_memleak_check(void) {
