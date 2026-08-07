@@ -1,6 +1,6 @@
-# LispDub
+# LispW
 
-A lisp as cringe as your favorite 2010 lip dub clip.
+A lisp as cringe as your favorite 2010 lip dub clip (did you get the joke?).
 
 Example of computing 5! with recursion:
 
