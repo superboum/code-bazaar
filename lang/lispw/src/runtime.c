@@ -247,7 +247,7 @@ atom* assoc(atom* key, atom* list) {
 
 static const int small_num_cache_size = 128;
 atom small_num_cache[128] = {0};
-atom* cnumber(int v) {
+atom* cnumber(int64_t v) {
   atom* a;
   if (v >= 0 && v < small_num_cache_size) {
     a = &small_num_cache[v];
@@ -266,8 +266,8 @@ atom* cnumber(int v) {
 atom* number(atom* charlist) {
   if (charlist == NULL) 
     error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
-  int acc = 0;
-  int base10shift = 1;
+  int64_t acc = 0;
+  int64_t base10shift = 1;
   while (boolc(charlist)) {
     atom* charcode = atom_rc_decr(car(charlist));
     if (charcode->val.as_number < ASCII_CODE_ZERO || charcode->val.as_number > ASCII_CODE_NINE) 
@@ -654,7 +654,7 @@ atom* sexpr(atom* a) {
     return final;
   }
   if (a->kind == NUMBER) {
-    const char fmt[] = "%d";
+    const char fmt[] = "%ld";
     int sz = snprintf(NULL, 0, fmt, a->val.as_number)+1;
     char* tmp = malloc(sz);
     if (tmp == NULL) 
@@ -745,7 +745,7 @@ atom* debug_sexpr(atom* a) {
     return final;
   }
   if (a->kind == NUMBER) {
-    const char fmt[] = "{%d}%d";
+    const char fmt[] = "{%d}%ld";
     int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_number)+1;
     char* tmp = malloc(sz);
     if (tmp == NULL) 

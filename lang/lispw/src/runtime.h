@@ -83,7 +83,7 @@ typedef struct atom {
   char kind;
   short rc;
   union {
-    int as_number;
+    int64_t as_number;
     string_t* as_string;
     struct pair as_pair;
     struct closu as_capture;
@@ -115,7 +115,7 @@ void  rc_memleak_check(void);
 //   c-bindings
 atom* cbool(int b);
 int boolc(atom* a);
-atom* cnumber(int v);
+atom* cnumber(int64_t v);
 string_t* heap_string(char* s, size_t len);
 atom* cstring(char* s, size_t len);
 int  cstring_eq(string_t* s1, string_t* s2);
