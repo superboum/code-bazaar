@@ -8,4 +8,4 @@
       (if (eq (mod (car l) 2) 1) 
 	(even-sum (cdr l))
         (+ (car l) (even-sum (cdr l)))))))
-    (even-sum (fibonacci (quote (2 1)) 4000))))
+    (even-sum (fibonacci (quote (2 1)) 4000000))))

@@ -18,7 +18,7 @@ int main(void) {
   exit_code += ensure("./examples/fib.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 377 });
   exit_code += ensure("./examples/collatz.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 111 });
   exit_code += ensure("./examples/euler_01.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 233168 });
-  exit_code += ensure("./examples/euler_02.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 3382 });
+  exit_code += ensure("./examples/euler_02.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 4613732 });
 
   rc_stats();
 
