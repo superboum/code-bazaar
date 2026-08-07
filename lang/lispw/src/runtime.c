@@ -1,9 +1,26 @@
+#include <execinfo.h>
 #include "runtime.h"
 
 /*
  * ERROR MANAGEMENT
  */
+#define BACKTRACE_MAX_SZ 1024
+void print_backtrace(void)
+{
+  void *bt[BACKTRACE_MAX_SZ];
+  int bt_size;
+  char **bt_syms;
+
+  bt_size = backtrace(bt, 1024);
+  bt_syms = backtrace_symbols(bt, bt_size);
+  for (int i = 1; i < bt_size; i++) {
+    fprintf(stderr, "%s\n", bt_syms[i]);
+  }
+  free(bt_syms);
+}
+
 void error(int code, char* msg, const char* fn, const char* file, int line) {
+  print_backtrace();
   fprintf(stderr, "Fatal Error in func %s at %s, line %d. %s\n", fn, file, line, msg);
   exit(code);
 }
@@ -1036,11 +1053,10 @@ atom* thunk(atom* expr, atom* env) {
 }
 
 atom* force_it(atom* maybe_thunk) {
-  printf("force it\n");
   if (maybe_thunk->kind != THUNK) return atom_rc_incr(maybe_thunk);
   // memoization lookup
   // @FIXME: a proper MEMOIZED_THUNK type would be better...
-  if (maybe_thunk->val.as_capture.env == NULL) return atom_rc_incr(maybe_thunk->val.as_capture.expr);
+  if (maybe_thunk->val.as_capture.env == _nil) return atom_rc_incr(maybe_thunk->val.as_capture.expr);
 
   // resolve
   atom* partial = eval(maybe_thunk->val.as_capture.expr, maybe_thunk->val.as_capture.env);
@@ -1050,12 +1066,11 @@ atom* force_it(atom* maybe_thunk) {
   atom_rc_decr(maybe_thunk->val.as_capture.expr);
   atom_rc_decr(maybe_thunk->val.as_capture.env);
   maybe_thunk->val.as_capture.expr = atom_rc_incr(finale);
-  maybe_thunk->val.as_capture.env = NULL;
+  maybe_thunk->val.as_capture.env = _nil;
   return finale;
 }
 
 atom* apply(atom* rator, atom* rands) {
-  printf("apply\n");
   atom* out_res = nil();
   if (rator == NULL) 
     error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
@@ -1119,7 +1134,6 @@ atom* apply(atom* rator, atom* rands) {
 }
 
 atom* eval(atom* ast, atom* env) {
-  printf("eval\n");
   atom* out_res = nil();
 
   // handle symbol
@@ -1195,7 +1209,6 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(local_binding);
     } else {
       // operator operand*
-      printf("operator\n");
       atom* local_evaled_rator_with_thunk = eval(local_head, env);
       atom* local_evaled_rator = force_it(local_evaled_rator_with_thunk);
 
