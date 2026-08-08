@@ -732,7 +732,6 @@ atom* lex_symbol(FILE* f) {
 }
 
 // Returns a (number 67)
-// @FIXME missing support for minus
 atom* lex_number(FILE* f) {
   atom* acc = nil();
 
@@ -793,9 +792,17 @@ atom* lex_token(FILE* f) {
       lex_comment(f);
       continue;
     }
-    if (is_digit(c) || c == '-') {
+    if (is_digit(c)) {
       ungetc(c, f);
       return lex_number(f);
+    }
+    if (c == '-') {
+      int d = fgetc(f);
+      int is_num = is_digit(d);
+      ungetc(d, f);
+      ungetc(c, f);
+      if (is_num) return lex_number(f);
+      else return lex_symbol(f);
     }
     if (is_symbol_char(c)) {
       ungetc(c, f);
@@ -1025,6 +1032,7 @@ atom* apply(atom* rator, atom* rands) {
     atom_rc_decr(branch_rand2);
     atom_rc_decr(branch_rand1);
   } else {
+    fprintf(stderr, "Can't apply: (%s %s)\n", sexpr(rator)->val.as_string->val, sexpr(rands)->val.as_string->val);
     error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   }
   return out_res;

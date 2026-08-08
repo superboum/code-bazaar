@@ -6,6 +6,7 @@ BIN_DIR = bin
 SRC_DIR = src
 OBJECTS = $(BIN_DIR)/errors.o \
 	    $(BIN_DIR)/mem.o \
+	    $(BIN_DIR)/symbols.o \
             $(BIN_DIR)/runtime.o
 
 .PHONY: all clean
@@ -17,6 +18,10 @@ clean:
 $(BIN_DIR)/errors.o: $(SRC_DIR)/errors.h $(SRC_DIR)/errors.c
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/errors.c -o $(BIN_DIR)/errors.o
+
+$(BIN_DIR)/symbols.o: $(SRC_DIR)/symbols.h $(SRC_DIR)/symbols.c
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) -c $(SRC_DIR)/symbols.c -o $(BIN_DIR)/symbols.o
 
 $(BIN_DIR)/mem.o: $(SRC_DIR)/errors.h $(SRC_DIR)/mem.h $(SRC_DIR)/mem.c
 	@mkdir -p $(BIN_DIR)

@@ -1,9 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <limits.h>
 #include "runtime.h"
 
 char* hello_world = "hello world";
 int ensure(char* candidate, atom* expected);
+int64_t min_int();
 int main(void) {
   int exit_code = 0;
 
@@ -11,6 +13,7 @@ int main(void) {
   exit_code += ensure("./examples/bool_false.lisp", _false());
   exit_code += ensure("./examples/lazy_if.lisp", _true());
   exit_code += ensure("./examples/comments.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 3 });
+  //exit_code += ensure("./examples/neg_number.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = min_int() });
   exit_code += ensure("./examples/list.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 4001 });
   exit_code += ensure("./examples/apply.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 5 });
   exit_code += ensure("./examples/number.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 5 });
@@ -26,6 +29,11 @@ int main(void) {
 
   if (exit_code > 0) fprintf(stderr, "ERROR. %d failed tests\n", exit_code);
   return exit_code;
+}
+
+int64_t min_int() {
+  int64_t base = 1; 
+  return base << 63;
 }
 
 int ensure(char* candidate, atom* expected) {
