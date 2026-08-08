@@ -586,6 +586,9 @@ atom* sexpr(atom* a) {
   if (a->kind == CLOSU) {
     return cstring("CLOSURE", 7);
   }
+  if (a->kind == MACRO) {
+    return cstring("MACRO", 5);
+  }
   if (a->kind == THUNK) {
     atom* branch_a = force_it(a);
     atom* out_res = sexpr(branch_a);
@@ -670,6 +673,11 @@ atom* print(atom* at) {
   return nil();
 }
 
+atom* make_macro(atom* a) {
+  atom* out_res = atom_alloc(MACRO);
+  out_res->val.as_macro = a;
+  return out_res;
+}
 
 /*
  * LEXER
@@ -1415,6 +1423,12 @@ atom* full_env() {
   out_res=tmp;
 
   head = afx1("parse", lisp_parse);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx1("make-macro", make_macro);
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);

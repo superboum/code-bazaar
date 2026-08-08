@@ -64,6 +64,7 @@ atom* symbol(atom* a); // build an atom from a string
 atom* sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 atom* debug_sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 atom* print(atom* a);
+atom* make_macro(atom* a);
 
 /*
  * LEXER

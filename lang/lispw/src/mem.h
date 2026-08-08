@@ -23,7 +23,8 @@
 #define FX2    8
 #define FX3    9
 #define WEAK   10
-#define NIL    11
+#define MACRO   11
+#define NIL    12
 
 typedef struct string {
   size_t len;
@@ -55,6 +56,7 @@ typedef struct atom {
     struct pair as_pair;
     struct closu as_capture;
     struct atom* as_weak;
+    struct atom* as_macro;
     fx1 as_fx1;
     fx2 as_fx2;
     fx3 as_fx3;

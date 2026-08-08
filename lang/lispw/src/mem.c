@@ -90,8 +90,8 @@ allocator_t global_allocator = {0};
 
 size_t alloc_count_per_kind[32] = {0};
 
-const int atom_kind_count = 12;
-const char* atom_kind_names[12] = {
+const int atom_kind_count = 13;
+const char* atom_kind_names[13] = {
   "FREED",
   "NUMBER",
   "STRING",
@@ -103,6 +103,7 @@ const char* atom_kind_names[12] = {
   "FX2",
   "FX3",
   "WEAK",
+  "MACRO",
   "NIL",
 };
 
