@@ -587,7 +587,10 @@ atom* sexpr(atom* a) {
     return cstring("CLOSURE", 7);
   }
   if (a->kind == THUNK) {
-    return cstring("THUNK", 5);
+    atom* branch_a = force_it(a);
+    atom* out_res = sexpr(branch_a);
+    atom_rc_decr(branch_a);
+    return out_res;
   }
   if (a->kind == WEAK) {
     return cstring("WEAK", 4);
@@ -655,10 +658,16 @@ atom* debug_sexpr(atom* a) {
   return a;
 }
 
-void print(atom* a) {
+atom* print(atom* at) {
+  if (at == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+
+  atom* a = force_it(at);
   if (a->kind != STRING && a->kind != SYMBOL) 
     error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
   printf("%s\n", a->val.as_string->val);
+  atom_rc_decr(a);
+  return nil();
 }
 
 
@@ -1355,6 +1364,18 @@ atom* full_env() {
   out_res=tmp;
 
   head = lisp_proc("t", "(quote t)");
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx1("sexpr", sexpr);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx1("print", print);
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);

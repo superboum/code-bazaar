@@ -21,6 +21,13 @@ make bin/repl
 
 ## Features
 
+### Lang props
+
+ - [x] lexical scoping (define may be the exception here, not sure yet...)
+ - [x] recursivity, corecursivity (through define only)
+ - [x] immutability
+ - [x] *should be* mostly normal order (and not applicative order, not sure yet...)
+
 ### Memory Management
 
 - [x] Reference Counting
@@ -59,10 +66,10 @@ It is designed to fit on 24 bytes.
  - [x] quote
  - [x] if
  - [x] thunk (delayed execution / normal order)
- - [ ] define
+ - [x] define (trough a hack however)
+   - [ ] properly scoped define 
  - [ ] macro
  - [ ] quasiquote + unquote
-
 
 ### Standard Library
 
