@@ -1058,18 +1058,18 @@ atom* eval(atom* ast, atom* env) {
   } else if (ast->kind == PAIR) {
     atom* local_head = car(ast);
 
-    if (boolc(eq(local_head, &_static_sym_lambda))) {
+    if (local_head == &_static_sym_lambda) {
       // (lambda var-list body) -> (closure var-list body env)
       // build a closure
       atom* closu = atom_alloc(CLOSU);
       closu->val.as_capture.expr = cdr(ast);
       closu->val.as_capture.env = atom_rc_incr(env);
       out_res = closu;
-    } else if (boolc(eq(local_head, &_static_sym_thunk))) {
+    } else if (local_head == &_static_sym_thunk) {
       atom* branch_thunk_body = cadr(ast);
       out_res = thunk(branch_thunk_body, env);
       atom_rc_decr(branch_thunk_body);
-    } else if (boolc(eq(local_head, &_static_sym_if))) {
+    } else if (local_head == &_static_sym_if) {
       atom* branch_cond = cadr(ast);
       atom* branch_cond_evaled = eval(branch_cond, env);
       atom* branch_cond_resolved = force_it(branch_cond_evaled);
@@ -1085,9 +1085,9 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(branch_cond_resolved);
       atom_rc_decr(branch_cond_evaled);
       atom_rc_decr(branch_cond);
-    } else if (boolc(eq(local_head, &_static_sym_quote))) {
+    } else if (local_head == &_static_sym_quote) {
       out_res = cadr(ast);
-    } else if (boolc(eq(local_head, &_static_sym_let))) {
+    } else if (local_head == &_static_sym_let) {
       // (let (symbol expr) expr)
       atom* local_binding = cadr(ast);
       atom* local_body = caddr(ast);
@@ -1111,6 +1111,22 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(local_binding_expr);
       atom_rc_decr(local_binding_name);
       atom_rc_decr(local_body);
+      atom_rc_decr(local_binding);
+    } else if (local_head == &_static_sym_define) {
+      //@FIXME ugly hack to implement define.
+      atom* local_binding = cadr(ast);
+      atom* local_expr = caddr(ast);
+      atom* local_env_entry = cons(local_binding, local_expr);
+      atom* env_tail = cons(local_env_entry, nil());
+
+      atom* env_iter = env;
+      while (env_iter->val.as_pair.tail != &_static_nil) {
+        env_iter = env_iter->val.as_pair.tail;
+      }
+      env_iter->val.as_pair.tail = env_tail;
+
+      atom_rc_decr(local_env_entry);
+      atom_rc_decr(local_expr);
       atom_rc_decr(local_binding);
     } else {
       // operator operand*

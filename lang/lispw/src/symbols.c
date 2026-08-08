@@ -85,6 +85,16 @@ atom _static_sym_number = (struct atom) {
   .val.as_string = (string_t*)&_static_str_number
 };
 
+static string_7_t _static_str_define = {
+  .len = 6,
+  .val = "define",
+};
+atom _static_sym_define = (struct atom) {
+  .kind = SYMBOL,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_string = (string_t*)&_static_str_define
+};
+
 
 atom global_symbols_p0 = (struct atom) {
   .kind = PAIR,
@@ -134,7 +144,13 @@ atom global_symbols_p7 = (struct atom) {
   .val.as_pair.head = &_static_sym_number,
   .val.as_pair.tail = &global_symbols_p6,
 };
-atom* initial_global_symbols = &global_symbols_p7;
-atom* global_symbols = &global_symbols_p7;
+atom global_symbols_p8 = (struct atom) {
+  .kind = PAIR,
+  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
+  .val.as_pair.head = &_static_sym_define,
+  .val.as_pair.tail = &global_symbols_p7,
+};
+atom* initial_global_symbols = &global_symbols_p8;
+atom* global_symbols = &global_symbols_p8;
 
 

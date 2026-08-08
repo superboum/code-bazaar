@@ -16,6 +16,7 @@ extern atom _static_sym_thunk;
 extern atom _static_sym_if;
 extern atom _static_sym_minus;
 extern atom _static_sym_number;
+extern atom _static_sym_define;
 
 extern atom* initial_global_symbols;
 extern atom* global_symbols;
