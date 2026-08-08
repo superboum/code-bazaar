@@ -26,6 +26,8 @@ make bin/repl
  - [x] lexical scoping (define may be the exception here, not sure yet...)
  - [x] recursivity, corecursivity (through define only)
  - [x] immutability
+ - [ ] implicit progn (only) on let / lambda / etc.
+ - [x] few syntactic sugar
  - [x] *should be* mostly normal order (and not applicative order, not sure yet...)
 
 ### Memory Management
@@ -86,7 +88,7 @@ It is designed to fit on 24 bytes.
    - [ ] map / fold
    - [ ] streams (lazy lists)
  - [ ] Expose interpreter internals
-   - [ ] `sexpr_load` / `sexpr_dump`
+   - [x] `sexpr` / `parse`
    - [ ] eval
 
 

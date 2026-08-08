@@ -6,6 +6,7 @@
  * MAIN
  */
 int main(void) {
+  printf("lispw by Quentin Dufour <quentin@dufour.io>\n");
   atom* my_env = full_env();
   while (true) {
     printf("> ");

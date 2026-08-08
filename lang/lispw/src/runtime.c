@@ -1178,6 +1178,39 @@ atom* eval(atom* ast, atom* env) {
   return out_res;
 }
 
+/*
+ * ENVIRONMENT BUILDING
+ */
+
+atom* lisp_parse(atom* at) {
+  atom* out_res = nil();
+
+  if (at == NULL)
+    error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
+
+  atom* a = force_it(at);
+
+  if (a->kind != STRING)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
+
+  // build the temporary file
+  FILE* f = tmpfile();
+  if (!f) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
+  fprintf(f, "%s", a->val.as_string->val);
+  rewind(f);
+
+  atom* my_tokens = lex(f);
+  if (my_tokens->kind != NIL) {
+    atom* branch_parse_res = expr(my_tokens);
+    out_res = car(branch_parse_res);
+    atom_rc_decr(branch_parse_res);
+  }
+  atom_rc_decr(my_tokens);
+  atom_rc_decr(a);
+  fclose(f);
+  return out_res;
+}
+
 atom* afx1(char* name, fx1 f) {
   atom* out_res;
 
@@ -1376,6 +1409,12 @@ atom* full_env() {
   out_res=tmp;
 
   head = afx1("print", print);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx1("parse", lisp_parse);
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);
