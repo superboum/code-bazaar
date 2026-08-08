@@ -47,6 +47,7 @@ It is designed to fit on 24 bytes.
 ### S-expr serialization / deserialization
 
  - [x] s-expr lexer
+   - [x] support comments
  - [x] s-expr parser
  - [x] s-expr serializer
  - [ ] handle dot syntax `(a . b)`; ie. the case where `cdr(a)` is not NIL or a PAIR
