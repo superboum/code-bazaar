@@ -23,6 +23,8 @@ make bin/repl
 
 ### Lang props
 
+Intended to be a mix between Scheme & Clojure.
+
  - [x] lexical scoping (define may be the exception here, not sure yet...)
  - [x] recursivity, corecursivity (through define only)
  - [x] immutability
@@ -55,10 +57,11 @@ It is designed to fit on 24 bytes.
 
 ### S-expr serialization / deserialization
 
- - [x] s-expr lexer
-   - [x] support comments
- - [x] s-expr parser
- - [x] s-expr serializer
+ - [x] base s-expr lexer
+ - [x] base s-expr parser
+ - [x] base s-expr serializer
+ - [x] support comments
+ - [ ] support ticks syntaxic sugar (quote `'`, quasiquote `\``, unquote `,`)
  - [ ] handle dot syntax `(a . b)`; ie. the case where `cdr(a)` is not NIL or a PAIR
 
 ### Special forms
@@ -70,7 +73,7 @@ It is designed to fit on 24 bytes.
  - [x] thunk (delayed execution / normal order)
  - [x] define (trough a hack however)
    - [ ] properly scoped define 
- - [ ] macro
+ - [x] macro
  - [ ] quasiquote + unquote
 
 ### Standard Library
@@ -195,6 +198,8 @@ label main:
 
 
 ## Resources
+
+What motivated me to start this project: [ William Byrd on "The Most Beautiful Program Ever Written" [PWL NYC] ](https://www.youtube.com/watch?v=OyfBQmvr2Hc)
 
 I've read (at least partially):
  - Crafting Interpreters by Robert Nystrom
