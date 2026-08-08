@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O2  -fsanitize=address -g 
+CFLAGS = -Wall -Wextra -fsanitize=address -g 
 LDFLAGS = -rdynamic  -fsanitize=address
 
 BIN_DIR = bin

@@ -507,6 +507,7 @@ void symbols_free() {
 }
 
 atom* sexpr(atom* a) {
+  if (a->kind == FREED) return cstring("FREED", 5);
   if (a->kind == NIL) return cstring("NIL", 3);
   if (a->kind == SYMBOL) {
     const char fmt[] = "%s";
@@ -580,7 +581,7 @@ atom* sexpr(atom* a) {
     free(acc);
     return final;
   }
-  if (a->kind == FX1 || a->kind == FX2) {
+  if (a->kind == FX1 || a->kind == FX2 || a->kind == FX3) {
     return cstring("C FUNCTION", 10);
   }
   if (a->kind == CLOSU) {
@@ -673,9 +674,9 @@ atom* print(atom* at) {
   return nil();
 }
 
-atom* make_macro(atom* a) {
+atom* macro(atom* a) {
   atom* out_res = atom_alloc(MACRO);
-  out_res->val.as_macro = a;
+  out_res->val.as_macro = atom_rc_incr(a);
   return out_res;
 }
 
@@ -1073,7 +1074,8 @@ atom* eval(atom* ast, atom* env) {
   } else if (ast->kind == WEAK) {
     out_res = atom_rc_incr(ast->val.as_weak);
   } else if (ast->kind == PAIR) {
-    atom* local_head = car(ast);
+    atom* local_head_lazy = car(ast);
+    atom* local_head = force_it(local_head_lazy);
 
     if (local_head == &_static_sym_lambda) {
       // (lambda var-list body) -> (closure var-list body env)
@@ -1149,36 +1151,45 @@ atom* eval(atom* ast, atom* env) {
       // operator operand*
       atom* local_evaled_rator_with_thunk = eval(local_head, env);
       atom* local_evaled_rator = force_it(local_evaled_rator_with_thunk);
-
-      // must be a atom(list(symb(closure))) or a atom(fx1) or a atom(fx2)
-      atom* local_evaled_rands = nil();
       atom* local_rands = cdr(ast);
-      while (local_rands->kind == PAIR) {
-	atom* loop_local_rands = local_rands;
-	atom* loop_cur = car(loop_local_rands);
-        atom* loop_evaled_cur = thunk(loop_cur, env);
-	atom* loop_prev_evaled_rands = local_evaled_rands;
 
-	local_evaled_rands = cons(loop_evaled_cur, loop_prev_evaled_rands);
-        local_rands = cdr(loop_local_rands);
+      if (local_evaled_rator->kind == MACRO) {
+	atom* local_macro_forced = force_it(local_evaled_rator->val.as_macro);
+        atom* local_expanded_macro = apply(local_macro_forced, local_rands);
+        out_res = eval(local_expanded_macro, env);
+	atom_rc_decr(local_macro_forced);
+	atom_rc_decr(local_expanded_macro);
+      } else {
+        // must be a atom(list(symb(closure))) or a atom(fx1) or a atom(fx2)
+        atom* local_evaled_rands = nil();
+        while (local_rands->kind == PAIR) {
+	  atom* loop_local_rands = local_rands;
+ 	  atom* loop_cur = car(loop_local_rands);
+          atom* loop_evaled_cur = thunk(loop_cur, env);
+	  atom* loop_prev_evaled_rands = local_evaled_rands;
 
-	atom_rc_decr(loop_prev_evaled_rands);
-	atom_rc_decr(loop_evaled_cur);
-        atom_rc_decr(loop_cur);
-	atom_rc_decr(loop_local_rands);
-      }
+	  local_evaled_rands = cons(loop_evaled_cur, loop_prev_evaled_rands);
+          local_rands = cdr(loop_local_rands);
 
-      atom* local_rev_evaled_rands = reverse(local_evaled_rands);
-      out_res = apply(local_evaled_rator, local_rev_evaled_rands);
+	  atom_rc_decr(loop_prev_evaled_rands);
+	  atom_rc_decr(loop_evaled_cur);
+          atom_rc_decr(loop_cur);
+	  atom_rc_decr(loop_local_rands);
+        }
+
+        atom* local_rev_evaled_rands = reverse(local_evaled_rands);
+        out_res = apply(local_evaled_rator, local_rev_evaled_rands);
       
-      atom_rc_decr(local_rev_evaled_rands);
+        atom_rc_decr(local_rev_evaled_rands);
+	atom_rc_decr(local_evaled_rands);
+      }
       atom_rc_decr(local_rands);
-      atom_rc_decr(local_evaled_rands);
       atom_rc_decr(local_evaled_rator);
       atom_rc_decr(local_evaled_rator_with_thunk);
     }
 
     atom_rc_decr(local_head);
+    atom_rc_decr(local_head_lazy);
   } else {
     out_res = atom_rc_incr(ast);
   }
@@ -1428,7 +1439,7 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
-  head = afx1("make-macro", make_macro);
+  head = afx1("macro", macro);
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);
