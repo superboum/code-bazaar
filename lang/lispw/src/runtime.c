@@ -853,6 +853,7 @@ atom* lex_symbol(FILE* f) {
 }
 
 // Returns a (number 67)
+// @FIXME missing support for minus
 atom* lex_number(FILE* f) {
   atom* acc = nil();
   while (true) {
@@ -876,6 +877,13 @@ atom* lex_number(FILE* f) {
   return final;
 }
 
+void lex_comment(FILE* f) {
+  int c = fgetc(f);
+  while (c != EOF && c != '\n') {
+    c = fgetc(f);
+  }
+}
+
 // Returns a token. (lparen) | (rparen) | (number 67) | (symbol foo) | (string "blabla")
 atom* lex_token(FILE* f) {
   // the loop eats spaces & new lines
@@ -896,6 +904,10 @@ atom* lex_token(FILE* f) {
     }
     if (c == '"') {
       return lex_string(f);
+    }
+    if (c == ';') {
+      lex_comment(f);
+      continue;
     }
     if (is_digit(c)) {
       ungetc(c, f);

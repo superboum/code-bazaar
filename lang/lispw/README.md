@@ -58,7 +58,6 @@ It is designed to fit on 24 bytes.
  - [x] quote
  - [x] if
  - [x] thunk (delayed execution / normal order)
-   - [x] memoized thunks
  - [ ] define
  - [ ] macro
  - [ ] quasiquote + unquote
@@ -78,6 +77,9 @@ It is designed to fit on 24 bytes.
    - [ ] cond
    - [ ] map / fold
    - [ ] streams (lazy lists)
+ - [ ] Expose interpreter internals
+   - [ ] `sexpr_load` / `sexpr_dump`
+   - [ ] eval
 
 
 ### I/O
@@ -85,6 +87,10 @@ It is designed to fit on 24 bytes.
 *Not yet implemented/designed. I'm thinking to something built around linux [io_uring](https://man7.org/linux/man-pages/man7/io_uring.7.html).*
 
 ### Optimizations
+
+ - [x] static symbols
+ - [x] memoized thunks
+ - [ ] avoid, when possible, rc allocs/deallocs in eval/apply
  - [ ] Lexical Addressing (or Static Scope Resolution)
  - [ ] Tail Call Optimization
 
