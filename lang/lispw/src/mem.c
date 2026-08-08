@@ -149,6 +149,9 @@ atom* atom_rc_decr(atom* a) {
       free(a->val.as_string);
       a->val.as_string = NULL;
     }
+    if (a->kind == MACRO) {
+      a->val.as_macro = atom_rc_decr(a->val.as_macro);
+    }
     allocator_free(&global_allocator, a);
     return NULL;
   }
