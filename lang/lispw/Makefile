@@ -4,7 +4,8 @@ LDFLAGS = -rdynamic  -fsanitize=address
 
 BIN_DIR = bin
 SRC_DIR = src
-OBJECTS = $(BIN_DIR)/mem.o \
+OBJECTS = $(BIN_DIR)/errors.o \
+	    $(BIN_DIR)/mem.o \
             $(BIN_DIR)/runtime.o
 
 .PHONY: all clean
@@ -13,11 +14,15 @@ clean:
 	@rm -rf $(BIN_DIR)
 
 # -- COMPILE RUNTIME --
-$(BIN_DIR)/mem.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/mem.c
+$(BIN_DIR)/errors.o: $(SRC_DIR)/errors.h $(SRC_DIR)/errors.c
+	@mkdir -p $(BIN_DIR)
+	$(CC) $(CFLAGS) -c $(SRC_DIR)/errors.c -o $(BIN_DIR)/errors.o
+
+$(BIN_DIR)/mem.o: $(SRC_DIR)/errors.h $(SRC_DIR)/mem.h $(SRC_DIR)/mem.c
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/mem.c -o $(BIN_DIR)/mem.o
 
-$(BIN_DIR)/runtime.o: $(SRC_DIR)/runtime.h $(SRC_DIR)/runtime.c
+$(BIN_DIR)/runtime.o: $(SRC_DIR)/errors.h $(SRC_DIR)/mem.h $(SRC_DIR)/symbols.h $(SRC_DIR)/runtime.h $(SRC_DIR)/runtime.c
 	@mkdir -p $(BIN_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/runtime.c -o $(BIN_DIR)/runtime.o
 

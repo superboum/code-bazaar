@@ -4,34 +4,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <limits.h>
-#include <stdalign.h>
-
-/*
- * ERROR MANAGEMENT
- */
-#define ERR_MALLOC_CODE 100
-#define ERR_MALLOC_MSG "Not enough memory."
-#define ERR_LOGIC_CODE 101
-#define ERR_LOGIC_MSG "Internal logic error."
-#define ERR_ATOM_WRONG_TYPE_CODE 102
-#define ERR_ATOM_WRONG_TYPE_MSG "An atom of a given type was expected; something else was found."
-#define ERR_CANT_CAR_CODE 103
-#define ERR_CANT_CAR_MSG "can't car or cdr this atom as it's not a pair."
-#define ERR_RC_ERROR_CODE 104
-#define ERR_RC_ERROR_MSG "reference counting logic error; object is freed."
-#define ERR_PARSER_ERROR_CODE 105
-#define ERR_PARSER_ERROR_MSG "Parser failed. You probably have a syntax error in your code"
-#define ERR_INTERPRETER_CODE 106
-#define ERR_INTERPRETER_MSG "Interpreter failed. Check your syntax."
-#define ERR_LEAK_CODE 107
-#define ERR_LEAK_MSG "Memory leak detected: some allocated objects were not deallocated."
-#define ERR_UNDEFINED_CODE 108
-#define ERR_UNDEFINED_MSG "Tried to resolve a variable that does not exist."
-#define ERR_SLAB_CODE 109
-#define ERR_SLAB_MSG "An internal error occured in the slab memory allocator"
-
-void error(int code, char* msg, const char* fn, const char* file, int line);
+#include "errors.h"
+#include "mem.h"
+#include "symbols.h"
 
 /*
  * SHARED REFS
@@ -41,72 +16,6 @@ void error(int code, char* msg, const char* fn, const char* file, int line);
 #define ASCII_CODE_EXCLAMATION 33
 #define ASCII_CODE_TILDE 126
 
-
-/*
- * DATATYPES DEFINITION
- */
-#define FREED  0
-#define NUMBER 1
-#define STRING 2
-#define SYMBOL 3
-#define PAIR   4
-#define CLOSU  5
-#define THUNK  6
-#define FX1    7
-#define FX2    8
-#define FX3    9
-#define WEAK   10
-#define NIL    11
-
-typedef struct string {
-  size_t len;
-  char val[];
-} string_t;
-
-struct atom;
-
-typedef struct atom* (*fx1)(struct atom*);
-typedef struct atom* (*fx2)(struct atom*, struct atom*);
-typedef struct atom* (*fx3)(struct atom*, struct atom*, struct atom*);
-
-typedef struct pair {
-  struct atom* head;
-  struct atom* tail;
-} pair;
-
-typedef struct closu {
-  struct atom* expr;
-  struct atom* env;
-} closu; // same as pair...
-
-typedef struct atom {
-  char kind;
-  short rc;
-  union {
-    int64_t as_number;
-    string_t* as_string;
-    struct pair as_pair;
-    struct closu as_capture;
-    struct atom* as_weak;
-    fx1 as_fx1;
-    fx2 as_fx2;
-    fx3 as_fx3;
-
-    // For memory management when freed
-    struct atom* as_slab_prev;
-  } val;
-} __attribute__((aligned(32))) atom;
-
-/*
- * MEMORY MANAGEMENT
- */
-
-#define RC_DISABLED_DUE_TO_STATIC_ALLOC -1
-atom* atom_alloc(char kind);
-atom* atom_rc_incr(atom* a);
-atom* atom_rc_decr(atom* a);
-void  rc_stats(void);
-void  rc_memleak_check(void);
 
 /*
  * DATATYPES PRIMITIVES

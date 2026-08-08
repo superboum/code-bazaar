@@ -1,40 +1,9 @@
-#include <execinfo.h>
 #include "runtime.h"
-
-/*
- * ERROR MANAGEMENT
- */
-#define BACKTRACE_MAX_SZ 1024
-void print_backtrace(void)
-{
-  void *bt[BACKTRACE_MAX_SZ];
-  int bt_size;
-  char **bt_syms;
-
-  bt_size = backtrace(bt, 1024);
-  bt_syms = backtrace_symbols(bt, bt_size);
-  for (int i = 1; i < bt_size; i++) {
-    fprintf(stderr, "%s\n", bt_syms[i]);
-  }
-  free(bt_syms);
-}
-
-void error(int code, char* msg, const char* fn, const char* file, int line) {
-  print_backtrace();
-  fprintf(stderr, "Fatal Error in func %s at %s, line %d. %s\n", fn, file, line, msg);
-  exit(code);
-}
 
 /*
  * DATATYPES PRIMITIVES
  */
 
-typedef struct { size_t len; char val[8]; } string_7_t;
-
-atom _static_nil = (struct atom) { 
-  .kind = NIL, 
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC 
-};
 atom* _nil = &_static_nil;
 atom* nil() {
   return _nil;
@@ -44,15 +13,6 @@ atom* _false() {
   return _nil;
 }
 
-static string_7_t _static_true_str = {
-  .len = 1,
-  .val = "t",
-};
-atom _static_true = (struct atom) {
-  .kind = SYMBOL,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = (string_t *)&_static_true_str
-};
 atom* _true() {
   return &_static_true;
 }
@@ -263,13 +223,22 @@ atom* cnumber(int64_t v) {
   return a;
 }
 
+// char->number
 atom* number(atom* charlist) {
   if (charlist == NULL) 
     error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+
+  if (charlist->kind != PAIR)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
+
   int64_t acc = 0;
   int64_t base10shift = 1;
   while (boolc(charlist)) {
     atom* charcode = atom_rc_decr(car(charlist));
+    if (boolc(eq(charcode, &_static_sym_minus))) {
+      acc = -acc;
+      break;
+    }
     if (charcode->val.as_number < ASCII_CODE_ZERO || charcode->val.as_number > ASCII_CODE_NINE) 
       error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
     int val = charcode->val.as_number - ASCII_CODE_ZERO;
@@ -463,96 +432,6 @@ atom* string_concatenate(atom* a1, atom* a2) {
   a->val.as_string = ptr;
   return a;
 }
-
-static string_7_t _static_str_lambda = {
-  .len = 6,
-  .val = "lambda",
-};
-atom _static_sym_lambda = (struct atom) {
-  .kind = SYMBOL,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = (string_t*)&_static_str_lambda
-};
-
-static string_7_t _static_str_quote = {
-  .len = 5,
-  .val = "quote",
-};
-atom _static_sym_quote = (struct atom) {
-  .kind = SYMBOL,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = (string_t*)&_static_str_quote
-};
-
-static string_7_t _static_str_let = {
-  .len = 3,
-  .val = "let",
-};
-atom _static_sym_let = (struct atom) {
-  .kind = SYMBOL,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = (string_t*)&_static_str_let
-};
-
-static string_7_t _static_str_thunk = {
-  .len = 5,
-  .val = "thunk",
-};
-atom _static_sym_thunk = (struct atom) {
-  .kind = SYMBOL,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = (string_t*)&_static_str_thunk
-};
-
-static string_7_t _static_str_if = {
-  .len = 2,
-  .val = "if",
-};
-atom _static_sym_if = (struct atom) {
-  .kind = SYMBOL,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_string = (string_t*)&_static_str_if
-};
-
-
-atom global_symbols_p0 = (struct atom) {
-  .kind = PAIR,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_pair.head = &_static_true,
-  .val.as_pair.tail = &_static_nil,
-};
-atom global_symbols_p1 = (struct atom) {
-  .kind = PAIR,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_pair.head = &_static_sym_lambda,
-  .val.as_pair.tail = &global_symbols_p0,
-};
-atom global_symbols_p2 = (struct atom) {
-  .kind = PAIR,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_pair.head = &_static_sym_quote,
-  .val.as_pair.tail = &global_symbols_p1,
-};
-atom global_symbols_p3 = (struct atom) {
-  .kind = PAIR,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_pair.head = &_static_sym_let,
-  .val.as_pair.tail = &global_symbols_p2,
-};
-atom global_symbols_p4 = (struct atom) {
-  .kind = PAIR,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_pair.head = &_static_sym_thunk,
-  .val.as_pair.tail = &global_symbols_p3,
-};
-atom global_symbols_p5 = (struct atom) {
-  .kind = PAIR,
-  .rc = RC_DISABLED_DUE_TO_STATIC_ALLOC,
-  .val.as_pair.head = &_static_sym_if,
-  .val.as_pair.tail = &global_symbols_p4,
-};
-atom* initial_global_symbols = &global_symbols_p5;
-atom* global_symbols = &global_symbols_p5;
 
 atom* _unsafe_symbol(char* inner_val, size_t inner_len) {
   atom* out_res = NULL;
@@ -856,6 +735,13 @@ atom* lex_symbol(FILE* f) {
 // @FIXME missing support for minus
 atom* lex_number(FILE* f) {
   atom* acc = nil();
+
+  // handle sign
+  int s = fgetc(f);
+  if (s == '-') acc = cons(&_static_sym_minus, acc);
+  else ungetc(s, f);
+
+  // capture numbers
   while (true) {
     int c = fgetc(f);
     if (c > 255 || c < 0 || c == EOF || !(is_digit(c))) {
@@ -869,11 +755,9 @@ atom* lex_number(FILE* f) {
     acc = new_acc;
   }
   atom* anum = number(acc);
-  atom* type = csymbol("number");
-  atom* final = cons(type, anum);
+  atom* final = cons(&_static_sym_number, anum);
   atom_rc_decr(acc);
   atom_rc_decr(anum);
-  atom_rc_decr(type);
   return final;
 }
 
@@ -909,7 +793,7 @@ atom* lex_token(FILE* f) {
       lex_comment(f);
       continue;
     }
-    if (is_digit(c)) {
+    if (is_digit(c) || c == '-') {
       ungetc(c, f);
       return lex_number(f);
     }
