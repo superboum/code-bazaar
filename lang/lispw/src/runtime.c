@@ -1023,9 +1023,7 @@ atom* eval(atom* ast, atom* env) {
 	fprintf(stderr, "'%s' is not defined.\n", ast->val.as_string->val);
 	error(ERR_UNDEFINED_CODE,ERR_UNDEFINED_MSG, __func__, __FILE__, __LINE__);
     }
-    atom* branch_expr = cdr(branch_res);
-    out_res = eval(branch_expr, env);
-    atom_rc_decr(branch_expr);
+    out_res = cdr(branch_res);
     atom_rc_decr(branch_res);
   } else if (ast->kind == WEAK) {
     out_res = atom_rc_incr(ast->val.as_weak);
@@ -1085,12 +1083,15 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(local_body);
       atom_rc_decr(local_binding);
     } else if (local_head == &_static_sym_define) {
-      //@FIXME ugly hack to implement define.
       atom* local_binding = cadr(ast);
       atom* local_expr = caddr(ast);
-      atom* local_env_entry = cons(local_binding, local_expr);
-      atom* env_tail = cons(local_env_entry, nil());
+      atom* local_expr_evaled = eval(local_expr, env);
 
+      // build an env entry
+      atom* local_env_entry = cons(local_binding, local_expr_evaled);
+      atom* env_tail = cons(local_env_entry, nil()); 
+
+      //@FIXME ugly hack to implement define by appending the entry at the end
       atom* env_iter = env;
       while (env_iter->val.as_pair.tail != &_static_nil) {
         env_iter = env_iter->val.as_pair.tail;
@@ -1098,6 +1099,7 @@ atom* eval(atom* ast, atom* env) {
       env_iter->val.as_pair.tail = env_tail;
 
       atom_rc_decr(local_env_entry);
+      atom_rc_decr(local_expr_evaled);
       atom_rc_decr(local_expr);
       atom_rc_decr(local_binding);
     } else {
@@ -1109,11 +1111,6 @@ atom* eval(atom* ast, atom* env) {
       if (local_evaled_rator->kind == MACRO) {
 	// we MUST not evaluate rands
 	atom* local_macro_forced = force_it(local_evaled_rator->val.as_macro);
-	atom* tmp1 = sexpr(local_macro_forced);
-	atom* tmp2 = sexpr(local_rands);
-	printf("macro will do (%s %s)\n", tmp1->val.as_string->val, tmp2->val.as_string->val);
-	atom_rc_decr(tmp1);
-	atom_rc_decr(tmp2);
         atom* local_expanded_macro = apply(local_macro_forced, local_rands);
         out_res = eval(local_expanded_macro, env);
 	atom_rc_decr(local_macro_forced);
@@ -1231,32 +1228,23 @@ atom* afx3(char* name, fx3 f) {
   return out_res;
 }
 
-atom* lisp_proc(char* name, char* proc) {
-  atom* out_res;
-
+void lisp_init(char* filename, atom* env) {
   // build the temporary file
-  FILE* f = tmpfile();
+  FILE* f = fopen(filename, "r");
   if (!f) error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
-  fprintf(f, "%s", proc);
-  rewind(f);
 
-  atom* local_tokens = lex(f);
-  if (local_tokens->kind == NIL) 
-    error(ERR_LOGIC_CODE, ERR_LOGIC_MSG, __func__, __FILE__, __LINE__);
-  atom* local_parsing = expr(local_tokens);
-  atom* local_ast = car(local_parsing);
-
-  atom* local_name = csymbol(name);
-
-  out_res = cons(local_name, local_ast);
-
-  atom_rc_decr(local_name);
-  atom_rc_decr(local_ast);
-  atom_rc_decr(local_parsing);
-  atom_rc_decr(local_tokens);
+  while (true) {
+    atom* local_tokens = lex(f);
+    if (local_tokens->kind == NIL) break;
+    atom* local_parsing = expr(local_tokens);
+    atom* local_ast = car(local_parsing);
+    atom* local_eval = eval(local_ast, env);
+    atom_rc_decr(local_eval);
+    atom_rc_decr(local_ast);
+    atom_rc_decr(local_parsing);
+    atom_rc_decr(local_tokens);
+  }
   fclose(f);
-
-  return out_res;
 }
 
 atom* full_env() {
@@ -1374,12 +1362,6 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
-  head = lisp_proc("t", "(quote t)");
-  tmp = cons(head, out_res);
-  atom_rc_decr(out_res);
-  atom_rc_decr(head);
-  out_res=tmp;
-
   head = afx1("sexpr", sexpr);
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
@@ -1404,50 +1386,8 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
-  head = lisp_proc("and", "(lambda (x y) (if x y nil))");
-  tmp = cons(head, out_res);
-  atom_rc_decr(out_res);
-  atom_rc_decr(head);
-  out_res=tmp;
-
-  head = lisp_proc("or", "(lambda (x y) (if x t y))");
-  tmp = cons(head, out_res);
-  atom_rc_decr(out_res);
-  atom_rc_decr(head);
-  out_res=tmp;
-
-  head = lisp_proc("map", "(let (do (lambda (fn lst) (if lst (cons (fn (car lst)) (do fn (cdr lst))) nil))) do)");
-  tmp = cons(head, out_res);
-  atom_rc_decr(out_res);
-  atom_rc_decr(head);
-  out_res=tmp;
-
-  head = lisp_proc("Y", "(lambda (f) ((lambda (x) (f (x x))) (lambda (x) (f (x x)))))");
-  tmp = cons(head, out_res);
-  atom_rc_decr(out_res);
-  atom_rc_decr(head);
-  out_res=tmp;
-
-  head = lisp_proc("ast-lambda", "(lambda (args body) (cons (quote lambda) (cons args (cons body nil)))))");
-  tmp = cons(head, out_res);
-  atom_rc_decr(out_res);
-  atom_rc_decr(head);
-  out_res=tmp;
-
-  head = lisp_proc("ast-y", "(lambda (name body) (cons (quote Y) (cons (ast-lambda (cons name nil) body) nil))))");
-  tmp = cons(head, out_res);
-  atom_rc_decr(out_res);
-  atom_rc_decr(head);
-  out_res=tmp;
-
-  head = lisp_proc(
-    "ast-letrec", 
-    "(lambda (bind body) (cons (quote let) (cons (cons (car bind) (cons (ast-y (car bind) (cadr bind)) nil)) (cons body nil))))"
-  );
-  tmp = cons(head, out_res);
-  atom_rc_decr(out_res);
-  atom_rc_decr(head);
-  out_res=tmp;
+  //@FIXME: ugly as it mutates out_res; it's due to how define works
+  lisp_init("./lib/stdlib.lisp", out_res);
 
   return out_res;
 }

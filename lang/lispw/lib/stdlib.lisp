@@ -1,9 +1,15 @@
 ; ---
+; Constants
+; ---
+(define t (quote t))
+(define nil (quote nil))
+
+; ---
 ; Recursivity
 ; ---
 (define Y (lambda (f) 
   ((lambda (x) (f (x x))) 
-   (lambda (x) (f (x x)))))
+   (lambda (x) (f (x x))))))
 
 ; ---
 ; Boolean logic
