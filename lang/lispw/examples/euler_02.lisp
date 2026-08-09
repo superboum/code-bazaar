@@ -2,7 +2,7 @@
   (if (> (+ (car l) (car (cdr l))) maxv)
     l
     (fibonacci (cons (+ (car l) (car (cdr l))) l) maxv))))
-  (let (even-sum (lambda (l)
+  (letrec (even-sum (lambda (l)
     (if (eq l nil) 
       0
       (if (eq (mod (car l) 2) 1) 

@@ -1069,7 +1069,8 @@ atom* apply(atom* rator, atom* rands) {
 atom* store = &_static_nil;
 void store_free(void) {
   store = atom_rc_decr(store);
-  //if (store != NULL) printf("store is still referenced somewhere\n");
+  if (store != NULL) printf("store is still referenced somewhere\n");
+  store= &_static_nil;
 }
 
 atom* eval(atom* ast, atom* env) {
