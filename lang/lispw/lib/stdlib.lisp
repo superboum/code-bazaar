@@ -26,6 +26,7 @@
 ; List manipulation
 ; ---
 (define null? (lambda (maybe_lst) (eq maybe_lst nil)))
+(define list (lambda args args))
 (define map (lambda (fn lst)
   (if lst (cons (fn (car lst)) (map fn (cdr lst))) nil)))
 (define reduce (lambda (fn acc lst)
