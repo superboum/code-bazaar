@@ -5,7 +5,7 @@ A lisp as cringe as your favorite 2010 lip dub clip (did you get the joke?).
 Example of computing 5! with recursion:
 
 ```lisp
-(let (fact (lambda (x) 
+(letrec (fact (lambda (x) 
   (if 
     (eq x 1) 1 
     (* x (fact (- x 1)))))) 
