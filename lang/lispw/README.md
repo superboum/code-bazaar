@@ -95,8 +95,9 @@ It is designed to fit on 24 bytes.
      - [ ] letrec* for mutual recursivity
    - [x] and / or
    - [ ] cond
-   - [ ] map / fold
+   - [x] map / fold
    - [ ] streams (lazy lists) / corecursivity
+   - [ ] pattern matching
  - [ ] Expose interpreter internals
    - [x] `sexpr` / `parse`
    - [ ] eval
