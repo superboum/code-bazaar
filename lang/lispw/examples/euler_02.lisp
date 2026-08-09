@@ -1,4 +1,4 @@
-(let (fibonacci (lambda (l maxv)
+(letrec (fibonacci (lambda (l maxv)
   (if (> (+ (car l) (car (cdr l))) maxv)
     l
     (fibonacci (cons (+ (car l) (car (cdr l))) l) maxv))))

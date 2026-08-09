@@ -1,4 +1,4 @@
-(let (collatz (lambda (val counter)
+(letrec (collatz (lambda (val counter)
   (if (eq val 1) 
     counter
     (if (eq (mod val 2) 0) 

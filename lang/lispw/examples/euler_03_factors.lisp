@@ -1,10 +1,10 @@
-(let
+(letrec
   (find-divisor (lambda (n d)
     (if
       (eq (mod n d) 0)
       d
       (find-divisor n (+ d 1)))))
-  (let
+  (letrec
     (largest-prime-factor (lambda (n last-div)
       (if
         (< n last-div) 
