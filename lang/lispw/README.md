@@ -5,11 +5,13 @@ A lisp as cringe as your favorite 2010 lip dub clip (did you get the joke?).
 Example of computing 5! with recursion:
 
 ```lisp
-(letrec (fact (lambda (x) 
-  (if 
-    (eq x 1) 1 
-    (* x (fact (- x 1)))))) 
+(letrec 
+  [fact (lambda (x) 
+    (cond 
+      [(eq x 1) 1]
+      [t (* x (fact (- x 1)))]))] 
   (fact 5))
+; 120
 ```
 
 ## Quickstart
