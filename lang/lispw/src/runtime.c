@@ -1070,20 +1070,16 @@ atom* eval(atom* ast, atom* env) {
       atom* local_binding_name = car(local_binding);
       atom* local_binding_expr = cadr(local_binding);
 
-      atom* local_evaled_expr_weak = atom_alloc(WEAK);
-      local_evaled_expr_weak->val.as_weak = NULL;
-      atom* local_new_env_entry = cons(local_binding_name, local_evaled_expr_weak);
+      atom* local_evaled_expr = thunk(local_binding_expr, env);
+      atom* local_new_env_entry = cons(local_binding_name, local_evaled_expr);
       atom* local_new_env = cons(local_new_env_entry, env);
-      atom* local_evaled_expr = thunk(local_binding_expr, local_new_env);
-      local_evaled_expr_weak->val.as_weak = local_evaled_expr;
 
       // eval final body
       out_res = eval(local_body, local_new_env); // eval let body
 
-      atom_rc_decr(local_evaled_expr_weak);
-      atom_rc_decr(local_evaled_expr);
       atom_rc_decr(local_new_env);
       atom_rc_decr(local_new_env_entry);
+      atom_rc_decr(local_evaled_expr);
       atom_rc_decr(local_binding_expr);
       atom_rc_decr(local_binding_name);
       atom_rc_decr(local_body);
@@ -1111,7 +1107,13 @@ atom* eval(atom* ast, atom* env) {
       atom* local_rands = cdr(ast);
 
       if (local_evaled_rator->kind == MACRO) {
+	// we MUST not evaluate rands
 	atom* local_macro_forced = force_it(local_evaled_rator->val.as_macro);
+	atom* tmp1 = sexpr(local_macro_forced);
+	atom* tmp2 = sexpr(local_rands);
+	printf("macro will do (%s %s)\n", tmp1->val.as_string->val, tmp2->val.as_string->val);
+	atom_rc_decr(tmp1);
+	atom_rc_decr(tmp2);
         atom* local_expanded_macro = apply(local_macro_forced, local_rands);
         out_res = eval(local_expanded_macro, env);
 	atom_rc_decr(local_macro_forced);
@@ -1415,6 +1417,33 @@ atom* full_env() {
   out_res=tmp;
 
   head = lisp_proc("map", "(let (do (lambda (fn lst) (if lst (cons (fn (car lst)) (do fn (cdr lst))) nil))) do)");
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = lisp_proc("Y", "(lambda (f) ((lambda (x) (f (x x))) (lambda (x) (f (x x)))))");
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = lisp_proc("ast-lambda", "(lambda (args body) (cons (quote lambda) (cons args (cons body nil)))))");
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = lisp_proc("ast-y", "(lambda (name body) (cons (quote Y) (cons (ast-lambda (cons name nil) body) nil))))");
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = lisp_proc(
+    "ast-letrec", 
+    "(lambda (bind body) (cons (quote let) (cons (cons (car bind) (cons (ast-y (car bind) (cadr bind)) nil)) (cons body nil))))"
+  );
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);
