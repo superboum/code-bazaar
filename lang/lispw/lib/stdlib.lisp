@@ -19,8 +19,9 @@
 ; ---
 ; List manipulation
 ; ---
+(define map (lambda (fn lst)
+  (if lst (cons (fn (car lst)) (map fn (cdr lst))) nil)))
 
-;@FIXME add map
 ;@FIXME add fold
 
 ; ---
