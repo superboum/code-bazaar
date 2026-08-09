@@ -28,7 +28,6 @@ Intended to be a mix between Scheme & Clojure.
  - [x] lexical scoping (define may be the exception here, not sure yet...)
  - [x] recursivity, corecursivity (through define only)
  - [x] immutability
- - [ ] implicit progn (only) on let / lambda / etc.
  - [x] few syntactic sugar
  - [x] *should be* mostly normal order (and not applicative order, not sure yet...)
 
@@ -75,6 +74,8 @@ It is designed to fit on 24 bytes.
    - [ ] properly scoped define 
  - [x] macro
  - [ ] quasiquote + unquote
+ - [ ] call/cc (call with continuation)
+   - [ ] implement exceptions
 
 ### Standard Library
 
@@ -109,8 +110,11 @@ It is designed to fit on 24 bytes.
 
 ### Tree-Walk Interpreter
 
- - [x] basic functionalities
- - [ ] proper REPL
+ - [x] basic REPL (read stdin until new line, eval, output to stdout)
+ - [x] proper REPL (read stdin a - multiline - lisp expression, eval & mutate env through define, output to stdout)
+ - [ ] recover on errors (requires call/cc)
+ - [ ] display a backtrace on errors (requires to rewrite with a proper frame abstraction)
+ - [ ] break loop (on error, provide a repl in the context of the exception)
 
 ### Bytecode Interpreter
 
