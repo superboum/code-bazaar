@@ -14,6 +14,7 @@ int main(void) {
   exit_code += ensure("./examples/lazy_if.lisp", _true());
   exit_code += ensure("./examples/sexpr_parse.lisp", _true());
   exit_code += ensure("./examples/comments.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 3 });
+  exit_code += ensure("./examples/variadic.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 45 });
   exit_code += ensure("./examples/neg_number.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = min_int() });
   exit_code += ensure("./examples/list.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 4001 });
   exit_code += ensure("./examples/apply.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 5 });

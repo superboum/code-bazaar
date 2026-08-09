@@ -21,6 +21,8 @@
 #define ERR_UNDEFINED_MSG "Tried to resolve a variable that does not exist."
 #define ERR_SLAB_CODE 109
 #define ERR_SLAB_MSG "An internal error occured in the slab memory allocator"
+#define ERR_APPLY_BIND_CODE 110
+#define ERR_APPLY_BIND_MSG "Can't bind operands to closure free variables."
 
 void error(int code, char* msg, const char* fn, const char* file, int line);
 

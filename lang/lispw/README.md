@@ -70,6 +70,7 @@ It is designed to fit on 24 bytes.
 
  - [X] let
  - [x] lambda
+   - [ ] add support for variadic functions (eg. `(lambda all-args (length all-args))` would return the number of passed args)
  - [x] quote
  - [x] if
  - [x] thunk (delayed execution / normal order)

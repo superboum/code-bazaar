@@ -685,6 +685,8 @@ int is_symbol_char(char c) {
       && c <= ASCII_CODE_TILDE
       && c != ')'
       && c != '('
+      && c != ']'
+      && c != '['
   );
 }
 
@@ -781,13 +783,13 @@ atom* lex_token(FILE* f) {
   while (true) {
     int c = fgetc(f);
     if (c > 255 || c < 0 || c == EOF) return nil();
-    if (c == '(') {
+    if (c == '(' || c == '[') {
 	atom* type = csymbol("lparen");
 	atom* final = cons(type, nil());
 	atom_rc_decr(type);
 	return final;
     }
-    if (c == ')') {
+    if (c == ')' || c == ']') {
 	atom* type = csymbol("rparen");
 	atom* final = cons(type, nil());
 	atom_rc_decr(type);
@@ -1012,26 +1014,35 @@ atom* apply(atom* rator, atom* rands) {
     atom* branch_body = cadr(branch_expr);
 
     if (branch_var_names->kind == PAIR && rands->kind == PAIR) {
+      // here we match the operands with the free variables of the lambda
       atom_rc_incr(rands);
-    }
-    while (branch_var_names->kind == PAIR && rands->kind == PAIR) {
-      atom* loop_branch_env = branch_env;
-      atom* loop_var_names = branch_var_names;
-      atom* loop_rands = rands;
-      atom* loop_cur_name = car(branch_var_names);
-      atom* loop_cur_val = car(rands);
-      atom* loop_env_entry = cons(loop_cur_name, loop_cur_val);
+      while (branch_var_names->kind == PAIR && rands->kind == PAIR) {
+        atom* loop_branch_env = branch_env;
+        atom* loop_var_names = branch_var_names;
+        atom* loop_rands = rands;
+        atom* loop_cur_name = car(branch_var_names);
+        atom* loop_cur_val = car(loop_rands);
+        atom* loop_env_entry = cons(loop_cur_name, loop_cur_val);
 
-      branch_env = cons(loop_env_entry, loop_branch_env);
-      rands = cdr(loop_rands);
-      branch_var_names = cdr(loop_var_names);
+        branch_env = cons(loop_env_entry, loop_branch_env);
+        rands = cdr(loop_rands);
+        branch_var_names = cdr(loop_var_names);
 
-      atom_rc_decr(loop_env_entry);
-      atom_rc_decr(loop_cur_val);
-      atom_rc_decr(loop_cur_name);
-      atom_rc_decr(loop_rands);
-      atom_rc_decr(loop_var_names);
-      atom_rc_decr(loop_branch_env);
+        atom_rc_decr(loop_env_entry);
+        atom_rc_decr(loop_cur_val);
+        atom_rc_decr(loop_cur_name);
+        atom_rc_decr(loop_rands);
+        atom_rc_decr(loop_var_names);
+        atom_rc_decr(loop_branch_env);
+      }
+    } else if (branch_var_names->kind == SYMBOL && rands->kind == PAIR) {
+       atom* bbranch_env_entry = cons(branch_var_names, rands);
+       atom* bbranch_past_env = branch_env;
+       branch_env = cons(bbranch_env_entry, bbranch_past_env);
+       atom_rc_decr(bbranch_past_env);
+       atom_rc_decr(bbranch_env_entry);
+    } else {
+      error(ERR_APPLY_BIND_CODE, ERR_APPLY_BIND_MSG, __func__, __FILE__, __LINE__);
     }
 
     out_res = eval(branch_body, branch_env);
