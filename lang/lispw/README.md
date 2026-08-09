@@ -73,8 +73,7 @@ It is designed to fit on 24 bytes.
  - [x] quote
  - [x] if
  - [x] thunk (delayed execution / normal order)
- - [x] define (trough a hack however)
-   - [ ] properly scoped define 
+ - [x] define
  - [x] macro
  - [ ] quasiquote + unquote
  - [ ] call/cc (call with continuation)
@@ -119,6 +118,7 @@ It is designed to fit on 24 bytes.
 
  - [x] basic REPL (read stdin until new line, eval, output to stdout)
  - [x] proper REPL (read stdin a - multiline - lisp expression, eval & mutate env through define, output to stdout)
+ - [ ] evolve flat env to a ~frame thingy
  - [ ] recover on errors (requires call/cc)
  - [ ] display a backtrace on errors (requires to rewrite with a proper frame abstraction)
  - [ ] break loop (on error, provide a repl in the context of the exception)
