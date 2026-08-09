@@ -65,7 +65,8 @@ It is designed to fit on 24 bytes.
  - [x] base s-expr parser
  - [x] base s-expr serializer
  - [x] support comments
- - [ ] support ticks syntaxic sugar (quote `'`, quasiquote `\``, unquote `,`)
+ - [x] support quote `'` syntaxic sugar
+ - [ ] support quasiquote + unquote
  - [ ] handle dot syntax `(a . b)`; ie. the case where `cdr(a)` is not NIL or a PAIR
 
 ### Special forms

@@ -785,12 +785,18 @@ void lex_comment(FILE* f) {
   }
 }
 
-// Returns a token. (lparen) | (rparen) | (number 67) | (symbol foo) | (string "blabla")
+// Returns a token. (lparen) | (rparen) | (quote) | (number 67) | (symbol foo) | (string "blabla")
 atom* lex_token(FILE* f) {
   // the loop eats spaces & new lines
   while (true) {
     int c = fgetc(f);
     if (c > 255 || c < 0 || c == EOF) return nil();
+    if (c == '\'') {
+   	atom* type = csymbol("quote");
+	atom* final = cons(type, nil());
+	atom_rc_decr(type);
+	return final;
+    }
     if (c == '(' || c == '[') {
 	atom* type = csymbol("lparen");
 	atom* final = cons(type, nil());
@@ -834,6 +840,7 @@ atom* lex(FILE* f) {
   int dangling_paren = 0;
   atom* lparen = csymbol("lparen");
   atom* rparen = csymbol("rparen");
+  atom* quote = csymbol("quote");
   while (true) {
     atom* tmp = lex_token(f);
     if (!boolc(tmp)) break;
@@ -849,10 +856,11 @@ atom* lex(FILE* f) {
     atom_rc_decr(acc);
     atom_rc_decr(loop_kind);
     acc = new_acc;
-    if (dangling_paren == 0) break;
+    if (dangling_paren == 0 && loop_kind != quote) break;
   }
   atom* res = reverse(acc);
   atom_rc_decr(acc);
+  atom_rc_decr(quote);
   atom_rc_decr(lparen);
   atom_rc_decr(rparen);
   return res;
@@ -861,12 +869,14 @@ atom* lex(FILE* f) {
 /*
  * PARSER
  *
- * expr:       LPAREN list | patom
+ * expr:       LPAREN list | QUOTE quoted | patom
  * list:       expr list | RPAREN 
  * patom:      SYMBOL | NUMBER | STRING
+ * quoted:     expr
  */
 
 atom* patom(atom* lex);
+atom* quoted(atom* lex);
 atom* list(atom* lex);
 atom* expr(atom* lex);
 
@@ -897,6 +907,22 @@ atom* patom(atom* lex) {
   atom_rc_decr(local_symbol);
   atom_rc_decr(local_number);
   atom_rc_decr(local_string);
+  return out_res;
+}
+
+// returns cons(AST . TOKENS)
+atom* quoted(atom* lex) {
+  atom* out_res;
+  if (lex == NULL) 
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+
+  atom* rc_inner = expr(lex);
+  atom* rc_wrap1 = cons(rc_inner->val.as_pair.head, nil());
+  atom* rc_wrap2 = cons(csymbol("quote"), rc_wrap1);
+  out_res = cons(rc_wrap2, rc_inner->val.as_pair.tail);
+  atom_rc_decr(rc_wrap2);
+  atom_rc_decr(rc_wrap1);
+  atom_rc_decr(rc_inner);
   return out_res;
 }
 
@@ -949,15 +975,19 @@ atom* expr(atom* lex) {
   atom* local_next = cdr(lex);
   atom* local_kind = car(local_candidate);
   atom* local_lparen = csymbol("lparen");
+  atom* local_quote = csymbol("quote");
   if (boolc(eq(local_kind, local_lparen))) {
     // Get references
     out_res = list(local_next);
+  } else if (boolc(eq(local_kind, local_quote))) {
+    out_res = quoted(local_next);
   } else {
     out_res = patom(lex);
   }
   atom_rc_decr(local_candidate);
   atom_rc_decr(local_next);
   atom_rc_decr(local_kind);
+  atom_rc_decr(local_quote);
   atom_rc_decr(local_lparen);
   return out_res;
 }
