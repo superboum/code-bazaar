@@ -67,8 +67,9 @@ atom* nth(atom* list, int pos) {
   }
   if (local_list == NULL) 
     error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
-  if (local_list->kind != PAIR) 
+  if (local_list->kind != PAIR) {
     error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG, __func__, __FILE__, __LINE__);
+  }
 
   atom* out_res = atom_rc_incr(local_list->val.as_pair.head);
   atom_rc_decr(local_list);
@@ -656,9 +657,11 @@ atom* macro_expand(atom* mac, atom* rands) {
   if (a->kind != MACRO)
     error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
 
-  atom* local_macro_forced = force_it(a->val.as_macro);
-  atom* local_rands_forced = force_it(rands);
-  out_res = apply(local_macro_forced, local_rands_forced);
+  atom* local_macro_forced = force_it_rec(a->val.as_macro);
+  atom* local_rands_forced = force_it_rec(rands);
+  atom* local_lazy_apply = apply(local_macro_forced, local_rands_forced);
+  out_res = force_it_rec(local_lazy_apply);
+  atom_rc_decr(local_lazy_apply);
   atom_rc_decr(local_macro_forced);
   atom_rc_decr(local_rands_forced);
   atom_rc_decr(a);
@@ -960,12 +963,30 @@ atom* thunk(atom* expr, atom* env) {
   return out;
 }
 
+atom* force_it_rec(atom* a) {
+  atom* out_res;
+  if (a->kind == PAIR) {
+    atom* left = force_it_rec(a->val.as_pair.head);
+    atom* right = force_it_rec(a->val.as_pair.tail);
+    out_res = cons(left, right);
+    atom_rc_decr(left);
+    atom_rc_decr(right);
+  } else if (a->kind == THUNK) {
+    atom* pre = force_it(a);
+    out_res = force_it_rec(pre);
+    atom_rc_decr(pre);
+  } else {
+    out_res = atom_rc_incr(a);
+  }
+  return out_res;
+}
+
 atom* force_it(atom* maybe_thunk) {
   if (maybe_thunk->kind != THUNK) return atom_rc_incr(maybe_thunk);
 
   // memoization lookup
   // @FIXME: a proper MEMOIZED_THUNK type would be better...
-  if (maybe_thunk->val.as_capture.env == _nil) return atom_rc_incr(maybe_thunk->val.as_capture.expr);
+  if (maybe_thunk->val.as_capture.env == &_static_nil) return atom_rc_incr(maybe_thunk->val.as_capture.expr);
 
   // resolve
   atom* partial = eval(maybe_thunk->val.as_capture.expr, maybe_thunk->val.as_capture.env);
@@ -975,7 +996,7 @@ atom* force_it(atom* maybe_thunk) {
   atom_rc_decr(maybe_thunk->val.as_capture.expr);
   atom_rc_decr(maybe_thunk->val.as_capture.env);
   maybe_thunk->val.as_capture.expr = atom_rc_incr(finale);
-  maybe_thunk->val.as_capture.env = _nil;
+  maybe_thunk->val.as_capture.env = &_static_nil;
   return finale;
 }
 
@@ -1147,6 +1168,7 @@ atom* eval(atom* ast, atom* env) {
 
       if (local_evaled_rator->kind == MACRO) {
 	// we MUST not evaluate rands
+	// we should really run it before calling eval
 	atom* local_expanded_macro = macro_expand(local_evaled_rator, local_rands);
         out_res = eval(local_expanded_macro, env);
 	atom_rc_decr(local_expanded_macro);

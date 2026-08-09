@@ -84,6 +84,7 @@ atom* expr(atom* lex);
 // it is also required in the repl.
 // it's ugly.
 atom* force_it(atom* a); 
+atom* force_it_rec(atom* a); 
 
 atom* eval(atom* ast, atom* env);
 atom* apply(atom* rator, atom* rands);
