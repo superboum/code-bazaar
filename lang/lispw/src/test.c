@@ -69,6 +69,7 @@ int ensure(char* candidate, atom* expected) {
   atom_rc_decr(local_parsing);
   atom_rc_decr(local_tokens);
 
+  store_free();
   symbols_free();
   rc_memleak_check();
   fclose(f);

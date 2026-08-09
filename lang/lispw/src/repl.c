@@ -27,6 +27,7 @@ int main(void) {
   }
   atom_rc_decr(my_env);
 
+  store_free();
   symbols_free();
   rc_memleak_check();
 

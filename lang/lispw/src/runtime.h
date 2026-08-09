@@ -86,6 +86,7 @@ atom* expr(atom* lex);
 atom* force_it(atom* a); 
 atom* force_it_rec(atom* a); 
 
+void store_free(void);
 atom* eval(atom* ast, atom* env);
 atom* apply(atom* rator, atom* rands);
 atom* full_env();

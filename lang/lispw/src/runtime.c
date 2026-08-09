@@ -506,6 +506,7 @@ atom* csymbol(char* s) {
 
 void symbols_free() {
   if (global_symbols != NULL) global_symbols = atom_rc_decr(global_symbols);
+
   /*enable_tracker = 0;
   for (int i = 0; i < 4096; i++) {
     if (tracker[i] != NULL) {
@@ -1064,6 +1065,13 @@ atom* apply(atom* rator, atom* rands) {
   return out_res;
 }
 
+//@FIXME: ugly, should be part of the interpreter result/parameters
+atom* store = &_static_nil;
+void store_free(void) {
+  store = atom_rc_decr(store);
+  if (store != NULL) printf("store is still referenced somewhere\n");
+}
+
 atom* eval(atom* ast, atom* env) {
   atom* out_res = nil();
 
@@ -1071,9 +1079,12 @@ atom* eval(atom* ast, atom* env) {
   if (ast->kind == SYMBOL) {
     // find symbol in env
     atom* branch_res = assoc(ast, env); 
-    if (branch_res->kind != PAIR) {
-	fprintf(stderr, "'%s' is not defined.\n", ast->val.as_string->val);
-	error(ERR_UNDEFINED_CODE,ERR_UNDEFINED_MSG, __func__, __FILE__, __LINE__);
+    if (branch_res->kind == NIL) {
+	branch_res = assoc(ast, store);
+	if (branch_res->kind == NIL) {
+	  fprintf(stderr, "'%s' is not defined.\n", ast->val.as_string->val);
+	  error(ERR_UNDEFINED_CODE,ERR_UNDEFINED_MSG, __func__, __FILE__, __LINE__);
+	}
     }
     atom* local_resolved = cdr(branch_res);
     out_res = force_it(local_resolved);
@@ -1139,22 +1150,14 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(local_body);
       atom_rc_decr(local_binding);
     } else if (local_head == &_static_sym_define) {
-      //@TODO: if eval returns env, see if we can go for a smaller primitive
-      // ie. a primitive that updates the interpreter env.
       atom* local_binding = cadr(ast);
       atom* local_expr = caddr(ast);
       atom* local_expr_evaled = eval(local_expr, env);
 
       // build an env entry
       atom* local_env_entry = cons(local_binding, local_expr_evaled);
-      atom* env_tail = cons(local_env_entry, nil()); 
 
-      //@FIXME ugly hack to implement define by appending the entry at the end
-      atom* env_iter = env;
-      while (env_iter->val.as_pair.tail != &_static_nil) {
-        env_iter = env_iter->val.as_pair.tail;
-      }
-      env_iter->val.as_pair.tail = env_tail;
+      store = cons(local_env_entry, store);
 
       atom_rc_decr(local_env_entry);
       atom_rc_decr(local_expr_evaled);
@@ -1449,9 +1452,6 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
-
-
-  //@FIXME: ugly as it mutates out_res; it's due to how define works
   lisp_init("./lib/stdlib.lisp", out_res);
 
   return out_res;
