@@ -62,7 +62,6 @@ atom* string(atom* charlist); // build a string from a list of char
 atom* string_concatenate(atom* a1, atom* a2); // concatenate 2 strings
 atom* symbol(atom* a); // build an atom from a string
 atom* sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
-atom* debug_sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 atom* print(atom* a);
 atom* macro(atom* a);
 

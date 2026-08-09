@@ -618,64 +618,6 @@ atom* sexpr(atom* a) {
   return NULL; // unreachable
 }
 
-atom* debug_sexpr(atom* a) {
-  if (a->kind == NIL) return cstring("NIL", 3);
-  if (a->kind == SYMBOL) {
-    const char fmt[] = "{%d}%s";
-    int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_string->val)+1;
-    char* tmp = malloc(sz);
-    if (tmp == NULL) 
-      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
-    memset(tmp, 0, sz);
-    snprintf(tmp, sz, fmt, a->rc, a->val.as_string->val);
-    atom* final = cstring(tmp, strlen(tmp));
-    free(tmp);
-    return final;
-  }
-  if (a->kind == STRING) {
-    const char fmt[] = "{%d}\"%s\"";
-    int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_string->val)+1;
-    char* tmp = malloc(sz);
-    if (tmp == NULL) 
-      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
-    memset(tmp, 0, sz);
-    snprintf(tmp, sz, fmt, a->rc, a->val.as_string->val);
-    atom* final = cstring(tmp, strlen(tmp));
-    free(tmp);
-    return final;
-  }
-  if (a->kind == NUMBER) {
-    const char fmt[] = "{%d}%ld";
-    int sz = snprintf(NULL, 0, fmt, a->rc, a->val.as_number)+1;
-    char* tmp = malloc(sz);
-    if (tmp == NULL) 
-      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
-    memset(tmp, 0, sz);
-    snprintf(tmp, sz, fmt, a->rc, a->val.as_number);
-    atom* final = cstring(tmp, strlen(tmp));
-    free(tmp);
-    return final;
-  }
-  if (a->kind == PAIR) {
-    const char fmt[] = "{%d}(%s %s) ";
-    atom* left = debug_sexpr(a->val.as_pair.head);
-    atom* right = debug_sexpr(a->val.as_pair.tail);
-    int sz = snprintf(NULL, 0, fmt, a->rc, left->val.as_string->val, right->val.as_string->val)+1;
-    char* tmp = malloc(sz);
-    if (tmp == NULL) 
-      error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
-    memset(tmp, 0, sz);
-    snprintf(tmp, sz, fmt, a->rc, left->val.as_string->val, right->val.as_string->val);
-    atom* final = cstring(tmp, strlen(tmp));
-    free(tmp);
-    atom_rc_decr(left);
-    atom_rc_decr(right);
-    return final;
-  }
-
-  return a;
-}
-
 atom* print(atom* at) {
   if (at == NULL) 
     error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
@@ -1103,6 +1045,7 @@ atom* eval(atom* ast, atom* env) {
       out_res = thunk(branch_thunk_body, env);
       atom_rc_decr(branch_thunk_body);
     } else if (local_head == &_static_sym_if) {
+      // (if <predicate> <consequence> <alternative>)
       atom* branch_cond = cadr(ast);
       atom* branch_cond_evaled = eval(branch_cond, env);
       atom* branch_cond_resolved = force_it(branch_cond_evaled);
