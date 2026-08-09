@@ -1457,5 +1457,11 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
+  head = lisp_proc("map", "(let (do (lambda (fn lst) (if lst (cons (fn (car lst)) (do fn (cdr lst)))))) do)");
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
   return out_res;
 }
