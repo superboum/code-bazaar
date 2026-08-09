@@ -69,13 +69,16 @@
 
 ; ~~cond things
 (define ast-cond (lambda options
-  (if 
-    (null? options)
-    nil
-    (ast-if 
-      (car (car options)) 
-      (cadr (car options))
-      (ast-cond (cdr options))))))
+  (letrec 
+    [do (lambda (options)
+      (if 
+        (null? options)
+        nil
+        (ast-if 
+          (car (car options)) 
+          (cadr (car options))
+          (do (cdr options)))))]
+    (do options))))
     
 
 ; ~~pattern matching things
@@ -88,3 +91,5 @@
 ; macro are basically bindings for the ast-* functions
 (define letrec (macro ast-letrec))
 (define let* (macro ast-let*))
+
+(define cond (macro ast-cond))

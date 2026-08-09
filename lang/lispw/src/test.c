@@ -21,6 +21,7 @@ int main(void) {
   exit_code += ensure("./examples/number.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 5 });
   exit_code += ensure("./examples/math.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 10 });
   exit_code += ensure("./examples/fact.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 120 });
+  exit_code += ensure("./examples/fact-cond.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 120 });
   exit_code += ensure("./examples/fib.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 377 });
   exit_code += ensure("./examples/collatz.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 111 });
   exit_code += ensure("./examples/euler_01.lisp", &(atom) { .kind = NUMBER, .rc = -1, .val.as_number = 233168 });
