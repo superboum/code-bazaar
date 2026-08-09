@@ -34,7 +34,7 @@ Intended to be a mix between Scheme & Clojure.
    - [ ] mutual recursion (a calls b, b calls a)
  - [x] immutability
  - [x] few syntactic sugar
- - [x] *should be* mostly normal order 
+ - [x] normal order (lazy evaluation)
 
 ### Memory Management
 
