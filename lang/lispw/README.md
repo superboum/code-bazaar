@@ -125,12 +125,7 @@ It is designed to fit on 24 bytes.
 
 ### Bytecode Interpreter
 
- - [ ] Bytecode definition
- - [ ] Bytecode emission
- - [ ] VM
-
-*Note: In the long run I would like to optimize the reference counting
-logic by integrating it to the VM bytecode. BUT maybe not for a first pass.*
+*Just a distant dream for now...*
 
 ## Other limitations...
 
@@ -140,73 +135,6 @@ logic by integrating it to the VM bytecode. BUT maybe not for a first pass.*
  - No static type
  - No proper check of compound argument number leading to weird bug.
    - eg. `((lambda (a b) (+ a b)) 3)` (missing `b` binding) leads to a weird error.
-
-## Some thinking
-
-First, I think to a stack-based VM/bytecode.
-Here are some ideas.
-
-### Research/examples
-
-Lisp expression:
-
-```lisp
-(+ 2 3)
-```
-
-Possible bytecode:
-
-```bytecode
---- DATA ---
-label plus: 
- +
-
---- CODE ---
-label main:
-  PUSH_NIL
-  PUSH_INT 2
-  PUSH_INT 3
-  PUSH_SYMBOL &label_plus
-  FETCH_ENV
-  APPLY
-```
-
----
-
-Lisp expression:
-
-```lisp
-((lambda (x) (+ x x)) 1)
-```
-
-Possible bytecode:
-
-```bytecode
---- DATA ---
-label plus:
- +
-label x:
- x
-
--- CODE --
-label anon1:
-  PUSH_NIL
-  PUSH_SYMB &label_x
-  RESOLVE_ENV
-  PUSH_SYMB &label_x
-  RESOLVE_ENV
-  PUSH_SYMB &label_plus
-  RESOLVE_ENV
-  CALL   // pop +, x, x ; push res
-  RETURN // pop res, pop ip, goto ip, push res
-label main:
-  PUSH_NIL
-  PUSH_INT 1
-  CLOSURE &anon1
-  CALL
-  // stack should be: [2]
-```
-
 
 ## Resources
 
