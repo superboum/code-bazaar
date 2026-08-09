@@ -64,6 +64,7 @@ atom* symbol(atom* a); // build an atom from a string
 atom* sexpr(atom* a); // build a string atom representing any atom (including list/pair) as a sexpr
 atom* print(atom* a);
 atom* macro(atom* a);
+atom* macro_expand(atom* mac, atom* rands);
 
 /*
  * LEXER
@@ -85,6 +86,7 @@ atom* expr(atom* lex);
 atom* force_it(atom* a); 
 
 atom* eval(atom* ast, atom* env);
+atom* apply(atom* rator, atom* rands);
 atom* full_env();
 
 

@@ -636,6 +636,24 @@ atom* macro(atom* a) {
   return out_res;
 }
 
+atom* macro_expand(atom* mac, atom* rands) {
+  atom* out_res;
+
+  atom* a = force_it(mac);
+  
+  if (a->kind != MACRO)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
+
+  atom* local_macro_forced = force_it(a->val.as_macro);
+  atom* local_rands_forced = force_it(rands);
+  out_res = apply(local_macro_forced, local_rands_forced);
+  atom_rc_decr(local_macro_forced);
+  atom_rc_decr(local_rands_forced);
+  atom_rc_decr(a);
+
+  return out_res;
+}
+
 /*
  * LEXER
  *
@@ -1043,6 +1061,7 @@ atom* eval(atom* ast, atom* env) {
       out_res = thunk(branch_thunk_body, env);
       atom_rc_decr(branch_thunk_body);
     } else if (local_head == &_static_sym_if) {
+      //@TODO: see if we can extract from the interpreter now that switched to normal order
       // (if <predicate> <consequence> <alternative>)
       atom* branch_cond = cadr(ast);
       atom* branch_cond_evaled = eval(branch_cond, env);
@@ -1062,6 +1081,7 @@ atom* eval(atom* ast, atom* env) {
     } else if (local_head == &_static_sym_quote) {
       out_res = cadr(ast);
     } else if (local_head == &_static_sym_let) {
+      //@TODO: see if we can extract from the interpreter by exposing thunk
       // (let (symbol expr) expr)
       atom* local_binding = cadr(ast);
       atom* local_body = caddr(ast);
@@ -1083,6 +1103,8 @@ atom* eval(atom* ast, atom* env) {
       atom_rc_decr(local_body);
       atom_rc_decr(local_binding);
     } else if (local_head == &_static_sym_define) {
+      //@TODO: if eval returns env, see if we can go for a smaller primitive
+      // ie. a primitive that updates the interpreter env.
       atom* local_binding = cadr(ast);
       atom* local_expr = caddr(ast);
       atom* local_expr_evaled = eval(local_expr, env);
@@ -1110,10 +1132,8 @@ atom* eval(atom* ast, atom* env) {
 
       if (local_evaled_rator->kind == MACRO) {
 	// we MUST not evaluate rands
-	atom* local_macro_forced = force_it(local_evaled_rator->val.as_macro);
-        atom* local_expanded_macro = apply(local_macro_forced, local_rands);
+	atom* local_expanded_macro = macro_expand(local_evaled_rator, local_rands);
         out_res = eval(local_expanded_macro, env);
-	atom_rc_decr(local_macro_forced);
 	atom_rc_decr(local_expanded_macro);
       } else {
         // must be a atom(list(symb(closure))) or a atom(fx1) or a atom(fx2)
@@ -1385,6 +1405,14 @@ atom* full_env() {
   atom_rc_decr(out_res);
   atom_rc_decr(head);
   out_res=tmp;
+
+  head = afx2("macro-expand", macro_expand);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+
 
   //@FIXME: ugly as it mutates out_res; it's due to how define works
   lisp_init("./lib/stdlib.lisp", out_res);
