@@ -88,6 +88,7 @@ It is designed to fit on 24 bytes.
      - [x] `reverse`
      - [x] basic utilities like `car`, `cdr`, `cons`, etc.
    - [ ] string processing
+   - [ ] gensym to create unique symbols for macros
  - [x] Lisp functions / macros
    - [ ] recursivity
      - [x] Y combinator

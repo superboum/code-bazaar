@@ -1127,7 +1127,6 @@ atom* eval(atom* ast, atom* env) {
     } else if (local_head == &_static_sym_quote) {
       out_res = cadr(ast);
     } else if (local_head == &_static_sym_let) {
-      //@TODO: see if we can extract from the interpreter by exposing thunk
       // (let (symbol expr) expr)
       atom* local_binding = cadr(ast);
       atom* local_body = caddr(ast);

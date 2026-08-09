@@ -19,6 +19,7 @@
 ; ---
 ; List manipulation
 ; ---
+(define null? (lambda (maybe_lst) (eq maybe_lst nil)))
 (define map (lambda (fn lst)
   (if lst (cons (fn (car lst)) (map fn (cdr lst))) nil)))
 
@@ -34,14 +35,30 @@
 (define ast-y (lambda (name body) 
   (cons (quote Y) (cons (ast-lambda (cons name nil) body) nil))))
 
-(define ast-letrec (lambda (bind body) 
+(define ast-let (lambda (bind body)
   (cons 
     (quote let) 
     (cons 
-      (cons (car bind) (cons (ast-y (car bind) (cadr bind)) nil)) 
+      (cons (car bind) (cons (cadr bind) nil)) 
       (cons body nil)))))
+
+(define ast-letrec (lambda (bind body) 
+  (ast-let 
+    (cons (car bind) (cons (ast-y (car bind) (cadr bind)) nil))
+    body)))
+
+(define ast-let* (lambda (many_binds body)
+  (if 
+    (null? many_binds) 
+    body
+    (ast-let 
+      (car many_binds) 
+      (ast-let* (cdr many_binds) body)))))
 
 ; ---
 ; Macro definitions
 ; ---
+
+; around let
 (define letrec (macro ast-letrec))
+(define let* (macro ast-let*))
