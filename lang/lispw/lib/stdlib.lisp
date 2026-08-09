@@ -22,7 +22,8 @@
 (define map (lambda (fn lst)
   (if lst (cons (fn (car lst)) (map fn (cdr lst))) nil)))
 
-;@FIXME add fold
+(define fold-left (lambda (fn acc lst)
+  (if lst (fold-left fn (fn acc (car lst)) (cdr lst)) acc)))
 
 ; ---
 ; AST manipulation (useful for macros)
