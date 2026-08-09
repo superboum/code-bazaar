@@ -555,8 +555,9 @@ atom* sexpr(atom* a) {
     snprintf(acc+cursor, allocated, "(");
     cursor += 1;
 
-    atom* iter = a;
-    const char fmt[] = "%s ";
+    atom* iter = atom_rc_incr(a);
+    static const char fmt[] = "%s ";
+    static const char fmt_last[] = ". %s)";
     while (iter->kind == PAIR) {
       atom* head = sexpr(iter->val.as_pair.head);
       size_t add_sz = snprintf(NULL, 0, fmt, head->val.as_string->val);
@@ -568,14 +569,27 @@ atom* sexpr(atom* a) {
       snprintf(acc+cursor, allocated-cursor, fmt, head->val.as_string->val);
       cursor += add_sz;
       atom_rc_decr(head);
-      iter = iter->val.as_pair.tail;
+      atom* prev_iter = iter;
+      iter = force_it(iter->val.as_pair.tail);
+      atom_rc_decr(prev_iter);
     }
     if (iter->kind == NIL) {
       cursor--;
+      snprintf(acc+cursor, allocated-cursor, ")");
+    } else {
+      atom* last = sexpr(iter);
+      size_t add_sz = snprintf(NULL, 0, fmt_last, last->val.as_string->val);
+      allocated += add_sz;
+      acc = realloc(acc, allocated);
+      if (acc == NULL)
+        error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
+      memset(acc+cursor, 0, allocated-cursor);
+      snprintf(acc+cursor, allocated-cursor, fmt_last, last->val.as_string->val);
+      cursor += add_sz;
+      atom_rc_decr(last);
     }
-    //@FIXME: We must handle the case where tail is not NIL
-    // BUT we may need first to add support for dot notations: `(foo . bar)`
-    snprintf(acc+cursor, allocated-cursor, ")");
+    atom_rc_decr(iter);
+
 
     atom* final = cstring(acc, strlen(acc));
     free(acc);
@@ -1457,7 +1471,7 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
-  head = lisp_proc("map", "(let (do (lambda (fn lst) (if lst (cons (fn (car lst)) (do fn (cdr lst)))))) do)");
+  head = lisp_proc("map", "(let (do (lambda (fn lst) (if lst (cons (fn (car lst)) (do fn (cdr lst))) nil))) do)");
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);
