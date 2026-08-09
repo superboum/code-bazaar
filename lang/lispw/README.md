@@ -25,19 +25,20 @@ make bin/repl
 
 Intended to be a mix between Scheme & Clojure.
 
- - [x] lexical scoping (define may be the exception here, not sure yet...)
- - [x] recursivity
- - [ ] corecursivity (streams, generator, etc.)
- - [ ] mutual recursion (a calls b, b calls a)
+ - [x] lexical scoping 
+ - [ ] recursivity
+   - [x] basic recursivity
+   - [ ] corecursivity (streams, generator, etc.)
+   - [ ] mutual recursion (a calls b, b calls a)
  - [x] immutability
  - [x] few syntactic sugar
- - [x] *should be* mostly normal order (and not applicative order, not sure yet...)
+ - [x] *should be* mostly normal order 
 
 ### Memory Management
 
 - [x] Reference Counting
 - [x] Slab allocator
-- [x] Weak references for recursivity
+- [x] Detect & crash on memory leaks
 
 ### Datatype
 
@@ -67,7 +68,7 @@ It is designed to fit on 24 bytes.
 
 ### Special forms
 
- - [X] let (with recursivity)
+ - [X] let
  - [x] lambda
  - [x] quote
  - [x] if
@@ -89,10 +90,14 @@ It is designed to fit on 24 bytes.
      - [x] basic utilities like `car`, `cdr`, `cons`, etc.
    - [ ] string processing
  - [x] Lisp functions / macros
+   - [ ] recursivity
+     - [x] Y combinator
+     - [x] letrec
+     - [ ] letrec* for mutual recursivity
    - [x] and / or
    - [ ] cond
    - [ ] map / fold
-   - [ ] streams (lazy lists)
+   - [ ] streams (lazy lists) / corecursivity
  - [ ] Expose interpreter internals
    - [x] `sexpr` / `parse`
    - [ ] eval
