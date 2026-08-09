@@ -2,7 +2,6 @@
 ; Constants
 ; ---
 (define t (quote t))
-(define nil (quote nil))
 
 ; ---
 ; Recursivity

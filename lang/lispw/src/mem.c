@@ -69,7 +69,13 @@ size_t allocator_live_atoms(allocator_t* alloc) {
   slab_t* iter = alloc->head;
   while (iter != NULL) {
     for (int i = 0; i < ATOMS_PER_SLAB; i++) {
-      if (iter->cells[i].kind != FREED) allocated_objects++;
+      if (iter->cells[i].kind != FREED) {
+	printf("kind is %d ; rc is %d\n", iter->cells[i].kind, iter->cells[i].rc);
+	if (iter->cells[i].kind == SYMBOL) {
+          printf("leaked symb is %s\n", iter->cells[i].val.as_string->val);
+	}
+	allocated_objects++;
+      }
     }
     iter = iter->prev;
   }

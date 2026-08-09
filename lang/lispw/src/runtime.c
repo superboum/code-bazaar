@@ -1069,7 +1069,7 @@ atom* apply(atom* rator, atom* rands) {
 atom* store = &_static_nil;
 void store_free(void) {
   store = atom_rc_decr(store);
-  if (store != NULL) printf("store is still referenced somewhere\n");
+  //if (store != NULL) printf("store is still referenced somewhere\n");
 }
 
 atom* eval(atom* ast, atom* env) {
@@ -1157,7 +1157,9 @@ atom* eval(atom* ast, atom* env) {
       // build an env entry
       atom* local_env_entry = cons(local_binding, local_expr_evaled);
 
-      store = cons(local_env_entry, store);
+      atom* new_store = cons(local_env_entry, store);
+      atom_rc_decr(store);
+      store = new_store;
 
       atom_rc_decr(local_env_entry);
       atom_rc_decr(local_expr_evaled);
