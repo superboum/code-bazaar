@@ -26,7 +26,9 @@ make bin/repl
 Intended to be a mix between Scheme & Clojure.
 
  - [x] lexical scoping (define may be the exception here, not sure yet...)
- - [x] recursivity, corecursivity (through define only)
+ - [x] recursivity
+ - [ ] corecursivity (streams, generator, etc.)
+ - [ ] mutual recursion (a calls b, b calls a)
  - [x] immutability
  - [x] few syntactic sugar
  - [x] *should be* mostly normal order (and not applicative order, not sure yet...)
