@@ -1035,12 +1035,14 @@ atom* apply(atom* rator, atom* rands) {
         atom_rc_decr(loop_var_names);
         atom_rc_decr(loop_branch_env);
       }
-    } else if (branch_var_names->kind == SYMBOL && rands->kind == PAIR) {
+    } else if (branch_var_names->kind == SYMBOL && (rands->kind == PAIR || rands->kind == NIL)) {
        atom* bbranch_env_entry = cons(branch_var_names, rands);
        atom* bbranch_past_env = branch_env;
        branch_env = cons(bbranch_env_entry, bbranch_past_env);
        atom_rc_decr(bbranch_past_env);
        atom_rc_decr(bbranch_env_entry);
+    } else if (branch_var_names->kind == NIL && rands->kind == NIL) {
+       // nothing to do I guess
     } else {
       error(ERR_APPLY_BIND_CODE, ERR_APPLY_BIND_MSG, __func__, __FILE__, __LINE__);
     }

@@ -45,6 +45,9 @@
       (cons (car bind) (cons (cadr bind) nil)) 
       (cons body nil)))))
 
+(define ast-if (lambda (predicate consequent alternative)
+  (cons (quote if) (cons predicate (cons consequent (cons alternative nil))))))
+
 ; ~call stdlib functions more easily
 (define ast-y (lambda (name body) 
   (cons (quote Y) (cons (ast-lambda (cons name nil) body) nil))))
@@ -65,7 +68,15 @@
       (ast-let* (cdr many_binds) body)))))
 
 ; ~~cond things
-;(define ast-cond (lambda options )
+(define ast-cond (lambda options
+  (if 
+    (null? options)
+    nil
+    (ast-if 
+      (car (car options)) 
+      (cadr (car options))
+      (ast-cond (cdr options))))))
+    
 
 ; ~~pattern matching things
 ; @TODO
