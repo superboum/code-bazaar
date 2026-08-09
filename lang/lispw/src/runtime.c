@@ -110,10 +110,14 @@ atom* length(atom* list) {
   if (list == NULL) 
     error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   int len = 0;
-  while (boolc(list)) {
+  atom* iter = atom_rc_incr(list);
+  while (boolc(iter)) {
     len++;
-    list = atom_rc_decr(cdr(list)); // protected by list root
+    atom* next = cdr(iter);
+    atom_rc_decr(iter);
+    iter = next;
   }
+  atom_rc_decr(iter);
 
   return cnumber(len);
 }
@@ -394,16 +398,24 @@ atom* string(atom* charlist) {
     error(ERR_MALLOC_CODE, ERR_MALLOC_MSG, __func__, __FILE__, __LINE__);
   memset(ptr, 0, memsz); // make sure we initialize with zero
   ptr->len = len;
+
+  atom* iter = atom_rc_incr(charlist);
   for (size_t i = 0; i < len; i++) {
-    atom* acharcode = atom_rc_decr(car(charlist)); // protected by list root
+    atom* acharcode = car(iter);
     if (acharcode->kind != NUMBER) 
       error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
     int charcode = acharcode->val.as_number;
     if (charcode < 0 || charcode > 255) 
       error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
     ptr->val[i] = charcode;
-    charlist = atom_rc_decr(cdr(charlist)); // protected by list root
+
+    atom* next = cdr(iter);
+    atom_rc_decr(iter);
+    iter = next;
+
+    atom_rc_decr(acharcode);
   }
+  atom_rc_decr(iter);
 
   atom* res = atom_alloc(STRING);
   res->val.as_string = ptr;
@@ -950,6 +962,7 @@ atom* thunk(atom* expr, atom* env) {
 
 atom* force_it(atom* maybe_thunk) {
   if (maybe_thunk->kind != THUNK) return atom_rc_incr(maybe_thunk);
+
   // memoization lookup
   // @FIXME: a proper MEMOIZED_THUNK type would be better...
   if (maybe_thunk->val.as_capture.env == _nil) return atom_rc_incr(maybe_thunk->val.as_capture.expr);
@@ -1041,10 +1054,10 @@ atom* eval(atom* ast, atom* env) {
 	fprintf(stderr, "'%s' is not defined.\n", ast->val.as_string->val);
 	error(ERR_UNDEFINED_CODE,ERR_UNDEFINED_MSG, __func__, __FILE__, __LINE__);
     }
-    out_res = cdr(branch_res);
+    atom* local_resolved = cdr(branch_res);
+    out_res = force_it(local_resolved);
+    atom_rc_decr(local_resolved);
     atom_rc_decr(branch_res);
-  } else if (ast->kind == WEAK) {
-    out_res = atom_rc_incr(ast->val.as_weak);
   } else if (ast->kind == PAIR) {
     atom* local_head_lazy = car(ast);
     atom* local_head = force_it(local_head_lazy);
@@ -1085,6 +1098,7 @@ atom* eval(atom* ast, atom* env) {
       // (let (symbol expr) expr)
       atom* local_binding = cadr(ast);
       atom* local_body = caddr(ast);
+      atom* local_body_forced = force_it(local_body);
       atom* local_binding_name = car(local_binding);
       atom* local_binding_expr = cadr(local_binding);
 
@@ -1093,13 +1107,14 @@ atom* eval(atom* ast, atom* env) {
       atom* local_new_env = cons(local_new_env_entry, env);
 
       // eval final body
-      out_res = eval(local_body, local_new_env); // eval let body
+      out_res = eval(local_body_forced, local_new_env); // eval let body
 
       atom_rc_decr(local_new_env);
       atom_rc_decr(local_new_env_entry);
       atom_rc_decr(local_evaled_expr);
       atom_rc_decr(local_binding_expr);
       atom_rc_decr(local_binding_name);
+      atom_rc_decr(local_body_forced);
       atom_rc_decr(local_body);
       atom_rc_decr(local_binding);
     } else if (local_head == &_static_sym_define) {
