@@ -644,6 +644,14 @@ atom* print(atom* at) {
   return nil();
 }
 
+atom* sexpr_and_print(atom* at) {
+  atom* tmp1 = sexpr(at);
+  atom* tmp2 = print(tmp1);
+  atom_rc_decr(tmp1);
+  atom_rc_decr(tmp2);
+  return atom_rc_incr(at);
+}
+
 atom* macro(atom* a) {
   atom* out_res = atom_alloc(MACRO);
   out_res->val.as_macro = atom_rc_incr(a);
@@ -1443,7 +1451,7 @@ atom* full_env() {
   atom_rc_decr(head);
   out_res=tmp;
 
-  head = afx1("print", print);
+  head = afx1("print", sexpr_and_print);
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);
