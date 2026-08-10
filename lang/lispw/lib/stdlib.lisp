@@ -17,7 +17,7 @@
 
 ; Derived from https://okmij.org/ftp/Computation/fixed-point-combinators.html#Poly-variadic
 (define Y*
-  (lambda fns  ; 'fns' captures variadic arguments as a list
+  (lambda fns
     ((lambda (u) (u u))
      (lambda (p)
        (map (lambda (li) (apply li (p p))) fns)))))
