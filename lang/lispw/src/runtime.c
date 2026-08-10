@@ -1118,8 +1118,9 @@ void store_free(void) {
   store= &_static_nil;
 }
 
-atom* eval(atom* ast, atom* env) {
+atom* eval(atom* astt, atom* env) {
   atom* out_res = nil();
+  atom* ast = force_it(astt);
 
   // handle symbol
   if (ast->kind == SYMBOL) {
@@ -1266,6 +1267,7 @@ atom* eval(atom* ast, atom* env) {
     out_res = atom_rc_incr(ast);
   }
 
+  atom_rc_decr(ast);
   return out_res;
 }
 
