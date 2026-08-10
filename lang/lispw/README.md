@@ -172,7 +172,7 @@ numerous limitations and bugs. Hopefully, Scheme, Common Lisps and other recent 
 chose lexical scoping.
 
 Clojure is not built on the concept of pairs. In fact, the Scheme creators (authors of SICP),
-did not believe that pairs are a "building blocks" of Lisp; they even show how it could be represented with lambda/closures:
+did not believe that pairs are a "foundational building blocks" of Lisp; they even show how it could be represented with lambda/closures:
 
 ```lisp
 ; build
@@ -192,6 +192,8 @@ did not believe that pairs are a "building blocks" of Lisp; they even show how i
 ```
 
 *Note that the above code works on lispw at least, even if, under the hood, it is still implemented with a primitive pair object.*
+
+Note that saying a Lisp could be built without pair (but with abstract sequences instead), and that its runtime / internals have no notion of pairs seems [to make some people angry](https://news.ycombinator.com/item?id=19123830). This choice is however discussed a little bit in the Clojure doc on page [Differences with other Lisps](https://clojure.org/reference/lisps).
 
 ## Resources
 
