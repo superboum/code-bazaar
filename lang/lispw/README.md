@@ -30,8 +30,8 @@ Intended to be a mix between Scheme & Clojure.
  - [x] lexical scoping 
  - [ ] recursivity
    - [x] basic recursivity
-   - [ ] corecursivity (streams, generator, etc.)
-   - [ ] mutual recursion (a calls b, b calls a)
+   - [x] corecursivity (streams, generator, etc. - see `examples/corecursion.lisp`)
+   - [ ] mutual recursion (a calls b, b calls a - WIP with Y*)
  - [x] immutability
  - [x] few syntactic sugar
  - [x] normal order (lazy evaluation)
