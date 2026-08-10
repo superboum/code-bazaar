@@ -65,7 +65,7 @@ atom* nth(atom* list, int pos) {
     error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG, __func__, __FILE__, __LINE__);
   }
 
-  atom* out_res = force_it(local_list->val.as_pair.head);
+  atom* out_res = atom_rc_incr(local_list->val.as_pair.head);
   atom_rc_decr(local_list);
   return out_res;
 }
@@ -1118,9 +1118,8 @@ void store_free(void) {
   store= &_static_nil;
 }
 
-atom* eval(atom* astt, atom* env) {
+atom* eval(atom* ast, atom* env) {
   atom* out_res = nil();
-  atom* ast = force_it(astt);
 
   // handle symbol
   if (ast->kind == SYMBOL) {
@@ -1263,7 +1262,6 @@ atom* eval(atom* astt, atom* env) {
     out_res = atom_rc_incr(ast);
   }
 
-  atom_rc_decr(ast);
   return out_res;
 }
 

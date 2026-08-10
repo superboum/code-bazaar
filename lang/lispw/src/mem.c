@@ -126,7 +126,7 @@ atom* atom_rc_incr(atom* a) {
   if (a == NULL) 
     error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
   if (a->rc >= SHRT_MAX) {
-    fprintf(stderr, "RC_MAX reached. Leaking memory for now.\n");
+    //fprintf(stderr, "RC_MAX reached. Leaking memory for now.\n");
   } else if (a->rc >= 0) {
     a->rc++;
   } else {

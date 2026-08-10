@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g 
-LDFLAGS = -rdynamic 
+CFLAGS = -Wall -Wextra -fsanitize=address -g 
+LDFLAGS = -rdynamic -fsanitize=address
 
 BIN_DIR = bin
 SRC_DIR = src
