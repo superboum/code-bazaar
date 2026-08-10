@@ -103,7 +103,7 @@ It is designed to fit on 24 bytes.
    - [x] map / fold
    - [ ] streams (lazy lists) / corecursivity
    - [ ] pattern matching
- - [ ] Expose interpreter internals
+ - [x] Expose interpreter internals
    - [x] `sexpr` / `parse`
    - [x] `eval` / `apply`
 
