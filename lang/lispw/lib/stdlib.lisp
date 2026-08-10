@@ -21,6 +21,8 @@
 ; ---
 (define max (lambda (a b) (if (a > b) a b)))
 (define min (lambda (a b) (if (a < b) a b)))
+(define abs (lambda (a) (if (>= a 0) a (* a -1))))
+(define gcd (lambda (a b) (if (eq b 0) a (gcd b (mod a b)))))
 
 ; ---
 ; List manipulation
