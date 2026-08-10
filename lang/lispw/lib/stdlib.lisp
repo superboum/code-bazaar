@@ -4,6 +4,11 @@
 (define t (quote t))
 
 ; ---
+; ???
+; ---
+(define apply (lambda (rator rands) (eval (cons rator rands))))
+
+; ---
 ; Recursivity
 ; ---
 (define Y (lambda (f) 
