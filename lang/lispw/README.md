@@ -161,9 +161,41 @@ It is designed to fit on 24 bytes.
  - No proper check of compound argument number leading to weird bug.
    - eg. `((lambda (a b) (+ a b)) 3)` (missing `b` binding) leads to a weird error.
 
+## Weird learnings
+
+Macros were not part of Lisp at its beginning. An alternative, fexpr, were proposed.
+But they had more limitations.
+
+Lisp 1.5 and prior, and despite McCarthy original papers, were using dynamic scoping
+instead of lexical scoping. `funargs` was required to turn on lexical scoping, but it had
+numerous limitations and bugs. Hopefully, Scheme, Common Lisps and other recent Lisp all
+chose lexical scoping.
+
+Clojure is not built on the concept of pairs. In fact, the Scheme creators (authors of SICP),
+did not believe that pairs are a "building blocks" of Lisp; they even show how it could be represented with lambda/closures:
+
+```lisp
+; build
+(define alt-cons (lambda (a b)
+  (lambda (m)
+    (cond
+      ((eq m 'car) a)
+      ((eq m 'cdr) b)
+      ((eq m 'list?) 't)))))
+(define alt-car (lambda (p) (p 'car)))
+(define alt-cdr (lambda (p) (p 'cdr)))
+(define alt-list? (lambda (p) (p 'list?)))
+
+; use
+(alt-car (alt-cons 37 67)) ; 37
+(alt-cdr (alt-cons 37 67)) ; 67
+```
+
+*Note that the above code works on lispw at least, even if, under the hood, it is still implemented with a primitive pair object.*
+
 ## Resources
 
-What motivated me to start this project: [ William Byrd on "The Most Beautiful Program Ever Written" [PWL NYC] ](https://www.youtube.com/watch?v=OyfBQmvr2Hc)
+What motivated me to start this project: [ William Byrd on "The Most Beautiful Program Ever Written" [PWL NYC] ](https://www.youtube.com/watch?v=OyfBQmvr2Hc). In term of videos, [the SICP lectures](https://ocw.mit.edu/courses/6-001-structure-and-interpretation-of-computer-programs-spring-2005/video_galleries/video-lectures/) also very interesting.
 
 I've read (at least partially):
  - Crafting Interpreters by Robert Nystrom
@@ -173,7 +205,11 @@ On my reading list:
  - Lisp In Small Pieces by C. Queinnec
  - Paradigms of Artificial Intelligence Programming (PAIP) by P. Norvig
 
-Other fragments found on the net:
+Other fragments found on the net that helped me:
  - [Poly-variadic fixpoint combinators](https://okmij.org/ftp/Computation/fixed-point-combinators.html#Poly-variadic). Useful for my `Y*` definition.
  - [SICP Distilled](https://www.sicpdistilled.com/). Useful to get "the spell names" as properly as possible (eg. `predicate` / `consequent` / `alternative` for the condition).
  - [Don't build your own Lisp](https://gist.github.com/no-defun-allowed/7e3e238c959e27d4919bb4272487d7ad). Overview of all the mistakes made in the "Build your own Lisp" book. Useful because there is a lot to learn from these mistakes, and they have some universality in them. The author of this post has also [many great blog posts on Lisp](https://applied-langua.ge/posts/).
+
+Things I want to read and recall me to the fact that's *lispw* is really only a toy language:
+ - [SCHEME: An Interpreter for Extended Lambda Calculus](https://dspace.mit.edu/entities/publication/83ae1e70-c572-430d-abc1-c52725abfefb). Where it is explained that pair is not necessarily a building block of Lisp.
+ - Learn more about Cyclone Scheme and CPS interpreters
