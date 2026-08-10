@@ -171,3 +171,8 @@ I've read (at least partially):
 On my reading list:
  - Lisp In Small Pieces by C. Queinnec
  - Paradigms of Artificial Intelligence Programming (PAIP) by P. Norvig
+
+Other fragments found on the net:
+ - [Poly-variadic fixpoint combinators](https://okmij.org/ftp/Computation/fixed-point-combinators.html#Poly-variadic). Useful for my `Y*` definition.
+ - [SICP Distilled](https://www.sicpdistilled.com/). Useful to get "the spell names" as properly as possible (eg. `predicate` / `consequent` / `alternative` for the condition).
+ - [Don't build your own Lisp](https://gist.github.com/no-defun-allowed/7e3e238c959e27d4919bb4272487d7ad). Overview of all the mistakes made in the "Build your own Lisp" book. Useful because there is a lot to learn from these mistakes, and they have some universality in them. The author of this post has also [many great blog posts on Lisp](https://applied-langua.ge/posts/).
