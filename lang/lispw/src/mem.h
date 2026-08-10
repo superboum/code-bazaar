@@ -22,8 +22,8 @@
 #define FX1    7
 #define FX2    8
 #define FX3    9
-#define WEAK   10
-#define MACRO   11
+#define FX_ENV 10
+#define MACRO  11
 #define NIL    12
 
 typedef struct string {

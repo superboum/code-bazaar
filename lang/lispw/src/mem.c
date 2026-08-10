@@ -16,6 +16,7 @@ static_assert(
 );
 
 #define ATOMS_PER_SLAB 2048 // Should be around ~64KiB
+#define APPROX_SLAB_RSS_IN_KIB 64
 typedef struct slab {
   struct slab* prev;
   struct atom cells[ATOMS_PER_SLAB];
@@ -108,7 +109,7 @@ const char* atom_kind_names[13] = {
   "FX1",
   "FX2",
   "FX3",
-  "WEAK",
+  "FX_ENV",
   "MACRO",
   "NIL",
 };
@@ -170,9 +171,11 @@ void rc_stats(void) {
     printf("  %s [%ld]\n", atom_kind_names[i], alloc_count_per_kind[i]);
   }
 
+  size_t slab_count = allocator_slabs_count(&global_allocator);
   printf("-- aggregated stats --\n");
   printf("  live objects: %ld\n", allocator_live_atoms(&global_allocator));
-  printf("  slabs: %ld\n", allocator_slabs_count(&global_allocator));
+  printf("  slabs: %ld\n", slab_count);
+  printf("  peek mem: %ld KiB\n", slab_count*APPROX_SLAB_RSS_IN_KIB);
 }
 
 void rc_memleak_check(void) {

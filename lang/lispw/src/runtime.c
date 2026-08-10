@@ -26,12 +26,6 @@ int boolc(atom* a) {
   return 1;
 }
 
-atom* weak(atom* orig) {
-  atom* out_res = atom_alloc(WEAK);
-  out_res->val.as_weak = orig;
-  return out_res;
-}
-
 atom* cons(atom* left, atom* right) {
   // left & right are now owned by the result; so we decrement as we consume, and increment as we bind to the new struct
   if (left == NULL || right == NULL) 
@@ -624,8 +618,8 @@ atom* sexpr(atom* a) {
     atom_rc_decr(branch_a);
     return out_res;
   }
-  if (a->kind == WEAK) {
-    return cstring("WEAK", 4);
+  if (a->kind == FX_ENV) {
+    return cstring("FX_ENV", 5);
   }
 
   error(ERR_LOGIC_CODE, ERR_LOGIC_MSG, __func__, __FILE__, __LINE__);
@@ -1095,7 +1089,7 @@ atom* apply(atom* rator, atom* rands) {
     atom* branch_rand1 = car(rands);
     out_res = rator->val.as_fx1(branch_rand1);
     atom_rc_decr(branch_rand1);
-  } else if (rator->kind == FX2) {
+  } else if (rator->kind == FX2 || rator->kind == FX_ENV) {
     atom* branch_rand1 = car(rands);
     atom* branch_rand2 = cadr(rands);
     out_res = rator->val.as_fx2(branch_rand1, branch_rand2);
@@ -1244,7 +1238,12 @@ atom* eval(atom* ast, atom* env) {
 	  atom_rc_decr(loop_evaled_cur);
           atom_rc_decr(loop_cur);
 	  atom_rc_decr(loop_local_rands);
-        }
+        }	
+	if (local_evaled_rator->kind == FX_ENV) {
+          atom* next_local_evaled_rands = cons(env, local_evaled_rands);
+	  atom_rc_decr(local_evaled_rands);
+	  local_evaled_rands = next_local_evaled_rands;
+	}
 
         atom* local_rev_evaled_rands = reverse(local_evaled_rands);
         out_res = apply(local_evaled_rator, local_rev_evaled_rands);
