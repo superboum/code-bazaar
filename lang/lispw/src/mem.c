@@ -175,7 +175,7 @@ void rc_stats(void) {
   printf("-- aggregated stats --\n");
   printf("  live objects: %ld\n", allocator_live_atoms(&global_allocator));
   printf("  slabs: %ld\n", slab_count);
-  printf("  peek mem: %ld KiB\n", slab_count*APPROX_SLAB_RSS_IN_KIB);
+  printf("  peak mem: %ld KiB\n", slab_count*APPROX_SLAB_RSS_IN_KIB);
 }
 
 void rc_memleak_check(void) {

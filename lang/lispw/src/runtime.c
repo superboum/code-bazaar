@@ -1214,7 +1214,8 @@ atom* eval(atom* ast, atom* env) {
       // operator operand*
       atom* local_evaled_rator_with_thunk = eval(local_head, env);
       atom* local_evaled_rator = force_it(local_evaled_rator_with_thunk);
-      atom* local_rands = cdr(ast);
+      atom* local_rands_lazy = cdr(ast);
+      atom* local_rands = force_it(local_rands_lazy);
 
       if (local_evaled_rator->kind == MACRO) {
 	// we MUST not evaluate rands
@@ -1232,8 +1233,10 @@ atom* eval(atom* ast, atom* env) {
 	  atom* loop_prev_evaled_rands = local_evaled_rands;
 
 	  local_evaled_rands = cons(loop_evaled_cur, loop_prev_evaled_rands);
-          local_rands = cdr(loop_local_rands);
+          atom* local_rands_lazy = cdr(loop_local_rands);
+	  local_rands = force_it(local_rands_lazy);
 
+	  atom_rc_decr(local_rands_lazy);
 	  atom_rc_decr(loop_prev_evaled_rands);
 	  atom_rc_decr(loop_evaled_cur);
           atom_rc_decr(loop_cur);
@@ -1251,6 +1254,7 @@ atom* eval(atom* ast, atom* env) {
         atom_rc_decr(local_rev_evaled_rands);
 	atom_rc_decr(local_evaled_rands);
       }
+      atom_rc_decr(local_rands_lazy);
       atom_rc_decr(local_rands);
       atom_rc_decr(local_evaled_rator);
       atom_rc_decr(local_evaled_rator_with_thunk);
