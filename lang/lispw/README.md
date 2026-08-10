@@ -129,6 +129,9 @@ It is designed to fit on 24 bytes.
  - [ ] display a backtrace on errors (requires to rewrite with a proper frame abstraction)
  - [ ] break loop (on error, provide a repl in the context of the exception)
 
+ *I would like to see if we can evolve, in the future, this interpreter as a Continuation Passing Style interpreter.
+ Cyclone Scheme may be an inspiration. It could also help me going closer to the metal. Maybe.*
+
 ### Bytecode Interpreter
 
 *Just a distant dream for now...*
@@ -137,8 +140,23 @@ It is designed to fit on 24 bytes.
 
 ...that come to my mind
 
+ - Macro should be resolved ahead of time, in a dedicated pass IMO
+ - Native functions are awful
+   - The proper way would be to have one type only
+   - It would support variadic functions
+   - It would pass the whole interpreter environment for fun & profit (including env, store, etc.)
+   - It would require an update of the apply() C call
+ - Env management with the assoc list is very inefficient
+   - It would be solved at the same time as we implement the lexical scoping optimization
+   - It's weird we register the global functions in the base env; it should be in the store
+   - But ideally, I would prefer we have no store at all, and everything to be lexically scoped
+ - Vulnerable to stack overflow
+   - Sure TCO (Tail Call Optimization) is an option
+   - I might be wrong but I think CPS (Continuation Passing Style) interprets could solve that too...
  - No error management (program just crash)
+   - Could be done properly with call/cc
  - No static type
+   - I am a bit lost on this topic; I've seen Typed Scheme but I don't understand it really...
  - No proper check of compound argument number leading to weird bug.
    - eg. `((lambda (a b) (+ a b)) 3)` (missing `b` binding) leads to a weird error.
 

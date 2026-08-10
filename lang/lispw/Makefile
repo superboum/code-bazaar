@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O2 -g 
+CFLAGS = -Wall -Wextra -g 
 LDFLAGS = -rdynamic 
 
 BIN_DIR = bin

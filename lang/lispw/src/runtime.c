@@ -65,7 +65,7 @@ atom* nth(atom* list, int pos) {
     error(ERR_CANT_CAR_CODE, ERR_CANT_CAR_MSG, __func__, __FILE__, __LINE__);
   }
 
-  atom* out_res = atom_rc_incr(local_list->val.as_pair.head);
+  atom* out_res = force_it(local_list->val.as_pair.head);
   atom_rc_decr(local_list);
   return out_res;
 }
@@ -1118,8 +1118,9 @@ void store_free(void) {
   store= &_static_nil;
 }
 
-atom* eval(atom* ast, atom* env) {
+atom* eval(atom* astt, atom* env) {
   atom* out_res = nil();
+  atom* ast = force_it(astt);
 
   // handle symbol
   if (ast->kind == SYMBOL) {
@@ -1262,6 +1263,7 @@ atom* eval(atom* ast, atom* env) {
     out_res = atom_rc_incr(ast);
   }
 
+  atom_rc_decr(ast);
   return out_res;
 }
 
@@ -1322,6 +1324,20 @@ atom* afx2(char* name, fx2 f) {
   out_res = cons(local_name, local_fx2);
 
   atom_rc_decr(local_fx2);
+  atom_rc_decr(local_name);
+  return out_res;
+}
+
+atom* afx_env(char* name, fx2 f) {
+  atom* out_res;
+
+  atom* local_fx_env = atom_alloc(FX_ENV);
+  local_fx_env->val.as_fx2 = f;
+  atom* local_name = csymbol(name);
+
+  out_res = cons(local_name, local_fx_env);
+
+  atom_rc_decr(local_fx_env);
   atom_rc_decr(local_name);
   return out_res;
 }
@@ -1487,6 +1503,12 @@ atom* full_env() {
   out_res=tmp;
 
   head = afx1("parse", lisp_parse);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx_env("eval", eval);
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);
