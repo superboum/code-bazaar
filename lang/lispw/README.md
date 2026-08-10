@@ -93,6 +93,7 @@ It is designed to fit on 24 bytes.
      - [x] basic utilities like `car`, `cdr`, `cons`, etc.
    - [ ] string processing
    - [ ] gensym to create unique symbols for macros
+   - [ ] Scheme *parameters* aka *context* in Python aka *dynamic scoping* aka variables resolving from the call stack (SRFI-39 / R7RS). 
  - [x] Lisp functions / macros
    - [ ] recursivity
      - [x] Y combinator
