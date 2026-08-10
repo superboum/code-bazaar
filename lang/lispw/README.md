@@ -105,7 +105,7 @@ It is designed to fit on 24 bytes.
    - [ ] pattern matching
  - [ ] Expose interpreter internals
    - [x] `sexpr` / `parse`
-   - [ ] eval
+   - [x] eval
 
 
 ### I/O
