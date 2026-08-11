@@ -45,6 +45,12 @@
   (if lst (cons (fn (car lst)) (map fn (cdr lst))) nil)))
 (define reduce (lambda (fn acc lst)
   (if lst (reduce fn (fn acc (car lst)) (cdr lst)) acc)))
+(define append (lambda (l1 l2)
+  (if l1 (cons (car l1) (append (cdr l1) l2)) l2)))
+(define -> (lambda val-then-fns
+  (letrec 
+    (do (lambda (acc fns) (if fns (do ((car fns) acc) (cdr fns)) acc))) 
+    (do (car val-then-fns) (cdr val-then-fns)))))
 
 ; ---
 ; AST manipulation (useful for macros)
@@ -95,6 +101,13 @@
           (do (cdr options)))))]
     (do options))))
 
+(define ast-partial (lambda fn-and-some-args
+  (list 'lambda 'rest-args  
+    (list 
+      'apply 
+      (car fn-and-some-args) 
+      (list 'append (list 'quote (cdr fn-and-some-args)) 'rest-args)))))
+
 ; ~~pattern matching things
 ; @TODO
 
@@ -105,5 +118,5 @@
 ; macro are basically bindings for the ast-* functions
 (define letrec (macro ast-letrec))
 (define let* (macro ast-let*))
-
 (define cond (macro ast-cond))
+(define partial (macro ast-partial))

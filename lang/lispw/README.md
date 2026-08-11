@@ -101,8 +101,9 @@ It is designed to fit on 24 bytes.
      - [ ] letrec* for mutual recursivity
    - [x] and / or
    - [x] cond
-   - [x] map / fold
-   - [ ] streams (lazy lists) / corecursivity
+   - [x] map / fold / `->` arrow function similar to clojure thread macro
+   - [x] currying (with `partial`), useful with the arrow function
+   - [x] streams (lazy lists) / corecursivity
    - [ ] pattern matching
  - [x] Expose interpreter internals
    - [x] `sexpr` / `parse`
