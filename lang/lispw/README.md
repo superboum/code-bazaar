@@ -207,6 +207,8 @@ I've read (at least partially):
 On my reading list:
  - Lisp In Small Pieces by C. Queinnec
  - Paradigms of Artificial Intelligence Programming (PAIP) by P. Norvig
+ - [CONS should not CONS its arguments, or, a lazy alloc is a smart alloc](https://dl.acm.org/doi/10.1145/130854.130858) by H. Baker
+ - [CONS should not CONS its arguments, part II: Cheney on the M.T.A.](https://dl.acm.org/doi/10.1145/214448.214454]) by H. Baker
 
 Other fragments found on the net that helped me:
  - [Poly-variadic fixpoint combinators](https://okmij.org/ftp/Computation/fixed-point-combinators.html#Poly-variadic). Useful for my `Y*` definition.
