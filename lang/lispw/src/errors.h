@@ -23,6 +23,8 @@
 #define ERR_SLAB_MSG "An internal error occured in the slab memory allocator"
 #define ERR_APPLY_BIND_CODE 110
 #define ERR_APPLY_BIND_MSG "Can't bind operands to closure free variables."
+#define ERR_IO_CODE 111
+#define ERR_IO_MSG "I/O error"
 
 void error(int code, char* msg, const char* fn, const char* file, int line);
 

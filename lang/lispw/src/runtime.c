@@ -603,8 +603,8 @@ atom* sexpr(atom* a) {
     free(acc);
     return final;
   }
-  if (a->kind == FX1 || a->kind == FX2 || a->kind == FX3) {
-    return cstring("C FUNCTION", 10);
+  if (a->kind == FX1 || a->kind == FX2 || a->kind == FX3 || a->kind == FX_ENV) {
+    return cstring("CFX", 3);
   }
   if (a->kind == CLOSU) {
     return cstring("CLOSURE", 7);
@@ -612,14 +612,14 @@ atom* sexpr(atom* a) {
   if (a->kind == MACRO) {
     return cstring("MACRO", 5);
   }
+  if (a->kind == FD) {
+    return cstring("FD", 2);
+  }
   if (a->kind == THUNK) {
     atom* branch_a = force_it(a);
     atom* out_res = sexpr(branch_a);
     atom_rc_decr(branch_a);
     return out_res;
-  }
-  if (a->kind == FX_ENV) {
-    return cstring("FX_ENV", 5);
   }
 
   error(ERR_LOGIC_CODE, ERR_LOGIC_MSG, __func__, __FILE__, __LINE__);
@@ -655,6 +655,9 @@ atom* macro(atom* a) {
 atom* macro_expand(atom* mac, atom* rands) {
   atom* out_res;
 
+  if (mac == NULL || mac->kind == FREED)
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+
   atom* a = force_it(mac);
   
   if (a->kind != MACRO)
@@ -669,6 +672,45 @@ atom* macro_expand(atom* mac, atom* rands) {
   atom_rc_decr(local_rands_forced);
   atom_rc_decr(a);
 
+  return out_res;
+}
+
+atom* io_open_file(atom* at) {
+  if (at == NULL || at->kind == FREED)
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+
+  atom* a = force_it(at);
+  if (a->kind != STRING)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
+
+
+  FILE* fd = fopen(a->val.as_string->val, "r");
+  if (fd == NULL)
+    error(ERR_IO_CODE, ERR_IO_MSG, __func__, __FILE__, __LINE__);
+  
+  atom* out_res = atom_alloc(FD);
+  out_res->val.as_file = fd;
+
+  atom_rc_decr(a);
+  return out_res;
+}
+
+atom* io_read(atom* at) {
+  if (at == NULL || at->kind == FREED)
+    error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+
+  atom* a = force_it(at);
+  if (a->kind != FD)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
+
+  int v = fgetc(a->val.as_file);
+  if (v == EOF) return nil();
+  if (v < 0 || v > 255) error(ERR_IO_CODE, ERR_IO_MSG, __func__, __FILE__, __LINE__);
+
+  atom* out_res = atom_alloc(NUMBER);
+  out_res->val.as_number = v;
+
+  atom_rc_decr(a);
   return out_res;
 }
 
@@ -1525,6 +1567,18 @@ atom* full_env() {
   out_res=tmp;
 
   head = afx2("macro-expand", macro_expand);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx1("io/open", io_open_file);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
+  out_res=tmp;
+
+  head = afx1("io/read", io_read);
   tmp = cons(head, out_res);
   atom_rc_decr(out_res);
   atom_rc_decr(head);

@@ -97,8 +97,8 @@ allocator_t global_allocator = {0};
 
 size_t alloc_count_per_kind[32] = {0};
 
-const int atom_kind_count = 13;
-const char* atom_kind_names[13] = {
+const int atom_kind_count = 14;
+const char* atom_kind_names[14] = {
   "FREED",
   "NUMBER",
   "STRING",
@@ -111,6 +111,7 @@ const char* atom_kind_names[13] = {
   "FX3",
   "FX_ENV",
   "MACRO",
+  "FD",
   "NIL",
 };
 
@@ -158,6 +159,9 @@ atom* atom_rc_decr(atom* a) {
     }
     if (a->kind == MACRO) {
       a->val.as_macro = atom_rc_decr(a->val.as_macro);
+    }
+    if (a->kind == FD) {
+      fclose(a->val.as_file);
     }
     allocator_free(&global_allocator, a);
     return NULL;

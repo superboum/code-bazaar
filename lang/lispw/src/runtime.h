@@ -67,6 +67,12 @@ atom* macro(atom* a);
 atom* macro_expand(atom* mac, atom* rands);
 
 /*
+ * Naive I/O
+ */
+atom* io_open_file(atom* a);
+atom* io_read(atom* a);
+
+/*
  * LEXER
  */
 atom* lex(FILE* f);

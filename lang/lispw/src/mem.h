@@ -24,7 +24,8 @@
 #define FX3    9
 #define FX_ENV 10
 #define MACRO  11
-#define NIL    12
+#define FD     12
+#define NIL    13
 
 typedef struct string {
   size_t len;
@@ -57,6 +58,7 @@ typedef struct atom {
     struct closu as_capture;
     struct atom* as_weak;
     struct atom* as_macro;
+    FILE* as_file;
     fx1 as_fx1;
     fx2 as_fx2;
     fx3 as_fx3;
