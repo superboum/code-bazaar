@@ -101,19 +101,26 @@ atom* not(atom* a) {
   return empty(a);
 }
 
-atom* length(atom* list) {
-  if (list == NULL) 
+atom* length(atom* list_thunk) {
+  if (list_thunk == NULL) 
     error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+
+  atom* list = force_it(list_thunk);
+  if (list->kind != PAIR)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
+
   int len = 0;
   atom* iter = atom_rc_incr(list);
-  while (boolc(iter)) {
+  while (iter->kind == PAIR) {
     len++;
-    atom* next = cdr(iter);
+    atom* next_lazy = cdr(iter);
     atom_rc_decr(iter);
+    atom* next = force_it(next_lazy);
+    atom_rc_decr(next_lazy);
     iter = next;
   }
   atom_rc_decr(iter);
-
+  atom_rc_decr(list);
   return cnumber(len);
 }
 
@@ -379,9 +386,14 @@ atom* cstring(char* s, size_t len) {
   return a;
 }
 
-atom* string(atom* charlist) {
-  if (charlist == NULL) 
+atom* string(atom* charlist_thunk) {
+  if (charlist_thunk == NULL) 
     error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
+
+  atom* charlist = force_it(charlist_thunk);
+  if (charlist->kind != PAIR)
+    error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
+
   atom* alen = length(charlist);
   size_t len = alen->val.as_number;
   alen = atom_rc_decr(alen); // we don't need alen past this point
@@ -396,7 +408,9 @@ atom* string(atom* charlist) {
 
   atom* iter = atom_rc_incr(charlist);
   for (size_t i = 0; i < len; i++) {
-    atom* acharcode = car(iter);
+    atom* acharcode_lazy = car(iter);
+    atom* acharcode = force_it(acharcode_lazy);
+    atom_rc_decr(acharcode_lazy);
     if (acharcode->kind != NUMBER) 
       error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
     int charcode = acharcode->val.as_number;
@@ -414,6 +428,8 @@ atom* string(atom* charlist) {
 
   atom* res = atom_alloc(STRING);
   res->val.as_string = ptr;
+
+  atom_rc_decr(charlist);
   return res;
 }
 
@@ -1444,6 +1460,12 @@ atom* full_env() {
   tmp = cons(head, out_res);
   atom_rc_decr(head);
   atom_rc_decr(out_res);
+  out_res=tmp;
+
+  head = afx1("string", string);
+  tmp = cons(head, out_res);
+  atom_rc_decr(out_res);
+  atom_rc_decr(head);
   out_res=tmp;
 
   head = afx2("+", plus);

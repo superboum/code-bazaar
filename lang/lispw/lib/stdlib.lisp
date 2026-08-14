@@ -120,3 +120,26 @@
 (define let* (macro ast-let*))
 (define cond (macro ast-cond))
 (define partial (macro ast-partial))
+
+; ---
+; Basic I/O
+; ---
+(define ascii/cr 13)
+(define ascii/lf 10)
+(define io/stdin "/dev/stdin")
+(define io/stdout "/dev/stdout")
+
+(define io/readline (lambda (fd)
+  (letrec (do (lambda (cand acc)
+    (cond
+      [(null? cand) acc]
+      [(or (eq cand ascii/cr) (eq cand ascii/lf)) acc]
+      [t (do (io/read fd) (cons cand acc))])))
+    (string (reverse (do (io/read fd) '()))))))
+
+(define io/readall (lambda (fd)
+(letrec (do (lambda (cand acc)
+  (cond
+    [(null? cand) acc]
+    [t (do (io/read fd) (cons cand acc))])))
+  (string (reverse (do (io/read fd) '()))))))
