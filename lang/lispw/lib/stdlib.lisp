@@ -143,3 +143,5 @@
     [(null? cand) acc]
     [t (do (io/read fd) (cons cand acc))])))
   (string (reverse (do (io/read fd) '()))))))
+
+(define io/input (lambda () (io/readline (io/open io/stdin))))
