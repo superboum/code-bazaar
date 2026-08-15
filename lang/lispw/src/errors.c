@@ -19,7 +19,7 @@ void print_backtrace(void)
 }
 
 void error(int code, char* msg, const char* fn, const char* file, int line) {
-  print_backtrace();
+  //print_backtrace();
   fprintf(stderr, "Fatal Error in func %s at %s, line %d. %s\n", fn, file, line, msg);
   exit(code);
 }
