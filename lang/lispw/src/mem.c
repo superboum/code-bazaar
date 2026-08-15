@@ -161,6 +161,7 @@ atom* atom_rc_decr(atom* a) {
       a->val.as_macro = atom_rc_decr(a->val.as_macro);
     }
     if (a->kind == FD) {
+      printf("DEALLOCATE FD\n");
       fclose(a->val.as_file);
     }
     allocator_free(&global_allocator, a);

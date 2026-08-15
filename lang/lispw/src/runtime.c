@@ -411,8 +411,10 @@ atom* string(atom* charlist_thunk) {
     atom* acharcode_lazy = car(iter);
     atom* acharcode = force_it(acharcode_lazy);
     atom_rc_decr(acharcode_lazy);
-    if (acharcode->kind != NUMBER) 
+    if (acharcode->kind != NUMBER) {
+      printf("acharcode type is %d\n", acharcode->kind);
       error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
+    }
     int charcode = acharcode->val.as_number;
     if (charcode < 0 || charcode > 255) 
       error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
@@ -712,6 +714,7 @@ atom* io_open_file(atom* at) {
 }
 
 atom* io_read(atom* at) {
+  atom* out_res = nil();
   if (at == NULL || at->kind == FREED)
     error(ERR_RC_ERROR_CODE, ERR_RC_ERROR_MSG, __func__, __FILE__, __LINE__);
 
@@ -720,11 +723,15 @@ atom* io_read(atom* at) {
     error(ERR_ATOM_WRONG_TYPE_CODE, ERR_ATOM_WRONG_TYPE_MSG, __func__, __FILE__, __LINE__);
 
   int v = fgetc(a->val.as_file);
-  if (v == EOF) return nil();
-  if (v < 0 || v > 255) error(ERR_IO_CODE, ERR_IO_MSG, __func__, __FILE__, __LINE__);
-
-  atom* out_res = atom_alloc(NUMBER);
-  out_res->val.as_number = v;
+  if (v == EOF) {
+    out_res = nil();
+  } else if (v < 0 || v > 255) {
+    out_res = nil();
+    error(ERR_IO_CODE, ERR_IO_MSG, __func__, __FILE__, __LINE__);
+  } else {
+    out_res = atom_alloc(NUMBER);
+    out_res->val.as_number = v;
+  }
 
   atom_rc_decr(a);
   return out_res;

@@ -51,6 +51,8 @@
   (letrec 
     (do (lambda (acc fns) (if fns (do ((car fns) acc) (cdr fns)) acc))) 
     (do (car val-then-fns) (cdr val-then-fns)))))
+(define take-while (lambda (pred l)
+  (if (pred (car l)) (cons (car l) (take-while pred (cdr l))) '())))
 
 ; ---
 ; AST manipulation (useful for macros)
@@ -122,26 +124,23 @@
 (define partial (macro ast-partial))
 
 ; ---
-; Basic I/O
+; Stream I/O
 ; ---
 (define ascii/cr 13)
 (define ascii/lf 10)
-(define io/stdin "/dev/stdin")
-(define io/stdout "/dev/stdout")
 
-(define io/readline (lambda (fd)
-  (letrec (do (lambda (cand acc)
-    (cond
-      [(null? cand) acc]
-      [(or (eq cand ascii/cr) (eq cand ascii/lf)) acc]
-      [t (do (io/read fd) (cons cand acc))])))
-    (string (reverse (do (io/read fd) '()))))))
+(define io/crlf? (lambda (cand) (or (eq cand ascii/cr) (eq cand ascii/lf))))
 
-(define io/readall (lambda (fd)
-(letrec (do (lambda (cand acc)
-  (cond
-    [(null? cand) acc]
-    [t (do (io/read fd) (cons cand acc))])))
-  (string (reverse (do (io/read fd) '()))))))
+; file I/O is hidden in a stream
+(define io/stream (lambda (filename)
+  (let [fd (io/open filename)]
+    (letrec [do (lambda (peek) (if peek (cons peek (do (io/read fd))) '()))]
+      (do (io/read fd))))))
+(define io/stdin (lambda () (io/stream "/dev/stdin")))
 
-(define io/input (lambda () (io/readline (io/open io/stdin))))
+; function that can process streams
+(define stream/readall string) 
+(define stream/readline (lambda (x) (-> x (partial take-while io/crlf?) string)))
+
+; helpers
+(define io/input (lambda () (stream/readline (io/stream io/stdin))))
