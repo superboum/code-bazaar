@@ -4,7 +4,7 @@
 (define t (quote t))
 
 ; ---
-; ???
+; Language definition
 ; ---
 (define apply (lambda (rator rands) (eval (cons rator rands))))
 
@@ -25,6 +25,7 @@
 ; ---
 ; Boolean logic
 ; ---
+(define not (lambda (x) (eq x nil)))
 (define and (lambda (x y) (if x y nil)))
 (define or (lambda (x y) (if x t y)))
 
@@ -123,24 +124,28 @@
 (define cond (macro ast-cond))
 (define partial (macro ast-partial))
 
-; ---
-; Stream I/O
-; ---
+;---
+; Collations
+;---
 (define ascii/cr 13)
 (define ascii/lf 10)
+(define ascii/crlf? (lambda (cand) (or (eq cand ascii/cr) (eq cand ascii/lf))))
 
-(define io/crlf? (lambda (cand) (or (eq cand ascii/cr) (eq cand ascii/lf))))
-
+; ---
+; I/O
+; ---
 ; file I/O is hidden in a stream
-(define io/stream (lambda (filename)
+(define io/file (lambda (filename)
   (let [fd (io/open filename)]
     (letrec [do (lambda (peek) (if peek (cons peek (do (io/read fd))) '()))]
       (do (io/read fd))))))
-(define io/stdin (lambda () (io/stream "/dev/stdin")))
-
-; function that can process streams
-(define stream/readall string) 
-(define stream/readline (lambda (x) (-> x (partial take-while io/crlf?) string)))
+(define io/stdin (lambda () (io/file "/dev/stdin")))
 
 ; helpers
-(define io/input (lambda () (stream/readline (io/stream io/stdin))))
+(define io/input (lambda () (stream/readline (io/file io/stdin))))
+
+; ---
+; Streams
+; ---
+(define stream/readall string) 
+(define stream/readline (lambda (lst) (string (take-while (lambda (x) (not (ascii/crlf? x))) lst))))
