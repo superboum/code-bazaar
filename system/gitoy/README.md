@@ -27,4 +27,4 @@ Hence, an object that did not change will keep the same sha1 fingerprint and wil
    - [10.4 Git Internals - Packfiles](https://git-scm.com/book/en/v2/Git-Internals-Packfiles)
    - [10.5 Git Internals - The RefSpec](https://git-scm.com/book/en/v2/Git-Internals-The-Refspec)
    - [10.6 Git Internals - Transfer Protocols](https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols)
- - Foo
+ - [You can run git on object storage if you re-make packfiles](https://www.tigrisdata.com/blog/objgit-packfiles/)
