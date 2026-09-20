@@ -28,3 +28,13 @@ Hence, an object that did not change will keep the same sha1 fingerprint and wil
    - [10.5 Git Internals - The RefSpec](https://git-scm.com/book/en/v2/Git-Internals-The-Refspec)
    - [10.6 Git Internals - Transfer Protocols](https://git-scm.com/book/en/v2/Git-Internals-Transfer-Protocols)
  - [You can run git on object storage if you re-make packfiles](https://www.tigrisdata.com/blog/objgit-packfiles/)
+ - git-repack
+   - [git-repack](https://man7.org/linux/man-pages/man1/git-repack.1.html)
+   - [Gitlab Gitaly Repack](https://about.gitlab.com/blog/rearchitecting-git-object-database-mainentance-for-scale/)
+ - jgit has a distributed filesystem abstraction contributed by Google & used by Gerrit
+   - [jgit homepage](https://projects.eclipse.org/projects/technology.jgit)
+   - [jgit github](https://github.com/eclipse-jgit/jgit)
+   - [jgit DfsRepository](https://github.com/eclipse-jgit/jgit/blob/master/org.eclipse.jgit/src/org/eclipse/jgit/internal/storage/dfs/DfsRepository.java#L31)
+   - [jgit aws](https://github.com/johnny0917/jgit-aws)
+   - [gitiles](https://gerrit.googlesource.com/gitiles/?utm_source=gemini) - Google open-source git browser built on top of jgit
+   - [a google group discussion about jgit+cassandra](https://groups.google.com/g/repo-discuss/c/IekVPmow0yE)
