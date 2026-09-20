@@ -30,7 +30,7 @@ def read_commit(commit: Path) -> str:
 
 def main() -> None:
     #print(read_commit(Path("../../.git/objects/5f/ad4a9489e1b28a725760f0ede687eaaf5e53f0")))
-    print(extract_zlib_object(Path("../../.git/objects/a1/fb136e2b37492f59160ab8254be1101f9a7650")))
+    Path("/tmp/foo").write_bytes(extract_zlib_object(Path("../../.git/objects/a1/fb136e2b37492f59160ab8254be1101f9a7650")))
 
 
 if __name__ == "__main__":
