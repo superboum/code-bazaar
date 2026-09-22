@@ -1,0 +1,9 @@
+{:deps
+ {
+  org.eclipse.jgit/org.eclipse.jgit {:mvn/version "7.8.0.202609011348-r"}
+  org.eclipse.jgit/org.eclipse.jgit.http.server {:mvn/version "7.8.0.202609011348-r"}
+  jakarta.servlet/jakarta.servlet-api {:mvn/version "6.2.0-M2"}
+  org.eclipse.jetty/jetty-server {:mvn/version "12.1.13"}
+  org.eclipse.jetty.ee10/jetty-ee10-servlet {:mvn/version "12.1.13"}
+ }
+}
