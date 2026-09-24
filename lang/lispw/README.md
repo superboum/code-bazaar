@@ -114,6 +114,17 @@ It is designed to fit on 24 bytes.
 
 *Not yet implemented/designed. I'm thinking to something built around linux [io_uring](https://man7.org/linux/man-pages/man7/io_uring.7.html).*
 
+For now, I'm going with a naive I/O system based on a stream abstraction
+
+ - [ ] C functions
+   - [x] `open` / `close` (RAII, close is called by the GC)
+   - [x] `read`
+   - [ ] `write`
+ - [ ] Lisp functions
+   - [x] `io/file` creates a file stream
+   - [x] `stream/readall` / `stream/readline` 
+  
+
 ### Optimizations
 
  - [x] static symbols
@@ -143,6 +154,7 @@ It is designed to fit on 24 bytes.
 ...that come to my mind
 
  - Macro should be resolved ahead of time, in a dedicated pass IMO
+ - Scheme hygienic macro could be a better macro system
  - Native functions are awful
    - The proper way would be to have one type only
    - It would support variadic functions
@@ -159,6 +171,7 @@ It is designed to fit on 24 bytes.
    - Could be done properly with call/cc
  - No static type
    - I am a bit lost on this topic; I've seen Typed Scheme but I don't understand it really...
+   - Alexis King and her Hackett project is also an interesting approach
  - No proper check of compound argument number leading to weird bug.
    - eg. `((lambda (a b) (+ a b)) 3)` (missing `b` binding) leads to a weird error.
 
